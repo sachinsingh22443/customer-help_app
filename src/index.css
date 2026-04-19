@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+/* optional plugins */
+@import "tw-animate-css";
+
+/* tumhara custom css */
+@import "./styles/globals.css";
+
+@layer base {
+  html, body, #root {
+    min-height: 100vh;
+    height: 100%;
+    margin: 0;
+  }
+}
