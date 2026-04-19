@@ -1,8 +1,3 @@
-node_modules/
-
-# Environment Variables
+node_modules
+dist
 .env
-
-# Build outputs
-dist/
-build/
