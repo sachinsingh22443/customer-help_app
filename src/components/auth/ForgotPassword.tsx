@@ -2,9 +2,12 @@ import { motion } from "motion/react";
 import { Mail, Smartphone, ArrowLeft } from "lucide-react";
 import { useState } from "react";
 
+import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+import { auth } from "@/firebase";
+
 interface ForgotPasswordProps {
   onBack: () => void;
-  onContinue: (method: "phone" | "email", value: string) => void;
+  onContinue: (phone: string) => void; // 🔥 simplified
 }
 
 export function ForgotPassword({ onBack, onContinue }: ForgotPasswordProps) {
@@ -12,46 +15,37 @@ export function ForgotPassword({ onBack, onContinue }: ForgotPasswordProps) {
   const [value, setValue] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const BASE_URL = "https://chef-backend-1.onrender.com";
-
   const handleSubmit = async () => {
     if (!value) {
-      alert(method === "phone" ? "Enter phone number" : "Enter email");
+      alert("Enter phone number");
       return;
     }
 
     try {
       setLoading(true);
 
-      // 🔥 ONLY PHONE API (email future ke liye)
-      if (method === "phone") {
-        const res = await fetch(
-          `${BASE_URL}/auth/forgot-password/send-otp`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ phone: value }),
-          }
-        );
+      // 🔥 Firebase OTP send
+      window.recaptchaVerifier = new RecaptchaVerifier(
+        "recaptcha-container",
+        { size: "invisible" },
+        auth
+      );
 
-        const data = await res.json();
+      const confirmation = await signInWithPhoneNumber(
+        auth,
+        `+91${value}`,
+        window.recaptchaVerifier
+      );
 
-        if (res.ok) {
-          alert("OTP sent successfully");
+      window.confirmationResult = confirmation;
 
-          // 👉 NEXT SCREEN (OTP VERIFY)
-          onContinue(method, value);
-        } else {
-          alert(data.detail || "Failed to send OTP");
-        }
-      } else {
-        alert("Email reset coming soon");
-      }
+      alert("OTP sent successfully");
+
+      // 👉 next screen (OTP verify screen)
+      onContinue(value);
     } catch (err) {
       console.error(err);
-      alert("Network error");
+      alert("Failed to send OTP");
     } finally {
       setLoading(false);
     }
@@ -59,102 +53,84 @@ export function ForgotPassword({ onBack, onContinue }: ForgotPasswordProps) {
 
   return (
     <div className="h-screen bg-[#FFF8F0] flex flex-col relative overflow-hidden">
-      {/* Decorative background */}
+
       <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-br from-[#FF7A30] via-[#5F2EEA] to-[#0FAD6E] rounded-b-[3rem]" />
-      
+
       <motion.div
-        className="absolute top-20 left-1/2 -translate-x-1/2 w-20 h-20 bg-white rounded-3xl flex items-center justify-center neo-shadow-sm"
-        initial={{ scale: 0, rotate: -180 }}
-        animate={{ scale: 1, rotate: 0 }}
-        transition={{ duration: 0.6, type: "spring" }}
+        className="absolute top-20 left-1/2 -translate-x-1/2 w-20 h-20 bg-white rounded-3xl flex items-center justify-center"
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
       >
         <span className="text-4xl">🔐</span>
       </motion.div>
 
-      {/* Back button */}
       <button
         onClick={onBack}
-        className="absolute top-12 left-6 w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center z-20"
+        className="absolute top-12 left-6 w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center z-20"
       >
         <ArrowLeft className="w-5 h-5 text-white" />
       </button>
 
-      {/* Content */}
       <div className="flex-1 flex flex-col pt-44 px-6 relative z-10">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white rounded-3xl p-8 neo-shadow-lg"
+          className="bg-white rounded-3xl p-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
         >
-          <h2 className="text-[#171717] mb-2">Forgot Password?</h2>
-          <p className="text-[#171717]/60 mb-6">
-            Don't worry! Enter your details and we'll send you a code to reset your password.
+          <h2 className="mb-2">Forgot Password?</h2>
+          <p className="mb-6 text-[#171717]/60">
+            Enter your phone number to reset password
           </p>
 
-          {/* Method selector */}
+          {/* Method (email future ke liye) */}
           <div className="flex gap-2 mb-6">
             <button
               onClick={() => setMethod("phone")}
-              className={`flex-1 py-3 px-4 rounded-xl border-2 flex items-center justify-center gap-2 transition-all ${
-                method === "phone"
-                  ? "border-[#FF7A30] bg-[#FF7A30]/5"
-                  : "border-[#171717]/10"
-              }`}
+              className="flex-1 py-3 rounded-xl border bg-[#FF7A30]/5"
             >
-              <Smartphone className="w-5 h-5" />
-              <span>Phone</span>
+              Phone
             </button>
             <button
-              onClick={() => setMethod("email")}
-              className={`flex-1 py-3 px-4 rounded-xl border-2 flex items-center justify-center gap-2 transition-all ${
-                method === "email"
-                  ? "border-[#FF7A30] bg-[#FF7A30]/5"
-                  : "border-[#171717]/10"
-              }`}
+              onClick={() => alert("Email coming soon")}
+              className="flex-1 py-3 rounded-xl border"
             >
-              <Mail className="w-5 h-5" />
-              <span>Email</span>
+              Email
             </button>
           </div>
 
           {/* Input */}
           <div className="mb-6">
-            <label className="block text-sm text-[#171717]/70 mb-2">
-              {method === "phone" ? "Phone Number" : "Email Address"}
-            </label>
+            <label className="block mb-2">Phone Number</label>
             <div className="relative">
-              {method === "phone" ? (
-                <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#171717]/40" />
-              ) : (
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#171717]/40" />
-              )}
+              <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" />
               <input
-                type={method === "phone" ? "tel" : "email"}
-                placeholder={method === "phone" ? "+91 98765 43210" : "your@email.com"}
+                type="tel"
+                placeholder="9876543210"
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-[#171717]/10 focus:border-[#FF7A30] outline-none transition-colors bg-[#FFF8F0]"
+                className="w-full pl-12 py-4 rounded-xl border"
               />
             </div>
           </div>
 
-          {/* Submit button */}
+          {/* Button */}
           <motion.button
             onClick={handleSubmit}
             disabled={loading}
-            className="w-full bg-gradient-to-r from-[#FF7A30] to-[#ff9d5c] text-white py-4 rounded-xl neo-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all disabled:opacity-50"
-            whileTap={{ scale: 0.98 }}
+            className="w-full bg-orange-500 text-white py-4 rounded-xl"
           >
-            {loading ? "Sending..." : "Send Code"}
+            {loading ? "Sending..." : "Send OTP"}
           </motion.button>
 
-          {/* Back to login */}
           <div className="mt-6 text-center">
             <button onClick={onBack} className="text-sm text-[#FF7A30]">
               Back to Login
             </button>
           </div>
+
+          {/* Firebase Recaptcha */}
+          <div id="recaptcha-container"></div>
+
         </motion.div>
       </div>
     </div>

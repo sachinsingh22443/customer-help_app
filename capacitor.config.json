@@ -1,0 +1,9 @@
+{
+  "appId": "com.eatunity.app",
+  "appName": "Eat Unity",
+  "webDir": "dist",
+  "server": {
+    "url": "https://customer-help-app.vercel.app",
+    "cleartext": true
+  }
+}

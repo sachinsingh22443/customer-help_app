@@ -137,6 +137,7 @@ function AppContent() {
   const [selectedSpecial, setSelectedSpecial] = useState<any>(null);
   // 🔥 ADD THIS STATE (IMPORTANT)
   const [currentOrder, setCurrentOrder] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
   const cart = JSON.parse(localStorage.getItem("cart") || "[]");
@@ -144,17 +145,40 @@ function AppContent() {
 }, []);
 
 
+
+
+
 useEffect(() => {
-  const token = localStorage.getItem("token");
+  const checkAuth = async () => {
+    const token = localStorage.getItem("token");
 
-  if (token) {
-    // optional: backend verify
-    setCurrentScreen("customerHome");
-  } else {
-    setCurrentScreen("login");
-  }
+    if (!token) {
+      setCurrentScreen("login");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(`https://chef-backend-1.onrender.com/auth/verify-token`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.ok) {
+        setCurrentScreen("customerHome");
+      } else {
+        localStorage.removeItem("token");
+        setCurrentScreen("login");
+      }
+    } catch {
+      localStorage.removeItem("token");
+      setCurrentScreen("login");
+    }
+
+    setLoading(false);
+  };
+
+  checkAuth();
 }, []);
-
 
   const handleSplashComplete = () => {
     setCurrentScreen("onboarding");

@@ -15,58 +15,60 @@ export function LogoutConfirmation({
   onBack,
 }: LogoutConfirmationProps) {
 
-  const BASE_URL = "https://chef-backend-1.onrender.com";
+  const BASE_URL = "https://chef-backend-1.onrender.com"; // ✅ FIX
 
   const roleMessages = {
     customer: {
       title: "Logout from EatUnity?",
-      message: "You'll need to log in again to track orders and access your account.",
+      message: "You'll need to log in again to access your account.",
       emoji: "👋"
     },
     chef: {
       title: "Logout from Chef Panel?",
-      message: "Make sure all orders are completed before logging out. You won't receive order notifications while logged out.",
+      message: "You won't receive orders while logged out.",
       emoji: "👨‍🍳"
     },
     admin: {
       title: "Logout from Admin Panel?",
-      message: "Logging out will stop all admin monitoring and controls.",
+      message: "Admin controls will be disabled.",
       emoji: "🛡️"
     }
   };
 
   const roleInfo = roleMessages[userRole];
 
-  // 🔥 MAIN LOGOUT LOGIC
   const handleLogout = async () => {
     try {
       const token = localStorage.getItem("token");
 
-      // 🔥 OPTIONAL: backend logout call
-      try {
-        await fetch(`${BASE_URL}/auth/logout`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-      } catch {
-        // ignore backend logout error
+      // 🔥 OPTIONAL backend logout
+      if (token) {
+        try {
+          await fetch(`${BASE_URL}/auth/logout`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+        } catch {
+          // ignore error
+        }
       }
 
-      // 🔥 CLEAR EVERYTHING
+      // 🔥 CLEAR STORAGE
       localStorage.clear();
       sessionStorage.clear();
 
-      // 🔥 CALLBACK
+      // 🔥 redirect / callback
       if (onConfirm) {
         onConfirm();
       } else {
-        window.location.href = "/"; // fallback
+        window.location.href = "/";
       }
 
     } catch (err) {
       console.error("Logout error:", err);
+      alert("Logout failed");
     }
   };
 
@@ -75,22 +77,21 @@ export function LogoutConfirmation({
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.9 }}
-        className="bg-white rounded-3xl p-8 neo-shadow-lg max-w-sm w-full"
+        className="bg-white rounded-3xl p-8 max-w-sm w-full"
       >
         <div className="w-16 h-16 bg-[#FFF8F0] rounded-2xl flex items-center justify-center mx-auto mb-4">
           <span className="text-3xl">{roleInfo.emoji}</span>
         </div>
 
-        <h2 className="text-[#171717] text-center mb-3">{roleInfo.title}</h2>
-        <p className="text-[#171717]/60 text-center mb-8">
+        <h2 className="text-center mb-3">{roleInfo.title}</h2>
+        <p className="text-center mb-8 text-gray-500">
           {roleInfo.message}
         </p>
 
         <div className="space-y-3">
           <button
             onClick={handleLogout}
-            className="w-full py-4 bg-[#FF7A30] text-white rounded-2xl neo-shadow hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all flex items-center justify-center gap-2"
+            className="w-full py-4 bg-orange-500 text-white rounded-xl flex items-center justify-center gap-2"
           >
             <LogOut className="w-5 h-5" />
             Yes, Logout
@@ -98,17 +99,15 @@ export function LogoutConfirmation({
 
           <button
             onClick={onCancel}
-            className="w-full py-4 bg-[#171717] text-white rounded-2xl neo-shadow-sm hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all flex items-center justify-center gap-2"
+            className="w-full py-4 bg-gray-800 text-white rounded-xl"
           >
-            <X className="w-5 h-5" />
             Cancel
           </button>
 
           <button
             onClick={onBack}
-            className="w-full py-4 bg-[#171717] text-white rounded-2xl neo-shadow-sm hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all flex items-center justify-center gap-2"
+            className="w-full py-4 border rounded-xl"
           >
-            <X className="w-5 h-5" />
             Back
           </button>
         </div>

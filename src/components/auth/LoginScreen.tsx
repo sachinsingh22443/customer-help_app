@@ -2,6 +2,9 @@ import { useState } from "react";
 import { motion } from "motion/react";
 import { Smartphone, Lock, Eye, EyeOff } from "lucide-react";
 
+import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+import { auth } from "@/firebase";
+
 interface LoginScreenProps {
   onLogin: () => void;
   onForgotPassword?: () => void;
@@ -18,72 +21,84 @@ export function LoginScreen({ onLogin, onForgotPassword }: LoginScreenProps) {
 
   const BASE_URL = "https://chef-backend-1.onrender.com";
 
-  // ✅ SEND OTP
+  // ============================
+  // 📲 SEND OTP (Signup)
+  // ============================
   const handleSendOTP = async () => {
-    if (!phone) {
-      alert("Enter phone number");
+    if (!phone || !password) {
+      alert("Enter phone and password");
       return;
     }
 
     try {
-      const res = await fetch(`${BASE_URL}/auth/send-otp`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ phone }),
-      });
+      window.recaptchaVerifier = new RecaptchaVerifier(
+        "recaptcha-container",
+        { size: "invisible" },
+        auth
+      );
 
-      const data = await res.json();
+      const confirmation = await signInWithPhoneNumber(
+        auth,
+        `+91${phone}`,
+        window.recaptchaVerifier
+      );
 
-      if (res.ok) {
-        alert(data.message || "OTP sent");
-        setShowOtpInput(true);
-      } else {
-        alert(data.detail || "Failed to send OTP");
-      }
+      window.confirmationResult = confirmation;
+
+      alert("OTP Sent");
+      setShowOtpInput(true);
     } catch (err) {
       console.error(err);
-      alert("Network error");
+      alert("Failed to send OTP");
     }
   };
 
-  // ✅ SIGNUP
+  // ============================
+  // ✅ SIGNUP (OTP verify + backend)
+  // ============================
   const handleSignup = async () => {
-    if (!otp || !password) {
-      alert("Enter OTP & password");
+    if (!otp) {
+      alert("Enter OTP");
       return;
     }
 
     try {
-      const res = await fetch(`${BASE_URL}/auth/verify-otp-signup`, {
+      const result = await window.confirmationResult.confirm(otp);
+      const user = result.user;
+
+      const token = await user.getIdToken();
+
+      const res = await fetch(`${BASE_URL}/auth/firebase-login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          phone,
-          otp,
-          password,
+          token,
+          password, // 🔥 added
         }),
       });
 
       const data = await res.json();
 
       if (res.ok) {
-        alert("Signup successful, please login");
-        setIsLogin(true);
-        setShowOtpInput(false);
-        setOtp("");
+        localStorage.setItem("token", data.access_token);
+        localStorage.setItem("user_id", data.user_id);
+
+        alert("Signup successful");
+        onLogin();
       } else {
         alert(data.detail || "Signup failed");
       }
     } catch (err) {
       console.error(err);
+      alert("Invalid OTP");
     }
   };
 
-  // ✅ LOGIN
+  // ============================
+  // 🔑 LOGIN (password)
+  // ============================
   const handleLogin = async () => {
     if (!phone || !password) {
       alert("Enter phone & password");
@@ -91,7 +106,7 @@ export function LoginScreen({ onLogin, onForgotPassword }: LoginScreenProps) {
     }
 
     try {
-      const res = await fetch(`${BASE_URL}/auth/loginapi`, {
+      const res = await fetch(`${BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -102,15 +117,7 @@ export function LoginScreen({ onLogin, onForgotPassword }: LoginScreenProps) {
       const data = await res.json();
 
       if (res.ok) {
-        const token = data.access_token || data.token;
-
-        if (!token) {
-          alert("Token not received");
-          return;
-        }
-
-        localStorage.setItem("token", token);
-        localStorage.setItem("user_id", data.user_id);
+        localStorage.setItem("token", data.access_token);
 
         alert("Login successful");
         onLogin();
@@ -125,7 +132,7 @@ export function LoginScreen({ onLogin, onForgotPassword }: LoginScreenProps) {
 
   return (
     <div className="h-screen bg-[#FFF8F0] flex flex-col relative overflow-hidden">
-      
+
       <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-br from-[#FF7A30] via-[#5F2EEA] to-[#0FAD6E] rounded-b-[3rem]" />
 
       <motion.div
@@ -137,12 +144,8 @@ export function LoginScreen({ onLogin, onForgotPassword }: LoginScreenProps) {
       </motion.div>
 
       <div className="flex-1 flex flex-col pt-44 px-6 relative z-10">
-        <motion.div
-          className="bg-white rounded-3xl p-8"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
-          
+        <motion.div className="bg-white rounded-3xl p-8">
+
           {/* Tabs */}
           <div className="flex gap-2 mb-8 bg-[#FFF8F0] rounded-2xl p-1">
             <button
@@ -170,75 +173,49 @@ export function LoginScreen({ onLogin, onForgotPassword }: LoginScreenProps) {
             </button>
           </div>
 
-          <h2 className="mb-2">
-            {isLogin ? "Welcome Back!" : "Join EatUnity"}
+          <h2 className="mb-4">
+            {isLogin ? "Welcome Back!" : "Create Account"}
           </h2>
 
-          <div className="space-y-4 mb-6">
+          {/* PHONE */}
+          <input
+            type="tel"
+            placeholder="Phone"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            className="w-full mb-4 px-4 py-3 border rounded-xl"
+          />
 
-            {/* PHONE */}
-            <div>
-              <label className="block mb-2">Phone Number</label>
-              <div className="relative">
-                <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" />
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+919876543210"
-                  className="w-full pl-12 py-4 rounded-xl border"
-                />
-              </div>
-            </div>
-
-            {/* PASSWORD */}
-            <div>
-              <label className="block mb-2">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-12 pr-12 py-4 rounded-xl border"
-                />
-                <button
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2"
-                >
-                  {showPassword ? <EyeOff /> : <Eye />}
-                </button>
-              </div>
-
-              {/* ✅ SAME UI STYLE (small text, no design change) */}
-              {isLogin && (
-                <div className="mt-2 text-right">
-                  <button
-                    onClick={onForgotPassword}
-                    className="text-sm text-[#171717]/60"
-                  >
-                    Forgot Password?
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* OTP */}
-            {!isLogin && showOtpInput && (
-              <div>
-                <label className="block mb-2">Enter OTP</label>
-                <input
-                  type="text"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  className="w-full px-4 py-4 rounded-xl border"
-                />
-              </div>
-            )}
+          {/* PASSWORD */}
+          <div className="relative mb-4">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-3 border rounded-xl"
+            />
+            <button
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-3"
+            >
+              {showPassword ? <EyeOff /> : <Eye />}
+            </button>
           </div>
 
+          {/* OTP */}
+          {!isLogin && showOtpInput && (
+            <input
+              type="text"
+              placeholder="Enter OTP"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              className="w-full mb-4 px-4 py-3 border rounded-xl"
+            />
+          )}
+
           {/* BUTTON */}
-          <motion.button
+          <button
             onClick={
               isLogin
                 ? handleLogin
@@ -246,14 +223,27 @@ export function LoginScreen({ onLogin, onForgotPassword }: LoginScreenProps) {
                 ? handleSignup
                 : handleSendOTP
             }
-            className="w-full bg-orange-500 text-white py-4 rounded-xl"
+            className="w-full bg-orange-500 text-white py-3 rounded-xl"
           >
             {isLogin
               ? "Login"
               : showOtpInput
               ? "Verify OTP & Signup"
               : "Send OTP"}
-          </motion.button>
+          </button>
+
+          {onForgotPassword && isLogin && (
+            <div className="mt-4 text-right">
+              <button
+                onClick={onForgotPassword}
+                className="text-sm text-gray-500"
+              >
+                Forgot Password?
+              </button>
+            </div>
+          )}
+
+          <div id="recaptcha-container"></div>
 
         </motion.div>
       </div>
