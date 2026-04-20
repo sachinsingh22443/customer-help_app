@@ -1,16 +1,11 @@
 import { useState } from "react";
 import { motion } from "motion/react";
-import { Smartphone, Lock, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { auth } from "@/firebase";
 
-interface LoginScreenProps {
-  onLogin: () => void;
-  onForgotPassword?: () => void;
-}
-
-export function LoginScreen({ onLogin, onForgotPassword }: LoginScreenProps) {
+export function LoginScreen({ onLogin, onForgotPassword }: any) {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -22,7 +17,7 @@ export function LoginScreen({ onLogin, onForgotPassword }: LoginScreenProps) {
   const BASE_URL = "https://chef-backend-1.onrender.com";
 
   // ============================
-  // 📲 SEND OTP (Signup)
+  // 📲 SEND OTP
   // ============================
   const handleSendOTP = async () => {
     if (!phone || !password) {
@@ -31,16 +26,23 @@ export function LoginScreen({ onLogin, onForgotPassword }: LoginScreenProps) {
     }
 
     try {
-      window.recaptchaVerifier = new RecaptchaVerifier(
-        "recaptcha-container",
-        { size: "invisible" },
-        auth
-      );
+      // 🔥 create only once
+      if (!window.recaptchaVerifier) {
+        window.recaptchaVerifier = new RecaptchaVerifier(
+          "recaptcha-container",
+          {
+            size: "invisible",
+          },
+          auth
+        );
+      }
+
+      const appVerifier = window.recaptchaVerifier;
 
       const confirmation = await signInWithPhoneNumber(
         auth,
         `+91${phone}`,
-        window.recaptchaVerifier
+        appVerifier
       );
 
       window.confirmationResult = confirmation;
@@ -48,13 +50,13 @@ export function LoginScreen({ onLogin, onForgotPassword }: LoginScreenProps) {
       alert("OTP Sent");
       setShowOtpInput(true);
     } catch (err) {
-      console.error(err);
+      console.error("OTP ERROR:", err);
       alert("Failed to send OTP");
     }
   };
 
   // ============================
-  // ✅ SIGNUP (OTP verify + backend)
+  // ✅ SIGNUP
   // ============================
   const handleSignup = async () => {
     if (!otp) {
@@ -75,7 +77,7 @@ export function LoginScreen({ onLogin, onForgotPassword }: LoginScreenProps) {
         },
         body: JSON.stringify({
           token,
-          password, // 🔥 added
+          password,
         }),
       });
 
@@ -97,7 +99,7 @@ export function LoginScreen({ onLogin, onForgotPassword }: LoginScreenProps) {
   };
 
   // ============================
-  // 🔑 LOGIN (password)
+  // 🔑 LOGIN
   // ============================
   const handleLogin = async () => {
     if (!phone || !password) {
@@ -118,7 +120,6 @@ export function LoginScreen({ onLogin, onForgotPassword }: LoginScreenProps) {
 
       if (res.ok) {
         localStorage.setItem("token", data.access_token);
-
         alert("Login successful");
         onLogin();
       } else {
@@ -135,26 +136,18 @@ export function LoginScreen({ onLogin, onForgotPassword }: LoginScreenProps) {
 
       <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-br from-[#FF7A30] via-[#5F2EEA] to-[#0FAD6E] rounded-b-[3rem]" />
 
-      <motion.div
-        className="absolute top-20 left-1/2 -translate-x-1/2 w-20 h-20 bg-white rounded-3xl flex items-center justify-center"
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-      >
-        <span className="text-4xl">🍽️</span>
-      </motion.div>
-
-      <div className="flex-1 flex flex-col pt-44 px-6 relative z-10">
-        <motion.div className="bg-white rounded-3xl p-8">
+      <motion.div className="flex-1 flex flex-col pt-44 px-6">
+        <div className="bg-white rounded-3xl p-8">
 
           {/* Tabs */}
-          <div className="flex gap-2 mb-8 bg-[#FFF8F0] rounded-2xl p-1">
+          <div className="flex gap-2 mb-6 bg-[#FFF8F0] rounded-xl p-1">
             <button
               onClick={() => {
                 setIsLogin(true);
                 setShowOtpInput(false);
               }}
-              className={`flex-1 py-3 rounded-xl ${
-                isLogin ? "bg-white text-[#FF7A30]" : "text-[#171717]/50"
+              className={`flex-1 py-2 ${
+                isLogin ? "bg-white text-orange-500" : "text-gray-500"
               }`}
             >
               Login
@@ -165,17 +158,13 @@ export function LoginScreen({ onLogin, onForgotPassword }: LoginScreenProps) {
                 setIsLogin(false);
                 setShowOtpInput(false);
               }}
-              className={`flex-1 py-3 rounded-xl ${
-                !isLogin ? "bg-white text-[#FF7A30]" : "text-[#171717]/50"
+              className={`flex-1 py-2 ${
+                !isLogin ? "bg-white text-orange-500" : "text-gray-500"
               }`}
             >
               Sign Up
             </button>
           </div>
-
-          <h2 className="mb-4">
-            {isLogin ? "Welcome Back!" : "Create Account"}
-          </h2>
 
           {/* PHONE */}
           <input
@@ -232,21 +221,20 @@ export function LoginScreen({ onLogin, onForgotPassword }: LoginScreenProps) {
               : "Send OTP"}
           </button>
 
+          {/* Forgot */}
           {onForgotPassword && isLogin && (
-            <div className="mt-4 text-right">
-              <button
-                onClick={onForgotPassword}
-                className="text-sm text-gray-500"
-              >
+            <div className="mt-3 text-right">
+              <button onClick={onForgotPassword} className="text-sm text-gray-500">
                 Forgot Password?
               </button>
             </div>
           )}
 
-          <div id="recaptcha-container"></div>
+          {/* 🔥 Invisible Recaptcha */}
+          <div id="recaptcha-container" style={{ display: "none" }} />
 
-        </motion.div>
-      </div>
+        </div>
+      </motion.div>
     </div>
   );
 }
