@@ -9,7 +9,7 @@ interface DishDetailProps {
   onNavigateToChef: (chefId: string) => void;
 }
 
-const BASE_URL = "https://chef-backend-1.onrender.com";
+const BASE_URL = "https://chef-backend-qh12.onrender.com";
 
 export function DishDetail({
   dish,

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "motion/react";
-import { ArrowLeft, AlertTriangle, Trash2 } from "lucide-react";
+import { ArrowLeft, AlertTriangle } from "lucide-react";
 
 interface DeleteAccountProps {
   onBack: () => void;
@@ -13,7 +13,7 @@ export function DeleteAccount({ onBack, onDeleted }: DeleteAccountProps) {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const BASE_URL = "https://chef-backend-1.onrender.com"; // ✅ FIX
+  const BASE_URL = "https://chef-backend-qh12.onrender.com";
 
   const reasons = [
     "Not using the app anymore",
@@ -39,25 +39,23 @@ export function DeleteAccount({ onBack, onDeleted }: DeleteAccountProps) {
         return;
       }
 
+      // ✅ FIX: no body in DELETE
       const res = await fetch(`${BASE_URL}/auth/delete-account`, {
         method: "DELETE",
         headers: {
-          "Content-Type": "application/json", // ✅ FIX
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ reason }),
       });
 
-      const data = await res.json();
-
       if (res.ok) {
+        // ✅ safe logout
         localStorage.clear();
         sessionStorage.clear();
 
         alert("Account deleted successfully");
-
         onDeleted();
       } else {
+        const data = await res.json();
         alert(data.detail || "Failed to delete account");
       }
     } catch (err) {
@@ -86,11 +84,7 @@ export function DeleteAccount({ onBack, onDeleted }: DeleteAccountProps) {
 
       <div className="flex-1 px-6 pt-6">
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="space-y-6"
-        >
+        <motion.div className="space-y-6">
 
           {/* Warning */}
           <div className="bg-red-100 border border-red-400 rounded-xl p-4 flex gap-3">
@@ -137,7 +131,9 @@ export function DeleteAccount({ onBack, onDeleted }: DeleteAccountProps) {
           <button
             onClick={handleDelete}
             disabled={!canDelete || loading}
-            className="w-full bg-red-500 text-white py-4 rounded-xl"
+            className={`w-full py-4 rounded-xl text-white ${
+              canDelete ? "bg-red-500" : "bg-gray-400"
+            }`}
           >
             {loading ? "Deleting..." : "Delete Account"}
           </button>

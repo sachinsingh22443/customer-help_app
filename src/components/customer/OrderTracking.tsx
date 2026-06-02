@@ -29,7 +29,7 @@ export function OrderTracking({ orderId, onBack }: OrderTrackingProps) {
         const token = localStorage.getItem("token");
 
         const res = await fetch(
-          `https://chef-backend-1.onrender.com/orders/${orderId}`,
+          `https://chef-backend-qh12.onrender.com/orders/${orderId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

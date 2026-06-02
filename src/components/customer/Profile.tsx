@@ -13,7 +13,7 @@ import {
   Trash2,
 } from "lucide-react";
 
-const BASE_URL = "https://chef-backend-1.onrender.com";
+const BASE_URL = "https://chef-backend-qh12.onrender.com";
 
 interface ProfileData {
   id: string;

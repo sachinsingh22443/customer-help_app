@@ -32,7 +32,7 @@ export function ChefDetails({ chefId, onBack, onNavigateToDish }: ChefDetailsPro
         console.log("🔥 Fetching chef:", finalChefId);
 
         const res = await axios.get(
-          `https://chef-backend-1.onrender.com/menu/chef/${finalChefId}`,
+          `https://chef-backend-qh12.onrender.com/menu/chef/${finalChefId}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,

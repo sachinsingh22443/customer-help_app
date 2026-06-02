@@ -5,17 +5,18 @@ import { useState } from "react";
 interface ResetPasswordProps {
   onBack: () => void;
   phone: string;
+  otp: string; // 🔥 NEW (OTP pass karo previous screen se)
   onResetSuccess: () => void;
 }
 
-export function ResetPassword({ onBack, phone, onResetSuccess }: ResetPasswordProps) {
+export function ResetPassword({ onBack, phone, otp, onResetSuccess }: ResetPasswordProps) {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const BASE_URL = "https://chef-backend-1.onrender.com"; // ✅ FIX
+  const BASE_URL = "https://chef-backend-qh12.onrender.com";
 
   const handleSubmit = async () => {
     if (!newPassword || newPassword.length < 6) {
@@ -31,13 +32,14 @@ export function ResetPassword({ onBack, phone, onResetSuccess }: ResetPasswordPr
     try {
       setLoading(true);
 
-      const res = await fetch(`${BASE_URL}/auth/reset-password`, { // ✅ FIX
+      const res = await fetch(`${BASE_URL}/auth/reset-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          phone: phone,
+          phone,
+          otp, // 🔥 IMPORTANT
           new_password: newPassword,
         }),
       });
@@ -59,7 +61,6 @@ export function ResetPassword({ onBack, phone, onResetSuccess }: ResetPasswordPr
   };
 
   const passwordsMatch = confirmPassword && newPassword === confirmPassword;
-  const passwordsDontMatch = confirmPassword && newPassword !== confirmPassword;
 
   return (
     <div className="h-screen bg-[#FFF8F0] flex flex-col relative overflow-hidden">
@@ -82,11 +83,8 @@ export function ResetPassword({ onBack, phone, onResetSuccess }: ResetPasswordPr
       </button>
 
       <div className="flex-1 flex flex-col pt-44 px-6 relative z-10">
-        <motion.div
-          className="bg-white rounded-3xl p-8"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
+        <motion.div className="bg-white rounded-3xl p-8">
+
           <h2 className="mb-2">Reset Password</h2>
           <p className="mb-6 text-[#171717]/60">
             Create a new password for your account
@@ -135,7 +133,7 @@ export function ResetPassword({ onBack, phone, onResetSuccess }: ResetPasswordPr
           <motion.button
             onClick={handleSubmit}
             disabled={!passwordsMatch || loading}
-            className="w-full bg-orange-500 text-white py-4 rounded-xl"
+            className="w-full bg-orange-500 text-white py-4 rounded-xl disabled:opacity-50"
           >
             {loading ? "Updating..." : "Reset Password"}
           </motion.button>

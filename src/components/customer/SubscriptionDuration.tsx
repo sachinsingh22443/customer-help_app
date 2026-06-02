@@ -93,7 +93,7 @@ export function SubscriptionDuration({ selectedPlan, onBack }: Props) {
       const finalPrice = calculatePrice(duration.days, duration.discount);
 
       // 🔥 CREATE ORDER (SEND EXACT AMOUNT)
-      const orderRes = await fetch("https://chef-backend-1.onrender.com/orders/", {
+      const orderRes = await fetch("https://chef-backend-qh12.onrender.com/orders/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -117,7 +117,7 @@ export function SubscriptionDuration({ selectedPlan, onBack }: Props) {
 
       // 🔥 CREATE PAYMENT
       const paymentRes = await fetch(
-        "https://chef-backend-1.onrender.com/orders/create-payment",
+        "https://chef-backend-qh12.onrender.com/orders/create-payment",
         {
           method: "POST",
           headers: {
@@ -142,7 +142,7 @@ export function SubscriptionDuration({ selectedPlan, onBack }: Props) {
 
         handler: async function (response: any) {
 
-          await fetch("https://chef-backend-1.onrender.com/orders/verify-payment", {
+          await fetch("https://chef-backend-qh12.onrender.com/orders/verify-payment", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -157,7 +157,7 @@ export function SubscriptionDuration({ selectedPlan, onBack }: Props) {
           });
 
           // 🔥 CREATE SUBSCRIPTION
-          await fetch("https://chef-backend-1.onrender.com/subscriptions/", {
+          await fetch("https://chef-backend-qh12.onrender.com/subscriptions/", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

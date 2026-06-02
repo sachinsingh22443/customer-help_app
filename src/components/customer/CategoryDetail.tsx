@@ -67,7 +67,7 @@ export function CategoryDetail({ category, onBack, onAddToCart }: CategoryDetail
       }
 
       const res = await fetch(
-        `https://chef-backend-1.onrender.com/menu/nearby-chefs?lat=${lat}&lng=${lng}&category=${category}`
+        `https://chef-backend-qh12.onrender.com/menu/nearby-chefs?lat=${lat}&lng=${lng}&category=${category}`
       );
 
       if (!res.ok) throw new Error("API failed");

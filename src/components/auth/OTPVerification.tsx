@@ -4,17 +4,20 @@ import { useState, useRef, useEffect } from "react";
 
 interface OTPVerificationProps {
   onBack: () => void;
-  onSuccess: (phone: string) => void; // 🔥 next step (reset password)
-  value: string; // phone number
+  onSuccess: (phone: string) => void;
+  value: string; // phone
 }
 
 export function OTPVerification({ onBack, onSuccess, value }: OTPVerificationProps) {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [timer, setTimer] = useState(60);
+  const [loading, setLoading] = useState(false);
+
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  const BASE_URL = "https://chef-backend-1.onrender.com";
+  const BASE_URL = "https://chef-backend-qh12.onrender.com";
 
+  // ⏱ Timer
   useEffect(() => {
     const interval = setInterval(() => {
       setTimer((prev) => (prev > 0 ? prev - 1 : 0));
@@ -22,6 +25,7 @@ export function OTPVerification({ onBack, onSuccess, value }: OTPVerificationPro
     return () => clearInterval(interval);
   }, []);
 
+  // 🔢 OTP input
   const handleChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return;
 
@@ -34,6 +38,7 @@ export function OTPVerification({ onBack, onSuccess, value }: OTPVerificationPro
     }
   };
 
+  // ================= VERIFY OTP =================
   const handleVerify = async () => {
     const finalOtp = otp.join("");
 
@@ -43,40 +48,51 @@ export function OTPVerification({ onBack, onSuccess, value }: OTPVerificationPro
     }
 
     try {
-      // 🔥 Firebase verify
-      const result = await (window as any).confirmationResult.confirm(finalOtp);
-      const user = result.user;
+      setLoading(true);
 
-      const token = await user.getIdToken();
-
-      // 🔥 backend verify (forgot password)
-      const res = await fetch(`${BASE_URL}/auth/forgot-password/verify`, {
+      const res = await fetch(`${BASE_URL}/auth/reset-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ token }),
+        body: JSON.stringify({
+          phone: value,
+          otp: finalOtp,
+          new_password: "temp1234" // ⚠️ temp (next screen me change karna hai)
+        }),
       });
 
       const data = await res.json();
 
       if (res.ok) {
         alert("OTP verified");
-        onSuccess(value); // 👉 go to reset password
+        onSuccess(value);
       } else {
         alert(data.detail || "Verification failed");
       }
     } catch (err) {
       console.error(err);
-      alert("Invalid OTP");
+      alert("Server error");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleResend = () => {
-    setTimer(60);
-    setOtp(["", "", "", "", "", ""]);
-    inputRefs.current[0]?.focus();
-    alert("Resend OTP from previous screen");
+  // ================= RESEND OTP =================
+  const handleResend = async () => {
+    try {
+      setTimer(60);
+      setOtp(["", "", "", "", "", ""]);
+      inputRefs.current[0]?.focus();
+
+      await fetch(`${BASE_URL}/auth/forgot-password?phone=${value}`, {
+        method: "POST",
+      });
+
+      alert("OTP resent");
+    } catch {
+      alert("Failed to resend OTP");
+    }
   };
 
   return (
@@ -100,11 +116,8 @@ export function OTPVerification({ onBack, onSuccess, value }: OTPVerificationPro
       </button>
 
       <div className="flex-1 flex flex-col pt-44 px-6 relative z-10">
-        <motion.div
-          className="bg-white rounded-3xl p-8"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
+        <motion.div className="bg-white rounded-3xl p-8">
+
           <h2 className="mb-2">Verification Code</h2>
           <p className="mb-8 text-[#171717]/60">
             Code sent to <span className="text-[#FF7A30]">{value}</span>
@@ -137,9 +150,10 @@ export function OTPVerification({ onBack, onSuccess, value }: OTPVerificationPro
           {/* Verify */}
           <motion.button
             onClick={handleVerify}
-            className="w-full bg-orange-500 text-white py-4 rounded-xl"
+            disabled={loading}
+            className="w-full bg-orange-500 text-white py-4 rounded-xl disabled:opacity-50"
           >
-            Verify OTP
+            {loading ? "Verifying..." : "Verify OTP"}
           </motion.button>
 
         </motion.div>

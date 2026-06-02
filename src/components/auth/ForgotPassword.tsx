@@ -1,51 +1,48 @@
 import { motion } from "motion/react";
-import { Mail, Smartphone, ArrowLeft } from "lucide-react";
+import { Smartphone, ArrowLeft } from "lucide-react";
 import { useState } from "react";
-
-import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-import { auth } from "@/firebase";
 
 interface ForgotPasswordProps {
   onBack: () => void;
-  onContinue: (phone: string) => void; // 🔥 simplified
+  onContinue: (phone: string) => void;
 }
 
 export function ForgotPassword({ onBack, onContinue }: ForgotPasswordProps) {
-  const [method, setMethod] = useState<"phone" | "email">("phone");
-  const [value, setValue] = useState("");
+  const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const BASE_URL = "https://chef-backend-qh12.onrender.com";
+
   const handleSubmit = async () => {
-    if (!value) {
+    if (!phone) {
       alert("Enter phone number");
+      return;
+    }
+
+    if (phone.length !== 10) {
+      alert("Enter valid 10 digit number");
       return;
     }
 
     try {
       setLoading(true);
 
-      // 🔥 Firebase OTP send
-      window.recaptchaVerifier = new RecaptchaVerifier(
-        "recaptcha-container",
-        { size: "invisible" },
-        auth
-      );
+      // 🔥 MSG91 BACKEND CALL
+      const res = await fetch(`${BASE_URL}/auth/forgot-password?phone=${phone}`, {
+        method: "POST",
+      });
 
-      const confirmation = await signInWithPhoneNumber(
-        auth,
-        `+91${value}`,
-        window.recaptchaVerifier
-      );
+      const data = await res.json();
 
-      window.confirmationResult = confirmation;
-
-      alert("OTP sent successfully");
-
-      // 👉 next screen (OTP verify screen)
-      onContinue(value);
+      if (res.ok) {
+        alert("OTP sent successfully");
+        onContinue(phone);
+      } else {
+        alert(data.detail || "Failed to send OTP");
+      }
     } catch (err) {
       console.error(err);
-      alert("Failed to send OTP");
+      alert("Server error");
     } finally {
       setLoading(false);
     }
@@ -72,33 +69,14 @@ export function ForgotPassword({ onBack, onContinue }: ForgotPasswordProps) {
       </button>
 
       <div className="flex-1 flex flex-col pt-44 px-6 relative z-10">
-        <motion.div
-          className="bg-white rounded-3xl p-8"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
+        <motion.div className="bg-white rounded-3xl p-8">
+
           <h2 className="mb-2">Forgot Password?</h2>
           <p className="mb-6 text-[#171717]/60">
             Enter your phone number to reset password
           </p>
 
-          {/* Method (email future ke liye) */}
-          <div className="flex gap-2 mb-6">
-            <button
-              onClick={() => setMethod("phone")}
-              className="flex-1 py-3 rounded-xl border bg-[#FF7A30]/5"
-            >
-              Phone
-            </button>
-            <button
-              onClick={() => alert("Email coming soon")}
-              className="flex-1 py-3 rounded-xl border"
-            >
-              Email
-            </button>
-          </div>
-
-          {/* Input */}
+          {/* PHONE */}
           <div className="mb-6">
             <label className="block mb-2">Phone Number</label>
             <div className="relative">
@@ -106,18 +84,18 @@ export function ForgotPassword({ onBack, onContinue }: ForgotPasswordProps) {
               <input
                 type="tel"
                 placeholder="9876543210"
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
                 className="w-full pl-12 py-4 rounded-xl border"
               />
             </div>
           </div>
 
-          {/* Button */}
+          {/* BUTTON */}
           <motion.button
             onClick={handleSubmit}
             disabled={loading}
-            className="w-full bg-orange-500 text-white py-4 rounded-xl"
+            className="w-full bg-orange-500 text-white py-4 rounded-xl disabled:opacity-50"
           >
             {loading ? "Sending..." : "Send OTP"}
           </motion.button>
@@ -127,9 +105,6 @@ export function ForgotPassword({ onBack, onContinue }: ForgotPasswordProps) {
               Back to Login
             </button>
           </div>
-
-          {/* Firebase Recaptcha */}
-          <div id="recaptcha-container"></div>
 
         </motion.div>
       </div>

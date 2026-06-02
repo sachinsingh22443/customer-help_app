@@ -11,7 +11,7 @@ import {
   Star,
 } from "lucide-react";
 
-const BASE_URL = "https://chef-backend-1.onrender.com";
+const BASE_URL = "https://chef-backend-qh12.onrender.com";
 
 interface MyAddressesProps {
   onBack: () => void;

@@ -6,7 +6,7 @@ interface NotificationsProps {
   onBack: () => void;
 }
 
-const BASE_URL = "https://chef-backend-1.onrender.com";
+const BASE_URL = "https://chef-backend-qh12.onrender.com";
 
 export function Notifications({ onBack }: NotificationsProps) {
   const [notifications, setNotifications] = useState<any[]>([]);

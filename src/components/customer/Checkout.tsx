@@ -37,7 +37,7 @@ export function Checkout({
     try {
       const token = localStorage.getItem("token");
 
-      const res = await fetch("https://chef-backend-1.onrender.com/address", {
+      const res = await fetch("https://chef-backend-qh12.onrender.com/address", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -74,7 +74,7 @@ export function Checkout({
       const addr = addresses.find(a => a.id === selectedAddress);
       if (!addr) return alert("Select address");
 
-      const res = await fetch("https://chef-backend-1.onrender.com/orders", {
+      const res = await fetch("https://chef-backend-qh12.onrender.com/orders", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -113,7 +113,7 @@ export function Checkout({
     try {
       const token = localStorage.getItem("token");
 
-      const res = await fetch("https://chef-backend-1.onrender.com/orders/create-payment", {
+      const res = await fetch("https://chef-backend-qh12.onrender.com/orders/create-payment", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -141,7 +141,7 @@ export function Checkout({
             console.log("SUCCESS:", response);
 
             const verify = await fetch(
-              "https://chef-backend-1.onrender.com/orders/verify-payment",
+              "https://chef-backend-qh12.onrender.com/orders/verify-payment",
               {
                 method: "POST",
                 headers: {

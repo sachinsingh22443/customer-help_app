@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "motion/react";
-import { ArrowLeft, Lock, Eye, EyeOff, Check } from "lucide-react";
-import { auth } from "@/firebase";
+import { ArrowLeft, Eye, EyeOff, Check } from "lucide-react";
+
 interface ChangePasswordProps {
   onBack: () => void;
   onPasswordChanged: () => void;
@@ -11,12 +11,14 @@ export function ChangePassword({ onBack, onPasswordChanged }: ChangePasswordProp
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
   const [loading, setLoading] = useState(false);
 
-  const BASE_URL = "https://chef-backend-1.onrender.com"; // ✅ FIX
+  const BASE_URL = "https://chef-backend-qh12.onrender.com";
 
   const passwordRequirements = [
     { label: "At least 8 characters", met: newPassword.length >= 8 },
@@ -57,7 +59,7 @@ export function ChangePassword({ onBack, onPasswordChanged }: ChangePasswordProp
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // ✅ important
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           current_password: currentPassword,
@@ -70,7 +72,6 @@ export function ChangePassword({ onBack, onPasswordChanged }: ChangePasswordProp
       if (res.ok) {
         alert("Password changed successfully");
 
-        // 🔥 logout
         localStorage.removeItem("token");
         localStorage.removeItem("user_id");
 
@@ -89,8 +90,9 @@ export function ChangePassword({ onBack, onPasswordChanged }: ChangePasswordProp
   return (
     <div className="h-screen bg-[#FFF8F0] flex flex-col overflow-y-auto pb-20">
 
+      {/* HEADER */}
       <div className="sticky top-0 z-10 bg-gradient-to-br from-[#FF7A30] via-[#5F2EEA] to-[#0FAD6E] px-6 py-6 rounded-b-[2rem]">
-        <div className="flex items-center gap-4 mb-4">
+        <div className="flex items-center gap-4">
           <button
             onClick={onBack}
             className="w-10 h-10 bg-white rounded-xl flex items-center justify-center"
@@ -102,44 +104,76 @@ export function ChangePassword({ onBack, onPasswordChanged }: ChangePasswordProp
       </div>
 
       <div className="flex-1 px-6 pt-6">
-        <motion.form
-          onSubmit={handleSubmit}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="space-y-6"
-        >
+        <motion.form onSubmit={handleSubmit} className="space-y-6">
 
-          {/* Current Password */}
-          <input
-            type={showCurrentPassword ? "text" : "password"}
-            placeholder="Current Password"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-            className="w-full py-4 px-5 rounded-xl border"
-          />
+          {/* CURRENT */}
+          <div className="relative">
+            <input
+              type={showCurrent ? "text" : "password"}
+              placeholder="Current Password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              className="w-full py-4 px-5 pr-12 rounded-xl border"
+            />
+            <button
+              type="button"
+              onClick={() => setShowCurrent(!showCurrent)}
+              className="absolute right-4 top-1/2 -translate-y-1/2"
+            >
+              {showCurrent ? <EyeOff /> : <Eye />}
+            </button>
+          </div>
 
-          {/* New Password */}
-          <input
-            type={showNewPassword ? "text" : "password"}
-            placeholder="New Password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            className="w-full py-4 px-5 rounded-xl border"
-          />
+          {/* NEW */}
+          <div className="relative">
+            <input
+              type={showNew ? "text" : "password"}
+              placeholder="New Password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="w-full py-4 px-5 pr-12 rounded-xl border"
+            />
+            <button
+              type="button"
+              onClick={() => setShowNew(!showNew)}
+              className="absolute right-4 top-1/2 -translate-y-1/2"
+            >
+              {showNew ? <EyeOff /> : <Eye />}
+            </button>
+          </div>
 
-          {/* Confirm Password */}
-          <input
-            type={showConfirmPassword ? "text" : "password"}
-            placeholder="Confirm Password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full py-4 px-5 rounded-xl border"
-          />
+          {/* REQUIREMENTS */}
+          <div className="text-sm space-y-1">
+            {passwordRequirements.map((req, i) => (
+              <div key={i} className={`flex items-center gap-2 ${req.met ? "text-green-600" : "text-gray-400"}`}>
+                <Check className="w-4 h-4" />
+                {req.label}
+              </div>
+            ))}
+          </div>
+
+          {/* CONFIRM */}
+          <div className="relative">
+            <input
+              type={showConfirm ? "text" : "password"}
+              placeholder="Confirm Password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full py-4 px-5 pr-12 rounded-xl border"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirm(!showConfirm)}
+              className="absolute right-4 top-1/2 -translate-y-1/2"
+            >
+              {showConfirm ? <EyeOff /> : <Eye />}
+            </button>
+          </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 bg-orange-500 text-white rounded-xl"
+            className="w-full py-4 bg-orange-500 text-white rounded-xl disabled:opacity-50"
           >
             {loading ? "Updating..." : "Update Password"}
           </button>

@@ -2,10 +2,12 @@ import { useState } from "react";
 import { motion } from "motion/react";
 import { Eye, EyeOff } from "lucide-react";
 
-import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-import { auth } from "@/firebase";
+interface LoginScreenProps {
+  onLogin: () => void;
+  onForgotPassword?: () => void;
+}
 
-export function LoginScreen({ onLogin, onForgotPassword }: any) {
+export function LoginScreen({ onLogin, onForgotPassword }: LoginScreenProps) {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -14,50 +16,46 @@ export function LoginScreen({ onLogin, onForgotPassword }: any) {
   const [otp, setOtp] = useState("");
   const [showOtpInput, setShowOtpInput] = useState(false);
 
-  const BASE_URL = "https://chef-backend-1.onrender.com";
+  const [loading, setLoading] = useState(false);
 
-  // ============================
-  // 📲 SEND OTP
-  // ============================
+  const BASE_URL = "https://chef-backend-qh12.onrender.com";
+
+  // ================= SEND OTP =================
   const handleSendOTP = async () => {
     if (!phone || !password) {
-      alert("Enter phone and password");
+      alert("Enter phone & password");
       return;
     }
 
     try {
-      // 🔥 create only once
-      if (!window.recaptchaVerifier) {
-        window.recaptchaVerifier = new RecaptchaVerifier(
-          "recaptcha-container",
-          {
-            size: "invisible",
-          },
-          auth
-        );
+      setLoading(true);
+
+      // 🔥 FIX: JSON body send karo (query nahi)
+      const res = await fetch(`${BASE_URL}/auth/send-otp`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ phone }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert("OTP Sent");
+        setShowOtpInput(true);
+      } else {
+        alert(data.detail || "Failed to send OTP");
       }
-
-      const appVerifier = window.recaptchaVerifier;
-
-      const confirmation = await signInWithPhoneNumber(
-        auth,
-        `+91${phone}`,
-        appVerifier
-      );
-
-      window.confirmationResult = confirmation;
-
-      alert("OTP Sent");
-      setShowOtpInput(true);
-    } catch (err) {
-      console.error("OTP ERROR:", err);
-      alert("Failed to send OTP");
+    } catch (err: any) {
+      console.error(err);
+      alert("Server error");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // ============================
-  // ✅ SIGNUP
-  // ============================
+  // ================= SIGNUP =================
   const handleSignup = async () => {
     if (!otp) {
       alert("Enter OTP");
@@ -65,19 +63,17 @@ export function LoginScreen({ onLogin, onForgotPassword }: any) {
     }
 
     try {
-      const result = await window.confirmationResult.confirm(otp);
-      const user = result.user;
+      setLoading(true);
 
-      const token = await user.getIdToken();
-
-      const res = await fetch(`${BASE_URL}/auth/firebase-login`, {
+      const res = await fetch(`${BASE_URL}/auth/signupapi`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          token,
+          phone,
           password,
+          otp,
         }),
       });
 
@@ -92,15 +88,15 @@ export function LoginScreen({ onLogin, onForgotPassword }: any) {
       } else {
         alert(data.detail || "Signup failed");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("Invalid OTP");
+      alert("Server error");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // ============================
-  // 🔑 LOGIN
-  // ============================
+  // ================= LOGIN =================
   const handleLogin = async () => {
     if (!phone || !password) {
       alert("Enter phone & password");
@@ -108,7 +104,9 @@ export function LoginScreen({ onLogin, onForgotPassword }: any) {
     }
 
     try {
-      const res = await fetch(`${BASE_URL}/auth/login`, {
+      setLoading(true);
+
+      const res = await fetch(`${BASE_URL}/auth/loginapi`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -120,34 +118,45 @@ export function LoginScreen({ onLogin, onForgotPassword }: any) {
 
       if (res.ok) {
         localStorage.setItem("token", data.access_token);
+        localStorage.setItem("user_id", data.user_id);
+
         alert("Login successful");
         onLogin();
       } else {
         alert(data.detail || "Login failed");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
       alert("Server error");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="h-screen bg-[#FFF8F0] flex flex-col relative overflow-hidden">
-
       <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-br from-[#FF7A30] via-[#5F2EEA] to-[#0FAD6E] rounded-b-[3rem]" />
 
-      <motion.div className="flex-1 flex flex-col pt-44 px-6">
-        <div className="bg-white rounded-3xl p-8">
+      <motion.div
+        className="absolute top-20 left-1/2 -translate-x-1/2 w-20 h-20 bg-white rounded-3xl flex items-center justify-center"
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+      >
+        <span className="text-4xl">🍽️</span>
+      </motion.div>
 
+      <div className="flex-1 flex flex-col pt-44 px-6 relative z-10">
+        <motion.div className="bg-white rounded-3xl p-8">
+          
           {/* Tabs */}
-          <div className="flex gap-2 mb-6 bg-[#FFF8F0] rounded-xl p-1">
+          <div className="flex gap-2 mb-8 bg-[#FFF8F0] rounded-2xl p-1">
             <button
               onClick={() => {
                 setIsLogin(true);
                 setShowOtpInput(false);
               }}
-              className={`flex-1 py-2 ${
-                isLogin ? "bg-white text-orange-500" : "text-gray-500"
+              className={`flex-1 py-3 rounded-xl ${
+                isLogin ? "bg-white text-[#FF7A30]" : "text-[#171717]/50"
               }`}
             >
               Login
@@ -158,13 +167,17 @@ export function LoginScreen({ onLogin, onForgotPassword }: any) {
                 setIsLogin(false);
                 setShowOtpInput(false);
               }}
-              className={`flex-1 py-2 ${
-                !isLogin ? "bg-white text-orange-500" : "text-gray-500"
+              className={`flex-1 py-3 rounded-xl ${
+                !isLogin ? "bg-white text-[#FF7A30]" : "text-[#171717]/50"
               }`}
             >
               Sign Up
             </button>
           </div>
+
+          <h2 className="mb-4">
+            {isLogin ? "Welcome Back!" : "Create Account"}
+          </h2>
 
           {/* PHONE */}
           <input
@@ -185,6 +198,7 @@ export function LoginScreen({ onLogin, onForgotPassword }: any) {
               className="w-full px-4 py-3 border rounded-xl"
             />
             <button
+              type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-3"
             >
@@ -205,6 +219,7 @@ export function LoginScreen({ onLogin, onForgotPassword }: any) {
 
           {/* BUTTON */}
           <button
+            disabled={loading}
             onClick={
               isLogin
                 ? handleLogin
@@ -212,29 +227,29 @@ export function LoginScreen({ onLogin, onForgotPassword }: any) {
                 ? handleSignup
                 : handleSendOTP
             }
-            className="w-full bg-orange-500 text-white py-3 rounded-xl"
+            className="w-full bg-orange-500 text-white py-3 rounded-xl disabled:opacity-50"
           >
-            {isLogin
+            {loading
+              ? "Please wait..."
+              : isLogin
               ? "Login"
               : showOtpInput
               ? "Verify OTP & Signup"
               : "Send OTP"}
           </button>
 
-          {/* Forgot */}
           {onForgotPassword && isLogin && (
-            <div className="mt-3 text-right">
-              <button onClick={onForgotPassword} className="text-sm text-gray-500">
+            <div className="mt-4 text-right">
+              <button
+                onClick={onForgotPassword}
+                className="text-sm text-gray-500"
+              >
                 Forgot Password?
               </button>
             </div>
           )}
-
-          {/* 🔥 Invisible Recaptcha */}
-          <div id="recaptcha-container" style={{ display: "none" }} />
-
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   );
 }

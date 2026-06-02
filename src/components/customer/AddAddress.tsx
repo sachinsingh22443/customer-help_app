@@ -3,7 +3,7 @@ import { motion } from "motion/react";
 import { ChevronLeft, Save, MapPin, Home, Briefcase, Navigation } from "lucide-react";
 import Location from "./Location";
 
-const BASE_URL = "https://chef-backend-1.onrender.com";
+const BASE_URL = "https://chef-backend-qh12.onrender.com";
 
 interface AddAddressProps {
   onBack: () => void;

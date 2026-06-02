@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 
-const BASE_URL = "https://chef-backend-1.onrender.com";
+const BASE_URL = "https://chef-backend-qh12.onrender.com";
 
 interface CartProps {
   onBack: () => void;

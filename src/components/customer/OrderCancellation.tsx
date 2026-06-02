@@ -41,7 +41,7 @@ export function OrderCancellation({
 
       const token = localStorage.getItem("token");
 
-      await fetch(`https://chef-backend-1.onrender.com/orders/${order.id}/cancel`, {
+      await fetch(`https://chef-backend-qh12.onrender.com/orders/${order.id}/cancel`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

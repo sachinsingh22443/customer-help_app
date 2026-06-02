@@ -1,5 +1,6 @@
 import { motion } from "motion/react";
-import { LogOut, X } from "lucide-react";
+import { LogOut } from "lucide-react";
+import { useState } from "react";
 
 interface LogoutConfirmationProps {
   userRole?: "customer" | "chef" | "admin";
@@ -15,7 +16,7 @@ export function LogoutConfirmation({
   onBack,
 }: LogoutConfirmationProps) {
 
-  const BASE_URL = "https://chef-backend-1.onrender.com"; // ✅ FIX
+  const [loading, setLoading] = useState(false);
 
   const roleMessages = {
     customer: {
@@ -39,27 +40,15 @@ export function LogoutConfirmation({
 
   const handleLogout = async () => {
     try {
-      const token = localStorage.getItem("token");
+      setLoading(true);
 
-      // 🔥 OPTIONAL backend logout
-      if (token) {
-        try {
-          await fetch(`${BASE_URL}/auth/logout`, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-        } catch {
-          // ignore error
-        }
-      }
+      // ✅ SAFE CLEAR (only auth data)
+      localStorage.removeItem("token");
+      localStorage.removeItem("user_id");
 
-      // 🔥 CLEAR STORAGE
-      localStorage.clear();
       sessionStorage.clear();
 
-      // 🔥 redirect / callback
+      // ✅ redirect / callback
       if (onConfirm) {
         onConfirm();
       } else {
@@ -69,6 +58,8 @@ export function LogoutConfirmation({
     } catch (err) {
       console.error("Logout error:", err);
       alert("Logout failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -89,27 +80,33 @@ export function LogoutConfirmation({
         </p>
 
         <div className="space-y-3">
+
+          {/* LOGOUT */}
           <button
             onClick={handleLogout}
-            className="w-full py-4 bg-orange-500 text-white rounded-xl flex items-center justify-center gap-2"
+            disabled={loading}
+            className="w-full py-4 bg-orange-500 text-white rounded-xl flex items-center justify-center gap-2 disabled:opacity-50"
           >
             <LogOut className="w-5 h-5" />
-            Yes, Logout
+            {loading ? "Logging out..." : "Yes, Logout"}
           </button>
 
+          {/* CANCEL */}
           <button
-            onClick={onCancel}
+            onClick={() => onCancel?.()}
             className="w-full py-4 bg-gray-800 text-white rounded-xl"
           >
             Cancel
           </button>
 
+          {/* BACK */}
           <button
             onClick={onBack}
             className="w-full py-4 border rounded-xl"
           >
             Back
           </button>
+
         </div>
       </motion.div>
     </div>

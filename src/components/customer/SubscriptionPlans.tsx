@@ -43,7 +43,7 @@ export function SubscriptionPlans({ onSelectPlan, onBack }: SubscriptionPlansPro
         }
 
         const res = await fetch(
-          `https://chef-backend-1.onrender.com/subscriptions/plans?lat=${lat}&lng=${lng}`
+          `https://chef-backend-qh12.onrender.com/subscriptions/plans?lat=${lat}&lng=${lng}`
         );
 
         if (!res.ok) {

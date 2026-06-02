@@ -66,7 +66,7 @@ export function CustomerHome({
       setLoadingChefs(true);
 
       const res = await fetch(
-        `https://chef-backend-1.onrender.com/menu/nearby-chefs?lat=${lat}&lng=${lng}&category=${selectedCategory}`
+        `https://chef-backend-qh12.onrender.com/menu/nearby-chefs?lat=${lat}&lng=${lng}&category=${selectedCategory}`
       );
 
       const data = await res.json();
@@ -92,7 +92,7 @@ export function CustomerHome({
       setLoadingSpecials(true);
 
       const res = await fetch(
-        `https://chef-backend-1.onrender.com/tomorrow-special/nearby?lat=${lat}&lng=${lng}&category=${selectedCategory}`
+        `https://chef-backend-qh12.onrender.com/tomorrow-special/nearby?lat=${lat}&lng=${lng}&category=${selectedCategory}`
       );
 
       const data = await res.json();
@@ -119,7 +119,7 @@ export function CustomerHome({
     if (!lat || !lng) return;
 
     const res = await fetch(
-      `https://chef-backend-1.onrender.com/menu/search-chefs?query=${value}&lat=${lat}&lng=${lng}`
+      `https://chef-backend-qh12.onrender.com/menu/search-chefs?query=${value}&lat=${lat}&lng=${lng}`
     );
 
     const data = await res.json();
