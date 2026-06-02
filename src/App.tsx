@@ -130,7 +130,7 @@ function AppContent() {
   const [selectedDuration, setSelectedDuration] = useState<string>("");
   const [userDetails, setUserDetails] = useState<any>(null);
   const [selectedChefId, setSelectedChefId] = useState<string>("");
-  const [forgotPasswordMethod, setForgotPasswordMethod] = useState<"phone" | "email">("phone");
+  const [forgotPasswordOtp, setForgotPasswordOtp] = useState("");
   const [forgotPasswordValue, setForgotPasswordValue] = useState<string>("");
   const [orderAmount, setOrderAmount] = useState(0);
   const [cartData, setCartData] = useState<any[]>([]);
@@ -196,15 +196,9 @@ useEffect(() => {
     setCurrentScreen("forgotPassword");
   };
 
-  const handleForgotPasswordContinue = (method: "phone" | "email", value: string) => {
-    setForgotPasswordMethod(method);
-    setForgotPasswordValue(value);
-    setCurrentScreen("otpVerification");
-  };
+  
 
-  const handleOTPVerified = () => {
-    setCurrentScreen("resetPassword");
-  };
+  
 
   const handlePasswordReset = () => {
     setCurrentScreen("login");
@@ -374,36 +368,35 @@ const handleNavigateToSpecialDetail = (special: any) => {
         )}
 
         {currentScreen === "forgotPassword" && (
-          <ForgotPassword
+  <ForgotPassword
   onBack={() => setCurrentScreen("login")}
-  onContinue={(method, value) => {
-    setForgotPasswordMethod(method);  // 🔥 ADD THIS
-    setForgotPasswordValue(value);
+  onContinue={(phone) => {
+    setForgotPasswordValue(phone);
     setCurrentScreen("otpVerification");
   }}
 />
         )}
 
         {currentScreen === "otpVerification" && (
-          <OTPVerification
-  key="otpVerification"
-  method={forgotPasswordMethod}
-  value={forgotPasswordValue}
-  onBack={() => setCurrentScreen("forgotPassword")}
-  onVerify={(otp) => {
-    console.log("OTP:", otp); // optional
-    handleOTPVerified();
-  }}
-/>
-        )}
+  <OTPVerification
+    value={forgotPasswordValue}
+    onBack={() => setCurrentScreen("forgotPassword")}
+    onSuccess={(phone, otp) => {
+      setForgotPasswordValue(phone);
+      setForgotPasswordOtp(otp);
+      setCurrentScreen("resetPassword");
+    }}
+  />
+)}
 
         {currentScreen === "resetPassword" && (
   <ResetPassword
-    key="resetPassword"
-    onBack={() => setCurrentScreen("otpVerification")}
-    phone={forgotPasswordValue}   // 🔥 MAIN FIX
-    onResetSuccess={() => setCurrentScreen("login")}
-  />
+  key="resetPassword"
+  onBack={() => setCurrentScreen("otpVerification")}
+  phone={forgotPasswordValue}
+  otp={forgotPasswordOtp}
+  onResetSuccess={() => setCurrentScreen("login")}
+/>
 )}
 
         {currentScreen === "changePassword" && (
