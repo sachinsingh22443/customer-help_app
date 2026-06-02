@@ -28,18 +28,31 @@ export function ForgotPassword({ onBack, onContinue }: ForgotPasswordProps) {
       setLoading(true);
 
       // 🔥 MSG91 BACKEND CALL
-      const res = await fetch(`${BASE_URL}/auth/forgot-password?phone=${phone}`, {
-        method: "POST",
-      });
+      const res = await fetch(
+  `${BASE_URL}/auth/forgot-password`,
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      phone,
+    }),
+  }
+);
 
       const data = await res.json();
 
       if (res.ok) {
-        alert("OTP sent successfully");
-        onContinue(phone);
-      } else {
-        alert(data.detail || "Failed to send OTP");
-      }
+  alert("OTP sent successfully");
+  onContinue(phone);
+} else {
+  alert(
+    typeof data.detail === "string"
+      ? data.detail
+      : JSON.stringify(data.detail)
+  );
+}
     } catch (err) {
       console.error(err);
       alert("Server error");
@@ -85,7 +98,13 @@ export function ForgotPassword({ onBack, onContinue }: ForgotPasswordProps) {
                 type="tel"
                 placeholder="9876543210"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) =>
+  setPhone(
+    e.target.value
+      .replace(/\D/g, "")
+      .slice(0, 10)
+  )
+}
                 className="w-full pl-12 py-4 rounded-xl border"
               />
             </div>

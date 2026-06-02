@@ -22,116 +22,154 @@ export function LoginScreen({ onLogin, onForgotPassword }: LoginScreenProps) {
 
   // ================= SEND OTP =================
   const handleSendOTP = async () => {
-    if (!phone || !password) {
-      alert("Enter phone & password");
-      return;
+
+  if (!/^\d{10}$/.test(phone)) {
+    alert("Enter valid 10 digit mobile number");
+    return;
+  }
+
+  if (password.length < 6) {
+    alert("Password must be at least 6 characters");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    const res = await fetch(`${BASE_URL}/auth/send-otp`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ phone }),
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      alert("OTP sent successfully to your mobile number");
+      setShowOtpInput(true);
+    } else {
+      alert(data.detail || "Failed to send OTP");
     }
-
-    try {
-      setLoading(true);
-
-      // 🔥 FIX: JSON body send karo (query nahi)
-      const res = await fetch(`${BASE_URL}/auth/send-otp`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ phone }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        alert("OTP Sent");
-        setShowOtpInput(true);
-      } else {
-        alert(data.detail || "Failed to send OTP");
-      }
-    } catch (err: any) {
-      console.error(err);
-      alert("Server error");
-    } finally {
-      setLoading(false);
-    }
-  };
+  } catch (err) {
+    alert("Server error");
+  } finally {
+    setLoading(false);
+  }
+};
 
   // ================= SIGNUP =================
   const handleSignup = async () => {
-    if (!otp) {
-      alert("Enter OTP");
-      return;
+
+  if (!/^\d{10}$/.test(phone)) {
+    alert("Enter valid 10 digit mobile number");
+    return;
+  }
+
+  if (password.length < 6) {
+    alert("Password must be at least 6 characters");
+    return;
+  }
+
+  if (!otp) {
+    alert("Enter OTP");
+    return;
+  }
+  if (otp.length < 4) {
+  alert("Enter valid OTP");
+  return;
+}
+
+  try {
+    setLoading(true);
+
+    const res = await fetch(`${BASE_URL}/auth/signupapi`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        phone,
+        password,
+        otp,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+  localStorage.setItem("token", data.access_token);
+  localStorage.setItem("user_id", data.user_id);
+
+  setPhone("");
+setPassword("");
+setOtp("");
+setShowOtpInput(false);
+
+  alert("Account created successfully");
+  onLogin();
+}else {
+      alert(
+        typeof data.detail === "string"
+          ? data.detail
+          : JSON.stringify(data.detail)
+      );
     }
-
-    try {
-      setLoading(true);
-
-      const res = await fetch(`${BASE_URL}/auth/signupapi`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          phone,
-          password,
-          otp,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        localStorage.setItem("token", data.access_token);
-        localStorage.setItem("user_id", data.user_id);
-
-        alert("Signup successful");
-        onLogin();
-      } else {
-        alert(data.detail || "Signup failed");
-      }
-    } catch (err: any) {
-      console.error(err);
-      alert("Server error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  } catch (err) {
+    alert("Server error");
+  } finally {
+    setLoading(false);
+  }
+};
   // ================= LOGIN =================
   const handleLogin = async () => {
-    if (!phone || !password) {
-      alert("Enter phone & password");
-      return;
+
+  if (!/^\d{10}$/.test(phone)) {
+    alert("Enter valid 10 digit mobile number");
+    return;
+  }
+
+  if (password.length < 6) {
+    alert("Password must be at least 6 characters");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    const res = await fetch(`${BASE_URL}/auth/loginapi`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        phone,
+        password,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      localStorage.setItem("token", data.access_token);
+      localStorage.setItem("user_id", data.user_id);
+
+      onLogin();
+    } else {
+      alert(
+        typeof data.detail === "string"
+          ? data.detail
+          : JSON.stringify(data.detail)
+      );
     }
-
-    try {
-      setLoading(true);
-
-      const res = await fetch(`${BASE_URL}/auth/loginapi`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ phone, password }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        localStorage.setItem("token", data.access_token);
-        localStorage.setItem("user_id", data.user_id);
-
-        alert("Login successful");
-        onLogin();
-      } else {
-        alert(data.detail || "Login failed");
-      }
-    } catch (err: any) {
-      console.error(err);
-      alert("Server error");
-    } finally {
-      setLoading(false);
-    }
-  };
+  } catch (err) {
+    console.error(err);
+    alert("Server error");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="h-screen bg-[#FFF8F0] flex flex-col relative overflow-hidden">
@@ -152,9 +190,10 @@ export function LoginScreen({ onLogin, onForgotPassword }: LoginScreenProps) {
           <div className="flex gap-2 mb-8 bg-[#FFF8F0] rounded-2xl p-1">
             <button
               onClick={() => {
-                setIsLogin(true);
-                setShowOtpInput(false);
-              }}
+  setIsLogin(true);
+  setShowOtpInput(false);
+  setOtp("");
+}}
               className={`flex-1 py-3 rounded-xl ${
                 isLogin ? "bg-white text-[#FF7A30]" : "text-[#171717]/50"
               }`}
@@ -164,9 +203,10 @@ export function LoginScreen({ onLogin, onForgotPassword }: LoginScreenProps) {
 
             <button
               onClick={() => {
-                setIsLogin(false);
-                setShowOtpInput(false);
-              }}
+  setIsLogin(false);
+  setShowOtpInput(false);
+  setOtp("");
+}}
               className={`flex-1 py-3 rounded-xl ${
                 !isLogin ? "bg-white text-[#FF7A30]" : "text-[#171717]/50"
               }`}
@@ -180,23 +220,31 @@ export function LoginScreen({ onLogin, onForgotPassword }: LoginScreenProps) {
           </h2>
 
           {/* PHONE */}
-          <input
-            type="tel"
-            placeholder="Phone"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            className="w-full mb-4 px-4 py-3 border rounded-xl"
-          />
+  <input
+  type="tel"
+  disabled={showOtpInput}
+  placeholder="Phone"
+  value={phone}
+  onChange={(e) =>
+    setPhone(
+      e.target.value
+        .replace(/\D/g, "")
+        .slice(0, 10)
+    )
+  }
+  className="w-full mb-4 px-4 py-3 border rounded-xl"
+/>
 
           {/* PASSWORD */}
           <div className="relative mb-4">
             <input
-              type={showPassword ? "text" : "password"}
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border rounded-xl"
-            />
+  disabled={showOtpInput}
+  type={showPassword ? "text" : "password"}
+  placeholder="Password (min 6 chars)"
+  value={password}
+  onChange={(e) => setPassword(e.target.value)}
+  className="w-full px-4 py-3 border rounded-xl"
+/>
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
@@ -209,12 +257,19 @@ export function LoginScreen({ onLogin, onForgotPassword }: LoginScreenProps) {
           {/* OTP */}
           {!isLogin && showOtpInput && (
             <input
-              type="text"
-              placeholder="Enter OTP"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              className="w-full mb-4 px-4 py-3 border rounded-xl"
-            />
+  maxLength={6}
+  type="text"
+  placeholder="Enter OTP"
+  value={otp}
+  onChange={(e) =>
+    setOtp(
+      e.target.value
+        .replace(/\D/g, "")
+        .slice(0, 6)
+    )
+  }
+  className="w-full mb-4 px-4 py-3 border rounded-xl"
+/>
           )}
 
           {/* BUTTON */}
