@@ -55,7 +55,7 @@ export function ChangePassword({ onBack, onPasswordChanged }: ChangePasswordProp
         return;
       }
 
-      const res = await fetch(`${BASE_URL}/auth/change-password`, {
+      const res = await fetch(`${BASE_URL}/auth/customer/change-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

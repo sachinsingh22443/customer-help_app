@@ -29,7 +29,7 @@ export function ForgotPassword({ onBack, onContinue }: ForgotPasswordProps) {
 
       // 🔥 MSG91 BACKEND CALL
       const res = await fetch(
-  `${BASE_URL}/auth/forgot-password`,
+  `${BASE_URL}/auth/customer/forgot-password`,
   {
     method: "POST",
     headers: {

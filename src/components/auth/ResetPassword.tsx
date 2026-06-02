@@ -32,7 +32,7 @@ export function ResetPassword({ onBack, phone, otp, onResetSuccess }: ResetPassw
     try {
       setLoading(true);
 
-      const res = await fetch(`${BASE_URL}/auth/reset-password`, {
+      const res = await fetch(`${BASE_URL}/auth/customer/reset-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
