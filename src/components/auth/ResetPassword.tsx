@@ -47,10 +47,17 @@ export function ResetPassword({ onBack, phone, otp, onResetSuccess }: ResetPassw
       const data = await res.json();
 
       if (res.ok) {
-        alert("Password reset successful");
-        onResetSuccess();
-      } else {
-        alert(data.detail || "Reset failed");
+  setNewPassword("");
+  setConfirmPassword("");
+
+  alert("Password reset successful");
+  onResetSuccess();
+} else {
+        alert(
+      typeof data.detail === "string"
+      ? data.detail
+      : JSON.stringify(data.detail)
+);
       }
     } catch (err) {
       console.error(err);
@@ -96,12 +103,14 @@ export function ResetPassword({ onBack, phone, otp, onResetSuccess }: ResetPassw
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" />
               <input
+                minLength={6}
                 type={showNewPassword ? "text" : "password"}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 className="w-full pl-12 pr-12 py-4 rounded-xl border"
               />
               <button
+               type="button"
                 onClick={() => setShowNewPassword(!showNewPassword)}
                 className="absolute right-4 top-1/2 -translate-y-1/2"
               >
@@ -116,12 +125,15 @@ export function ResetPassword({ onBack, phone, otp, onResetSuccess }: ResetPassw
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" />
               <input
+
+              minLength={6}
                 type={showConfirmPassword ? "text" : "password"}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="w-full pl-12 pr-12 py-4 rounded-xl border"
               />
               <button
+               type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-4 top-1/2 -translate-y-1/2"
               >

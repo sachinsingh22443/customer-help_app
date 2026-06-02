@@ -4,12 +4,16 @@ import { useState, useRef, useEffect } from "react";
 
 interface OTPVerificationProps {
   onBack: () => void;
-  onSuccess: (phone: string) => void;
-  value: string; // phone
+  onSuccess: (phone: string, otp: string) => void;
+  value: string;
 }
 
-export function OTPVerification({ onBack, onSuccess, value }: OTPVerificationProps) {
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+export function OTPVerification({
+  onBack,
+  onSuccess,
+  value,
+}: OTPVerificationProps) {
+  const [otp, setOtp] = useState(["", "", "", ""]);
   const [timer, setTimer] = useState(60);
   const [loading, setLoading] = useState(false);
 
@@ -17,15 +21,14 @@ export function OTPVerification({ onBack, onSuccess, value }: OTPVerificationPro
 
   const BASE_URL = "https://chef-backend-qh12.onrender.com";
 
-  // ⏱ Timer
   useEffect(() => {
     const interval = setInterval(() => {
       setTimer((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
+
     return () => clearInterval(interval);
   }, []);
 
-  // 🔢 OTP input
   const handleChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return;
 
@@ -33,64 +36,62 @@ export function OTPVerification({ onBack, onSuccess, value }: OTPVerificationPro
     newOtp[index] = value.slice(-1);
     setOtp(newOtp);
 
-    if (value && index < 5) {
+    if (value && index < 3) {
       inputRefs.current[index + 1]?.focus();
     }
   };
 
-  // ================= VERIFY OTP =================
+  // OTP Verify (frontend only)
   const handleVerify = async () => {
     const finalOtp = otp.join("");
 
-    if (finalOtp.length !== 6) {
-      alert("Enter full OTP");
+    if (finalOtp.length !== 4) {
+      alert("Enter complete 4 digit OTP");
       return;
     }
 
+    setLoading(true);
+
     try {
-      setLoading(true);
-
-      const res = await fetch(`${BASE_URL}/auth/reset-password`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          phone: value,
-          otp: finalOtp,
-          new_password: "temp1234" // ⚠️ temp (next screen me change karna hai)
-        }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        alert("OTP verified");
-        onSuccess(value);
-      } else {
-        alert(data.detail || "Verification failed");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Server error");
+      // OTP ko next screen me bhejenge
+      onSuccess(value, finalOtp);
     } finally {
       setLoading(false);
     }
   };
 
-  // ================= RESEND OTP =================
   const handleResend = async () => {
     try {
       setTimer(60);
-      setOtp(["", "", "", "", "", ""]);
+      setOtp(["", "", "", ""]);
       inputRefs.current[0]?.focus();
 
-      await fetch(`${BASE_URL}/auth/forgot-password?phone=${value}`, {
-        method: "POST",
-      });
+      const res = await fetch(
+        `${BASE_URL}/auth/customer/forgot-password`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            phone: value,
+          }),
+        }
+      );
 
-      alert("OTP resent");
-    } catch {
+      const data = await res.json();
+
+      if (res.ok) {
+        alert("OTP resent successfully");
+      } else {
+        alert(
+          typeof data.detail === "string"
+            ? data.detail
+            : JSON.stringify(data.detail)
+        );
+      }
+    } catch (err) {
+      console.error(err);
       alert("Failed to resend OTP");
     }
   };
@@ -119,11 +120,12 @@ export function OTPVerification({ onBack, onSuccess, value }: OTPVerificationPro
         <motion.div className="bg-white rounded-3xl p-8">
 
           <h2 className="mb-2">Verification Code</h2>
+
           <p className="mb-8 text-[#171717]/60">
-            Code sent to <span className="text-[#FF7A30]">{value}</span>
+            Enter the 4 digit OTP sent to{" "}
+            <span className="text-[#FF7A30]">{value}</span>
           </p>
 
-          {/* OTP Inputs */}
           <div className="flex justify-between px-2 mb-6">
             {otp.map((digit, index) => (
               <input
@@ -132,22 +134,27 @@ export function OTPVerification({ onBack, onSuccess, value }: OTPVerificationPro
                 type="text"
                 maxLength={1}
                 value={digit}
-                onChange={(e) => handleChange(index, e.target.value)}
-                className="w-[14%] aspect-square text-center rounded-lg border"
+                onChange={(e) =>
+                  handleChange(index, e.target.value)
+                }
+                className="w-16 h-16 text-2xl text-center rounded-lg border"
               />
             ))}
           </div>
 
-          {/* Timer */}
           <div className="text-center mb-6">
             {timer > 0 ? (
               <p>Expires in {timer}s</p>
             ) : (
-              <button onClick={handleResend}>Resend OTP</button>
+              <button
+                onClick={handleResend}
+                className="text-[#FF7A30]"
+              >
+                Resend OTP
+              </button>
             )}
           </div>
 
-          {/* Verify */}
           <motion.button
             onClick={handleVerify}
             disabled={loading}
