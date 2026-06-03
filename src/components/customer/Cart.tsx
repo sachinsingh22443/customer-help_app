@@ -122,7 +122,7 @@ export function Cart({ onBack, onCheckout, setCartData }: CartProps) {
     0
   );
 
-  const deliveryFee = 40;
+  const deliveryFee = 0;
   const total = subtotal + deliveryFee;
 
   return (

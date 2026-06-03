@@ -35,25 +35,57 @@ export function Orders({ onNavigateToTracking }: OrdersProps) {
     };
 
     fetchOrders();
+    const interval = setInterval(() => {
+    fetchOrders();
+  }, 15000);
+
+  return () => clearInterval(interval);
   }, []);
 
+  const getStatusLabel = (status: string) => {
+  switch (status) {
+    case "pending":
+      return "Order Received";
+    case "accepted":
+      return "Accepted";
+    case "preparing":
+      return "Preparing";
+    case "ready":
+      return "Ready For Pickup";
+    case "out_for_delivery":
+      return "Out For Delivery";
+    case "delivered":
+      return "Delivered";
+    default:
+      return status;
+  }
+};
+
   const getStatusIcon = (status: string) => {
-    if (status === "delivering") return Truck;
-    if (status === "completed") return CheckCircle;
-    return Package;
-  };
+  if (status === "pending") return Clock;
+  if (status === "accepted") return CheckCircle;
+  if (status === "preparing") return Package;
+  if (status === "ready") return Package;
+  if (status === "out_for_delivery") return Truck;
+  if (status === "delivered") return CheckCircle;
+  return Package;
+};
 
   const getStatusColor = (status: string) => {
-    if (status === "delivering") return "from-[#FF7A30] to-[#ff9d5c]";
-    if (status === "completed") return "from-[#0FAD6E] to-[#3ec98d]";
-    return "from-[#171717] to-[#3a3a3a]";
-  };
+  if (status === "pending") return "from-yellow-500 to-yellow-400";
+  if (status === "accepted") return "from-green-500 to-green-400";
+  if (status === "preparing") return "from-[#5F2EEA] to-[#7c5cff]";
+  if (status === "ready") return "from-purple-500 to-purple-400";
+  if (status === "out_for_delivery") return "from-[#FF7A30] to-[#ff9d5c]";
+  if (status === "delivered") return "from-[#0FAD6E] to-[#3ec98d]";
+  return "from-[#171717] to-[#3a3a3a]";
+};
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center">
-        Loading orders...
-      </div>
+    <div className="h-screen flex items-center justify-center text-gray-500">
+    🍽️ Loading your orders...
+    </div>
     );
   }
 
@@ -89,9 +121,13 @@ export function Orders({ onNavigateToTracking }: OrdersProps) {
               <div className={`bg-gradient-to-r ${statusColor} px-4 py-2 flex justify-between`}>
                 <div className="flex items-center gap-2 text-white">
                   <StatusIcon className="w-4 h-4" />
-                  <span className="text-sm capitalize">{order.status}</span>
+                  <span className="text-sm">
+                  {getStatusLabel(order.status)}
+                 </span>
                 </div>
-                <span className="text-white text-xs">#{order.id}</span>
+                <span className="text-white text-xs">
+              #{order.id.slice(0, 8)}
+               </span>
               </div>
 
               {/* CONTENT */}
@@ -108,12 +144,54 @@ export function Orders({ onNavigateToTracking }: OrdersProps) {
                 </p>
 
                 {/* STATUS */}
-                {order.status === "delivering" && (
-                  <div className="flex items-center gap-2 text-sm text-[#FF7A30]">
-                    <Clock className="w-4 h-4" />
-                    <span>On the way</span>
-                  </div>
-                )}
+  <div className="flex items-center gap-2 text-sm text-gray-500">
+  <Clock className="w-4 h-4" />
+
+  <span>
+    {order.status === "pending" && "Order received"}
+    {order.status === "accepted" && "Order accepted by chef"}
+    {order.status === "preparing" && "Chef is preparing your food"}
+    {order.status === "ready" &&
+   "Your food is ready and waiting for pickup"}
+    {order.status === "out_for_delivery" &&
+  "Delivery partner is bringing your order"}
+    {order.status === "delivered" && "Delivered successfully"}
+  </span>
+</div>
+
+
+
+{/* ORDER PROGRESS */}
+<div className="mt-3 text-xs text-gray-600">
+  {order.status === "pending" &&
+    "✓ Order Received → ○ Accepted → ○ Preparing → ○ Delivery"}
+
+  {order.status === "accepted" &&
+    "✓ Order Received → ✓ Accepted → ○ Preparing → ○ Delivery"}
+
+  {order.status === "preparing" &&
+    "✓ Order Received → ✓ Accepted → ✓ Preparing → ○ Delivery"}
+
+  {order.status === "ready" &&
+    "✓ Order Received → ✓ Accepted → ✓ Preparing → ⏳ Waiting Pickup"}
+
+  {order.status === "out_for_delivery" &&
+    "✓ Order Received → ✓ Accepted → ✓ Preparing → 🚚 On The Way"}
+
+  {order.status === "delivered" &&
+    "✓ Order Received → ✓ Accepted → ✓ Preparing → ✓ Delivered"}
+</div>
+{order.status === "delivered" && (
+  <div className="mt-3 bg-green-50 text-green-700 px-3 py-2 rounded-xl text-sm font-medium">
+    🎉 Your order has been delivered successfully
+  </div>
+)}
+
+<div className="text-xs text-gray-400 mt-2">
+  {order.created_at
+    ? new Date(order.created_at).toLocaleString()
+    : "Recently ordered"}
+</div>
 
                 {/* PRICE */}
                 <div className="flex justify-between mt-4">
@@ -122,14 +200,19 @@ export function Orders({ onNavigateToTracking }: OrdersProps) {
                 </div>
 
                 {/* ACTION */}
-                {order.status === "delivering" && (
-                  <button
-                    onClick={() => onNavigateToTracking?.(order.id)}
-                    className="mt-4 w-full bg-[#FF7A30] text-white py-3 rounded-xl"
-                  >
-                    Track Order
-                  </button>
-                )}
+                {/* ACTION */}
+<button
+  onClick={() => onNavigateToTracking?.(order.id)}
+  className={`mt-4 w-full py-3 rounded-xl text-white font-medium ${
+    order.status === "delivered"
+      ? "bg-green-600"
+      : "bg-[#FF7A30]"
+  }`}
+>
+  {order.status === "delivered"
+  ? "View Order Details"
+  : "Track Order"}
+</button>
 
               </div>
             </motion.div>

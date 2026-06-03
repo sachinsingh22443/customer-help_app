@@ -25,9 +25,11 @@ export function DishDetail({
   // 🔥 SAFE VALUES
   const availableQty = Number(dish?.remaining ?? dish?.quantity ?? 0);
   const image =
-    dish?.image_urls?.[0] ||
-    dish?.image ||
-    "/fallback.jpg";
+  dish?.image_url ||
+  dish?.image_urls?.[0] ||
+  dish?.image ||
+  dish?.photo_url ||
+  "/fallback.jpg";
 
   const foodType =
     dish?.food_type === "veg"

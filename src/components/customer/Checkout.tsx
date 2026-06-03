@@ -62,9 +62,9 @@ export function Checkout({
     0
   );
 
-  const delivery = 40;
-  const tax = Math.round(subtotal * 0.05);
-  const total = subtotal + delivery + tax;
+  // const delivery = 0;
+  // const tax = ;
+  const total = subtotal ;
 
   // 🧾 CREATE ORDER
   const createOrder = async () => {

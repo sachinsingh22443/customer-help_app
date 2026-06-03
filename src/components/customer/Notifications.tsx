@@ -1,5 +1,14 @@
 import { motion } from "motion/react";
-import { ArrowLeft, Package, Tag, Star, Gift, TrendingUp } from "lucide-react";
+import {
+  ArrowLeft,
+  Package,
+  Tag,
+  Star,
+  Gift,
+  TrendingUp,
+  CheckCircle,
+  Truck,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface NotificationsProps {
@@ -33,13 +42,20 @@ export function Notifications({ onBack }: NotificationsProps) {
   };
 
   useEffect(() => {
+  fetchNotifications();
+
+  const interval = setInterval(() => {
     fetchNotifications();
-  }, []);
+  }, 10000);
+
+  return () => clearInterval(interval);
+}, []);
 
   // ✅ MARK ALL READ (FIXED)
   const markAllRead = async () => {
     try {
       const token = localStorage.getItem("token");
+      console.log("MARK ALL TOKEN:", token);
 
       await fetch(`${BASE_URL}/notifications/mark-all-read`, {
         method: "PUT", // 🔥 FIX
@@ -58,19 +74,51 @@ export function Notifications({ onBack }: NotificationsProps) {
   };
 
   const getIcon = (type: string) => {
-    switch (type) {
-      case "order":
-        return Package;
-      case "offer":
-        return Tag;
-      case "review":
-        return Star;
-      case "reward":
-        return Gift;
-      default:
-        return TrendingUp;
-    }
-  };
+  switch (type) {
+    case "order":
+      return Package;
+
+    case "payment":
+      return CheckCircle;
+
+    case "delivery":
+      return Truck;
+
+    case "offer":
+      return Tag;
+
+    case "review":
+      return Star;
+
+    case "reward":
+      return Gift;
+
+    default:
+      return TrendingUp;
+  }
+};
+
+const markRead = async (id: string) => {
+  try {
+    const token = localStorage.getItem("token");
+    console.log("MARK READ TOKEN:", token);
+
+    await fetch(`${BASE_URL}/notifications/${id}/read`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    setNotifications((prev) =>
+      prev.map((n) =>
+        n.id === id ? { ...n, unread: false } : n
+      )
+    );
+  } catch (err) {
+    console.log(err);
+  }
+};
 
   const unreadCount = notifications.filter((n) => n.unread).length;
 
@@ -97,19 +145,27 @@ export function Notifications({ onBack }: NotificationsProps) {
             </div>
           </div>
 
-          <button onClick={markAllRead} className="text-white text-sm">
-            Mark all read
-          </button>
+          {unreadCount > 0 && (
+         <button onClick={markAllRead} className="text-white text-sm">
+         Mark all read
+        </button>
+)}
         </div>
       </div>
 
       {/* Body */}
       <div className="px-6 -mt-4 space-y-3">
 
-        {loading && <p>Loading...</p>}
+        {loading && (
+     <div className="text-center py-10">
+    🔔 Loading notifications...
+  </div>
+)}
 
         {!loading && notifications.length === 0 && (
-          <p className="text-center text-[#171717]/60">No notifications</p>
+          <div className="text-center py-10">
+        🔔 No notifications yet
+</div>
         )}
 
         {notifications.map((notification, idx) => {
@@ -118,10 +174,15 @@ export function Notifications({ onBack }: NotificationsProps) {
           return (
             <motion.div
               key={notification.id}
+              onClick={() => {
+           if (notification.unread) {
+          markRead(notification.id);
+              }
+         }}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05 }}
-              className={`bg-white rounded-2xl p-4 relative ${
+              className={`bg-white rounded-2xl p-4 relative cursor-pointer ${
                 notification.unread ? "border-2 border-[#FF7A30]/20" : ""
               }`}
             >

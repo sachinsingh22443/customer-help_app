@@ -57,21 +57,40 @@ export function OrderTracking({ orderId, onBack }: OrderTrackingProps) {
 
   // 🔥 STATUS → STEP MAP
   const getStep = (status: string) => {
-    if (status === "pending") return 1;
-    if (status === "preparing") return 2;
-    if (status === "delivering") return 3;
-    if (status === "completed") return 4;
-    return 1;
-  };
+  switch (status) {
+    case "pending":
+      return 1;
+
+    case "accepted":
+      return 2;
+
+    case "preparing":
+      return 3;
+
+    case "ready":
+      return 4;
+
+    case "out_for_delivery":
+      return 5;
+
+    case "delivered":
+      return 6;
+
+    default:
+      return 1;
+  }
+};
 
   const currentStep = getStep(order?.status);
 
   const steps = [
-    { id: 1, title: "Order Placed", icon: CheckCircle },
-    { id: 2, title: "Preparing", icon: Package },
-    { id: 3, title: "Out for Delivery", icon: Truck },
-    { id: 4, title: "Delivered", icon: Home },
-  ];
+  { id: 1, title: "Order Received", icon: CheckCircle },
+  { id: 2, title: "Accepted By Chef", icon: CheckCircle },
+  { id: 3, title: "Preparing Food", icon: Package },
+  { id: 4, title: "Ready For Pickup", icon: Package },
+  { id: 5, title: "Out For Delivery", icon: Truck },
+  { id: 6, title: "Delivered", icon: Home },
+];
 
   if (loading) {
     return <div className="p-10 text-center">Loading tracking...</div>;
@@ -90,7 +109,9 @@ export function OrderTracking({ orderId, onBack }: OrderTrackingProps) {
 
           <div>
             <h2 className="text-white">Track Order</h2>
-            <p className="text-white/80 text-sm">#{order.id}</p>
+            <p className="text-white/80 text-sm">
+            #{order.id?.slice(0, 8)}
+            </p>
           </div>
         </div>
 
@@ -98,6 +119,20 @@ export function OrderTracking({ orderId, onBack }: OrderTrackingProps) {
           <p>Estimated: 20-30 min</p>
         </div>
       </div>
+
+
+      <div className="mt-4 bg-white/20 rounded-xl p-3">
+  <p className="text-white/80 text-sm">Current Status</p>
+
+  <p className="text-white font-semibold">
+    {order.status === "pending" && "Order Received"}
+    {order.status === "accepted" && "Accepted By Chef"}
+    {order.status === "preparing" && "Preparing Food"}
+    {order.status === "ready" && "Ready For Pickup"}
+    {order.status === "out_for_delivery" && "Out For Delivery"}
+    {order.status === "delivered" && "Delivered"}
+  </p>
+</div>
 
       {/* PROGRESS */}
       <div className="px-6 mt-6 space-y-4">

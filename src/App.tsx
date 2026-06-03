@@ -243,10 +243,16 @@ useEffect(() => {
 };
 
 const handleNavigateToSpecialDetail = (special: any) => {
-  setSelectedDish(null); 
-  setSelectedSpecial(special);
-  setCurrentScreen("dishDetail"); // reuse or new page
+  setSelectedDish(null);
+
+  setSelectedSpecial({
+    ...special,
+    type: "special", // 🔥 IMPORTANT
+  });
+
+  setCurrentScreen("dishDetail");
 };
+
   const handleNavigateToChefDetails = (chefId: string) => {
     setSelectedChefId(chefId);
     setCurrentScreen("chefDetails");
@@ -256,11 +262,11 @@ const handleNavigateToSpecialDetail = (special: any) => {
   console.log("SELECTED DISH:", dish);
   setSelectedSpecial(null);
   setSelectedDish(dish);
-  setSelectedMenu({
-  id: dish.id,
-  chef_id: dish.chef_id,
-  name: dish.name,
-});        // 🔥 FULL OBJECT SAVE
+//   setSelectedMenu({
+//   id: dish.id,
+//   chef_id: dish.chef_id,
+//   name: dish.name,
+// });        // 🔥 FULL OBJECT SAVE
   setCurrentScreen("dishDetail");
 };
 
