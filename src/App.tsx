@@ -159,19 +159,28 @@ useEffect(() => {
     }
 
     try {
-      const res = await fetch(`https://chef-backend-qh12.onrender.com/auth/verify-token`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(
+        "https://chef-backend-qh12.onrender.com/auth/verify-token",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
 
       if (res.ok) {
         setCurrentScreen("customerHome");
       } else {
         localStorage.removeItem("token");
+        localStorage.removeItem("user_id");
         setCurrentScreen("login");
       }
-    } catch {
-      localStorage.removeItem("token");
-      setCurrentScreen("login");
+    } catch (err) {
+      console.error("VERIFY ERROR:", err);
+
+      // Network issue me logout mat karo
+      setCurrentScreen("customerHome");
     }
 
     setLoading(false);
@@ -209,7 +218,7 @@ useEffect(() => {
 };
 
   const handleSelectPlan = (plan: any) => {
-  console.log("SELECTED PLAN:", plan); // 🔥 DEBUG
+  // console.log("SELECTED PLAN:", plan); // 🔥 DEBUG
 
   setSelectedPlan(plan);
   setCurrentScreen("subscriptionTypeDetail");
@@ -259,7 +268,7 @@ const handleNavigateToSpecialDetail = (special: any) => {
   };
 
   const handleNavigateToDishDetail = (dish: any) => {
-  console.log("SELECTED DISH:", dish);
+  // console.log("SELECTED DISH:", dish);
   setSelectedSpecial(null);
   setSelectedDish(dish);
 //   setSelectedMenu({
@@ -317,7 +326,7 @@ const handleNavigateToSpecialDetail = (special: any) => {
   };
 
   const handleAddToCart = (itemId: string, quantity?: number) => {
-    console.log("Added to cart:", itemId, quantity);
+    // console.log("Added to cart:", itemId, quantity);
   };
 
   const handleCheckout = () => {
@@ -357,6 +366,10 @@ const handleNavigateToSpecialDetail = (special: any) => {
     "profile",
     "tomorrowSpecials",
   ].includes(currentScreen);
+  
+  if (loading) {
+  return <LoadingScreen />;
+}
 
   return (
     <div className="max-w-[390px] mx-auto min-h-screen bg-[#FFF8F0] relative overflow-hidden shadow-2xl">
