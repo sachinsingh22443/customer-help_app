@@ -56,6 +56,7 @@ import { TomorrowSpecials } from "./components/customer/TomorrowSpecials";
 import { ChefDetails } from "./components/customer/ChefDetails";
 import { LoadingScreen } from "./components/customer/LoadingScreen";
 import { SkeletonLoader } from "./components/customer/SkeletonLoader";
+import { Network } from "@capacitor/network";
 
 // Screen types for navigation
 type Screen =
@@ -138,7 +139,7 @@ function AppContent() {
   // 🔥 ADD THIS STATE (IMPORTANT)
   const [currentOrder, setCurrentOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-
+  const [isOnline, setIsOnline] = useState(true);
   useEffect(() => {
   const cart = JSON.parse(localStorage.getItem("cart") || "[]");
   setCartData(cart);
@@ -151,6 +152,7 @@ function AppContent() {
 useEffect(() => {
   const checkAuth = async () => {
     const token = localStorage.getItem("token");
+    
 
     if (!token) {
       setCurrentScreen("login");
@@ -159,34 +161,67 @@ useEffect(() => {
     }
 
     try {
-      const res = await fetch(
-        "https://chef-backend-qh12.onrender.com/auth/verify-token",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-
-      if (res.ok) {
-        setCurrentScreen("customerHome");
-      } else {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user_id");
-        setCurrentScreen("login");
-      }
-    } catch (err) {
-      console.error("VERIFY ERROR:", err);
-
-      // Network issue me logout mat karo
-      setCurrentScreen("customerHome");
+  const res = await fetch(
+    "https://chef-backend-qh12.onrender.com/auth/verify-token",
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     }
+  );
+
+  if (res.ok) {
+    setCurrentScreen("customerHome");
+  } else {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user_id");
+    setCurrentScreen("login");
+  }
+
+} catch (err) {
+  // console.error("VERIFY ERROR:", err);
+
+  const status = await Network.getStatus();
+
+  if (!status.connected) {
+    setCurrentScreen("noInternet");
+  } else {
+    setCurrentScreen("customerHome");
+  }
+}
 
     setLoading(false);
   };
 
   checkAuth();
+}, []);
+
+useEffect(() => {
+  let listener: any;
+
+  const setupNetwork = async () => {
+    const status = await Network.getStatus();
+    setIsOnline(status.connected);
+
+    listener = await Network.addListener(
+      "networkStatusChange",
+      (status) => {
+        setIsOnline(status.connected);
+
+        if (!status.connected) {
+          setCurrentScreen("noInternet");
+        }
+      }
+    );
+  };
+
+  setupNetwork();
+
+  return () => {
+    if (listener) {
+      listener.remove();
+    }
+  };
 }, []);
 
   const handleSplashComplete = () => {
@@ -341,9 +376,19 @@ const handleNavigateToSpecialDetail = (special: any) => {
     setCurrentScreen("checkout");
   };
 
-  const handleRetryConnection = () => {
-    window.location.reload();
-  };
+  const handleRetryConnection = async () => {
+  const status = await Network.getStatus();
+
+  if (status.connected) {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      setCurrentScreen("customerHome");
+    } else {
+      setCurrentScreen("login");
+    }
+  }
+};
 
   const handleTabChange = (tab: "home" | "orders" | "profile" | "specials") => {
     setActiveTab(tab);
@@ -369,6 +414,14 @@ const handleNavigateToSpecialDetail = (special: any) => {
   
   if (loading) {
   return <LoadingScreen />;
+}
+
+if (!isOnline) {
+  return (
+    <NoInternet
+      onRetry={handleRetryConnection}
+    />
+  );
 }
 
   return (
