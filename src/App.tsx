@@ -159,7 +159,7 @@ useEffect(() => {
     }
 
     try {
-      const res = await fetch(`https://chef-backend-1.onrender.com/auth/verify-token`, {
+      const res = await fetch(`https://chef-backend-qh12.onrender.com/auth/verify-token`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
