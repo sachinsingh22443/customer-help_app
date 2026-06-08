@@ -222,7 +222,7 @@ rzp.on("payment.failed", function (response: any) {
   // console.log("PAYMENT FAILED:", response.error);
   alert(JSON.stringify(response.error));
 });
-console.log("USER AGENT:", navigator.userAgent);
+alert("USER AGENT: " + navigator.userAgent);
 rzp.open();
 
     } catch (err) {
