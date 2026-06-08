@@ -136,6 +136,12 @@ export function Checkout({
         currency: "INR",
         order_id: data.razorpay_order_id,
 
+        prefill: {
+       name: "Customer",
+      contact: "9999999999",
+      email: "test@test.com",
+      },
+
         handler: async function (response: any) {
           try {
             console.log("SUCCESS:", response);
@@ -191,7 +197,13 @@ export function Checkout({
       };
 
       const rzp = new (window as any).Razorpay(options);
-      rzp.open();
+
+rzp.on("payment.failed", function (response: any) {
+  console.log("PAYMENT FAILED:", response.error);
+  alert(JSON.stringify(response.error));
+});
+
+rzp.open();
 
     } catch (err) {
       console.error(err);
