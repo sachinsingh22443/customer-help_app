@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { ArrowLeft, Plus } from "lucide-react";
 import { useState, useEffect } from "react";
-import { Browser } from "@capacitor/browser";
+import { Checkout as RazorpayCheckout } from "capacitor-razorpay";
 
 interface CheckoutProps {
   onBack: () => void;
@@ -131,99 +131,53 @@ export function Checkout({
         return;
       }
 
-      const options = {
-        key: data.key,
-        amount: data.amount,
-        currency: "INR",
-        order_id: data.razorpay_order_id,
+      try {
+  const result = await RazorpayCheckout.open({
+    key: data.key,
+    amount: String(data.amount),
+    currency: "INR",
+    name: "Eat Unity",
+    description: "Food Order",
+    order_id: data.razorpay_order_id,
+  });
 
-        config: {
-  display: {
-    blocks: {
-      upi: {
-        name: "Pay using UPI",
-        instruments: [
-          {
-            method: "upi",
-          },
-        ],
+  console.log("RAZORPAY RESULT:", result);
+
+  const response = result.response;
+
+  const verify = await fetch(
+    "https://chef-backend-qh12.onrender.com/orders/verify-payment",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
-    },
-    sequence: ["block.upi", "block.card"],
-    preferences: {
-      show_default_blocks: true,
-    },
-  },
-},
+      body: JSON.stringify({
+        razorpay_order_id: response.razorpay_order_id,
+        razorpay_payment_id: response.razorpay_payment_id,
+        razorpay_signature: response.razorpay_signature,
+        order_id: order.id,
+      }),
+    }
+  );
 
-      //   prefill: {
-      //  name: "Customer",
-      // contact: "9999999999",
-      // email: "test@test.com",
-      // },
+  if (!verify.ok) {
+    alert("Payment verification failed");
+    return onFailed();
+  }
 
-        handler: async function (response: any) {
-          try {
-            console.log("SUCCESS:", response);
+  localStorage.removeItem("cart");
 
-            const verify = await fetch(
-              "https://chef-backend-qh12.onrender.com/orders/verify-payment",
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_signature: response.razorpay_signature,
-                  order_id: order.id,
-                }),
-              }
-            );
+  onSuccess({
+    ...order,
+    payment_status: "paid",
+  });
 
-            const verifyData = await verify.json();
-            console.log("VERIFY:", verifyData);
-
-            if (!verify.ok) {
-              alert("Payment verification failed");
-              return onFailed();
-            }
-
-            localStorage.removeItem("cart");
-
-            onSuccess({
-              ...order,
-              payment_status: "paid",
-            });
-
-          } catch (err) {
-            console.error(err);
-            onFailed();
-          }
-        },
-
-        modal: {
-          ondismiss: () => {
-            setLoading(false);
-            onFailed();
-          },
-        },
-
-        theme: {
-          color: "#FF7A30",
-        },
-      };
-
-      const rzp = new (window as any).Razorpay(options);
-
-rzp.on("payment.failed", function (response: any) {
-  // console.log("PAYMENT FAILED:", response.error);
-  alert(JSON.stringify(response.error));
-});
-alert("USER AGENT: " + navigator.userAgent);
-rzp.open();
+} catch (err: any) {
+  console.error("PAYMENT FAILED:", err);
+  onFailed();
+}
 
     } catch (err) {
       console.error(err);
