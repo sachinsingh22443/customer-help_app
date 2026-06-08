@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { ArrowLeft, Plus } from "lucide-react";
 import { useState, useEffect } from "react";
+import { Browser } from "@capacitor/browser";
 
 interface CheckoutProps {
   onBack: () => void;
@@ -136,11 +137,30 @@ export function Checkout({
         currency: "INR",
         order_id: data.razorpay_order_id,
 
-        prefill: {
-       name: "Customer",
-      contact: "9999999999",
-      email: "test@test.com",
+        config: {
+  display: {
+    blocks: {
+      upi: {
+        name: "Pay using UPI",
+        instruments: [
+          {
+            method: "upi",
+          },
+        ],
       },
+    },
+    sequence: ["block.upi", "block.card"],
+    preferences: {
+      show_default_blocks: true,
+    },
+  },
+},
+
+      //   prefill: {
+      //  name: "Customer",
+      // contact: "9999999999",
+      // email: "test@test.com",
+      // },
 
         handler: async function (response: any) {
           try {
@@ -199,10 +219,10 @@ export function Checkout({
       const rzp = new (window as any).Razorpay(options);
 
 rzp.on("payment.failed", function (response: any) {
-  console.log("PAYMENT FAILED:", response.error);
+  // console.log("PAYMENT FAILED:", response.error);
   alert(JSON.stringify(response.error));
 });
-
+console.log("USER AGENT:", navigator.userAgent);
 rzp.open();
 
     } catch (err) {
