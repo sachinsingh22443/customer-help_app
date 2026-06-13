@@ -154,7 +154,7 @@ setShowOtpInput(false);
     if (res.ok) {
       localStorage.setItem("token", data.access_token);
       // console.log("TOKEN SAVED:", data.access_token);
-      alert("TOKEN SAVED");
+      // alert("TOKEN SAVED");
       localStorage.setItem("user_id", data.user_id);
 
       onLogin();

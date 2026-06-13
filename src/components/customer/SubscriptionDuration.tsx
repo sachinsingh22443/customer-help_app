@@ -10,6 +10,13 @@ interface SelectedPlan {
   chef_id: string;
   menu_id: string;
   menu_name: string;
+
+  goal?: string;
+diet_type?: string;
+meal_type?: string[];
+
+calories_per_day?: number;
+duration_days?: number;
 }
 
 interface Duration {
@@ -26,34 +33,19 @@ interface Props {
   onBack: () => void;
 }
 
-const durations: Duration[] = [
+
+export function SubscriptionDuration({ selectedPlan, onBack }: Props) {
+
+  const durations: Duration[] = [
   {
-    id: "weekly",
-    name: "7 Days",
-    days: 7,
+    id: "plan",
+    name: `${selectedPlan.duration_days || 30} Days`,
+    days: selectedPlan.duration_days || 30,
     discount: 0,
-    icon: Zap,
-    color: "from-[#0FAD6E] to-[#3ec98d]",
-  },
-  {
-    id: "biweekly",
-    name: "15 Days",
-    days: 15,
-    discount: 10,
-    icon: TrendingUp,
-    color: "from-[#FF7A30] to-[#ff9d5c]",
-  },
-  {
-    id: "monthly",
-    name: "30 Days",
-    days: 30,
-    discount: 20,
     icon: Calendar,
     color: "from-[#5F2EEA] to-[#8860f5]",
   },
 ];
-
-export function SubscriptionDuration({ selectedPlan, onBack }: Props) {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -71,12 +63,9 @@ export function SubscriptionDuration({ selectedPlan, onBack }: Props) {
     return d.toISOString();
   };
 
-  const calculatePrice = (days: number, discount: number) => {
-    const perDay = selectedPlan.price / 30;
-    const base = perDay * days;
-    const discounted = base * (1 - discount / 100);
-    return Math.round(discounted);
-  };
+  const calculatePrice = () => {
+  return selectedPlan.price;
+};
 
   const handleSubscribe = async (duration: Duration) => {
     try {
@@ -90,7 +79,7 @@ export function SubscriptionDuration({ selectedPlan, onBack }: Props) {
 
       setLoading(true);
 
-      const finalPrice = calculatePrice(duration.days, duration.discount);
+      const finalPrice = calculatePrice();
 
       // 🔥 CREATE ORDER (SEND EXACT AMOUNT)
       const orderRes = await fetch("https://chef-backend-qh12.onrender.com/orders/", {
@@ -236,6 +225,18 @@ export function SubscriptionDuration({ selectedPlan, onBack }: Props) {
           <p className="text-orange-500 font-bold">
             ₹{selectedPlan.price}
           </p>
+
+          <p className="text-sm text-gray-500">
+  {selectedPlan.goal}
+</p>
+
+<p className="text-sm text-gray-500">
+  {selectedPlan.diet_type}
+</p>
+
+<p className="text-sm text-gray-500">
+  🔥 {selectedPlan.calories_per_day} kcal/day
+</p>
         </div>
       </div>
 
@@ -249,7 +250,7 @@ export function SubscriptionDuration({ selectedPlan, onBack }: Props) {
         {durations.map((d, index) => {
           const Icon = d.icon;
 
-          const finalPrice = calculatePrice(d.days, d.discount);
+          const finalPrice = calculatePrice();
 
           return (
             <motion.div

@@ -17,6 +17,16 @@ interface Plan {
 
   menu_id: string;
   menu_name: string;
+
+  goal?: string;
+diet_type?: string;
+meal_type?: string[];
+
+calories_per_day?: number;
+duration_days?: number;
+
+tagline?: string;
+includes?: string[];
 }
 
 interface SubscriptionPlansProps {
@@ -145,6 +155,14 @@ export function SubscriptionPlans({ onSelectPlan, onBack }: SubscriptionPlansPro
     // 🔥 ADD THESE (MOST IMPORTANT)
     title: plan.title,
     price: plan.price,
+    goal: plan.goal,
+diet_type: plan.diet_type,
+meal_type: plan.meal_type,
+
+calories_per_day: plan.calories_per_day,
+duration_days: plan.duration_days,
+
+tagline: plan.tagline,
     description: plan.description,
     emoji: plan.emoji,
     color: plan.color,
@@ -187,6 +205,25 @@ export function SubscriptionPlans({ onSelectPlan, onBack }: SubscriptionPlansPro
                   <div className="text-orange-500 text-xl font-semibold mb-3">
                     ₹{plan.price}
                   </div>
+
+
+                  <div className="flex flex-wrap gap-2 mb-3">
+  <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs">
+    {plan.goal}
+  </span>
+
+  <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
+    {plan.diet_type}
+  </span>
+</div>
+
+<p className="text-xs text-gray-500">
+  🔥 {plan.calories_per_day} kcal/day
+</p>
+
+<p className="text-xs text-gray-500">
+  ⏳ {plan.duration_days} Days
+</p>
 
                   {(plan.features || []).slice(0, 3).map((f, i) => (
                     <div key={i} className="flex items-center gap-2 text-sm text-gray-700">

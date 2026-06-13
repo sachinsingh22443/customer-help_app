@@ -14,6 +14,13 @@ interface Plan {
   chef_id: string;
   menu_id: string;
   menu_name: string;
+
+  goal?: string;
+diet_type?: string;
+meal_type?: string[];
+
+calories_per_day?: number;
+duration_days?: number;
 }
 
 interface Props {
@@ -61,9 +68,34 @@ export function SubscriptionTypeDetail({
         <p className="text-white text-2xl mt-2">
           ₹{selectedPlan.price}
         </p>
+
+        <div className="flex flex-wrap gap-2 mt-3">
+     <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
+    {selectedPlan.goal}
+  </span>
+
+  <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
+    {selectedPlan.diet_type}
+  </span>
+</div>
       </div>
 
       <div className="p-6 space-y-4">
+        
+        <div className="bg-white rounded-2xl p-4 shadow">
+  <h3 className="font-semibold mb-2">
+    Plan Details
+  </h3>
+
+  <p>🔥 {selectedPlan.calories_per_day} kcal/day</p>
+
+  <p>⏳ {selectedPlan.duration_days} Days</p>
+
+  <p>
+    🍽️ {(selectedPlan.meal_type || []).join(", ")}
+  </p>
+</div>
+
 
         {selectedPlan.description && (
           <p>{selectedPlan.description}</p>

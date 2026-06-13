@@ -110,7 +110,9 @@ export function Checkout({
   };
 
   // 💳 RAZORPAY
+  
   const openRazorpay = async (order: any) => {
+    console.log("STEP 1 - openRazorpay called");
     try {
       const token = localStorage.getItem("token");
 
@@ -124,6 +126,8 @@ export function Checkout({
       });
 
       const data = await res.json();
+      console.log("STEP 2 - payment data", data);
+      alert("STEP 2");
       console.log("PAYMENT:", data);
 
       if (!res.ok) {
@@ -132,6 +136,9 @@ export function Checkout({
       }
 
       try {
+  alert("STEP 3 - Before Razorpay");
+
+   console.log("STEP 3 - Before Razorpay");
   const result = await RazorpayCheckout.open({
     key: data.key,
     amount: String(data.amount),
@@ -176,6 +183,13 @@ export function Checkout({
 
 } catch (err: any) {
   console.error("PAYMENT FAILED:", err);
+
+  alert(
+    typeof err === "object"
+      ? JSON.stringify(err)
+      : String(err)
+  );
+
   onFailed();
 }
 
