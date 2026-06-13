@@ -84,14 +84,37 @@ export function SubscriptionDuration({
       setError("");
 
       const token = localStorage.getItem("token");
-      if (!token) {
-        setError("Please login first");
-        return;
-      }
 
-      setLoading(true);
+if (!token) {
+  setError("Please login first");
+  return;
+}
 
-      const finalPrice = calculatePrice();
+// ✅ CHECK ACTIVE SUBSCRIPTION FIRST
+const activeCheck = await fetch(
+  "https://chef-backend-qh12.onrender.com/subscriptions/my-active",
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }
+);
+
+const activeData = await activeCheck.json();
+
+if (activeData.has_active_subscription) {
+  alert(
+    `You already have an active subscription until ${new Date(
+      activeData.end_date
+    ).toLocaleDateString()}`
+  );
+
+  return;
+}
+
+setLoading(true);
+
+const finalPrice = calculatePrice();
 
       // 🔥 CREATE ORDER (SEND EXACT AMOUNT)
       const orderRes = await fetch("https://chef-backend-qh12.onrender.com/orders/", {

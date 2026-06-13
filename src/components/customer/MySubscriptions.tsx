@@ -110,9 +110,19 @@ export default function MySubscriptions({
                       👨‍🍳 {sub.chefName}
                     </p>
 
-                    <p className="text-sm text-gray-500 mt-1">
-                      Premium Meal Subscription
-                    </p>
+
+                    
+{sub.plan_type && (
+  <div className="mt-2">
+    <span className="px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-medium">
+      {sub.plan_type === "normal" && "🥗 Normal Diet"}
+      {sub.plan_type === "dietician" && "👨‍⚕️ Dietician Support"}
+      {sub.plan_type === "gym" && "💪 Gym + Diet + Trainer"}
+    </span>
+  </div>
+)}
+
+                    
                   </div>
 
                   <span
