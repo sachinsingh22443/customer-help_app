@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import { Calendar, TrendingUp, Zap } from "lucide-react";
+import { Checkout as RazorpayCheckout } from "capacitor-razorpay";
 
 interface SelectedPlan {
   plan_id: string;
@@ -98,8 +99,9 @@ export function SubscriptionDuration({ selectedPlan, onBack }: Props) {
   amount: finalPrice,
   is_subscription: true,
   address: localStorage.getItem("address") || "Default Address",
-  payment_method: "card",
-})
+  payment_method:
+    localStorage.getItem("payment_method") || "card",
+}),
       });
 
       const orderData = await orderRes.json();
@@ -172,8 +174,69 @@ export function SubscriptionDuration({ selectedPlan, onBack }: Props) {
         },
       };
 
-      const rzp = new (window as any).Razorpay(options);
-      rzp.open();
+  const result = await RazorpayCheckout.open({
+  key: paymentData.key,
+  amount: String(paymentData.amount),
+  currency: "INR",
+  name: "Eat Unity",
+  description: selectedPlan.title,
+  order_id: paymentData.razorpay_order_id,
+});
+
+
+const response = result.response;
+
+// ✅ VERIFY PAYMENT
+const verify = await fetch(
+  "https://chef-backend-qh12.onrender.com/orders/verify-payment",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      razorpay_order_id: response.razorpay_order_id,
+      razorpay_payment_id: response.razorpay_payment_id,
+      razorpay_signature: response.razorpay_signature,
+      order_id: orderData.id,
+    }),
+  }
+);
+
+if (!verify.ok) {
+  throw new Error("Payment verification failed");
+}
+
+// ✅ CREATE SUBSCRIPTION
+await fetch(
+  "https://chef-backend-qh12.onrender.com/subscriptions/",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      chef_id: selectedPlan.chef_id,
+      menu_id: selectedPlan.menu_id,
+      dish_name: selectedPlan.menu_name,
+      plan_id: selectedPlan.plan_id,
+      meals_per_day: 2,
+      delivery_days: ["Mon", "Tue", "Wed"],
+      delivery_time: "Lunch",
+      address: localStorage.getItem("address") || "Default Address",
+      start_date: new Date().toISOString(),
+      end_date: getEndDate(duration.days),
+    }),
+  }
+);
+
+// ✅ SUCCESS SCREEN
+setOrderId(orderData.id);
+setPaymentSuccess(true);
+
+
 
     } catch (err: any) {
       setError(err.message);
@@ -261,9 +324,14 @@ export function SubscriptionDuration({ selectedPlan, onBack }: Props) {
               transition={{ delay: index * 0.1 }}
             >
               <button
-                onClick={() => handleSubscribe(d)}
-                className="w-full bg-white p-5 rounded-xl shadow-md hover:shadow-lg"
-              >
+  onClick={() => handleSubscribe(d)}
+  disabled={loading}
+  className={`w-full p-5 rounded-xl shadow-md transition-all ${
+    loading
+      ? "bg-gray-200 opacity-70 cursor-not-allowed"
+      : "bg-white hover:shadow-lg active:scale-95"
+  }`}
+>
                 <div className="flex items-center gap-4">
 
                   <div className={`w-14 h-14 bg-gradient-to-br ${d.color} rounded-xl flex items-center justify-center`}>
@@ -271,14 +339,14 @@ export function SubscriptionDuration({ selectedPlan, onBack }: Props) {
                   </div>
 
                   <div className="flex-1 text-left">
-                    <h3 className="text-lg font-semibold">
-                      {d.name}
-                    </h3>
+  <h3 className="text-lg font-semibold">
+    {loading ? "Processing..." : d.name}
+  </h3>
 
-                    <p className="text-orange-500 font-semibold">
-                      ₹{finalPrice}
-                    </p>
-                  </div>
+  <p className="text-orange-500 font-semibold">
+    ₹{finalPrice}
+  </p>
+</div>
 
                 </div>
               </button>
