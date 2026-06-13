@@ -124,55 +124,7 @@ export function SubscriptionDuration({ selectedPlan, onBack }: Props) {
 
       const paymentData = await paymentRes.json();
 
-      const options = {
-        key: paymentData.key,
-        amount: paymentData.amount,
-        currency: "INR",
-        name: "Food App",
-        description: selectedPlan.title,
-        order_id: paymentData.razorpay_order_id,
-
-        handler: async function (response: any) {
-
-          await fetch("https://chef-backend-qh12.onrender.com/orders/verify-payment", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              order_id: orderData.id,
-            }),
-          });
-
-          // 🔥 CREATE SUBSCRIPTION
-          await fetch("https://chef-backend-qh12.onrender.com/subscriptions/", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              chef_id: selectedPlan.chef_id,
-              menu_id: selectedPlan.menu_id,
-              dish_name: selectedPlan.menu_name,
-              plan_id: selectedPlan.plan_id,
-              meals_per_day: 2,
-              delivery_days: ["Mon", "Tue", "Wed"],
-              delivery_time: "Lunch",
-              address: localStorage.getItem("address") || "Default Address",
-              start_date: new Date().toISOString(),
-              end_date: getEndDate(duration.days),
-            }),
-          });
-
-          setOrderId(orderData.id);
-          setPaymentSuccess(true);
-        },
-      };
+      
 
   const result = await RazorpayCheckout.open({
   key: paymentData.key,
@@ -187,6 +139,7 @@ export function SubscriptionDuration({ selectedPlan, onBack }: Props) {
 const response = result.response;
 
 // ✅ VERIFY PAYMENT
+console.log("VERIFY START");
 const verify = await fetch(
   "https://chef-backend-qh12.onrender.com/orders/verify-payment",
   {
@@ -204,6 +157,9 @@ const verify = await fetch(
   }
 );
 
+console.log("VERIFY STATUS =", verify.status);
+console.log("VERIFY DONE");
+
 if (!verify.ok) {
   throw new Error("Payment verification failed");
 }
@@ -220,7 +176,6 @@ await fetch(
     body: JSON.stringify({
       chef_id: selectedPlan.chef_id,
       menu_id: selectedPlan.menu_id,
-      dish_name: selectedPlan.menu_name,
       plan_id: selectedPlan.plan_id,
       meals_per_day: 2,
       delivery_days: ["Mon", "Tue", "Wed"],
