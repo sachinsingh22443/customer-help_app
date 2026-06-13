@@ -32,10 +32,17 @@ interface Duration {
 interface Props {
   selectedPlan: SelectedPlan;
   onBack: () => void;
+  onViewSubscriptions: () => void;
+  onGoHome: () => void;
 }
 
 
-export function SubscriptionDuration({ selectedPlan, onBack }: Props) {
+export function SubscriptionDuration({
+  selectedPlan,
+  onBack,
+  onViewSubscriptions,
+  onGoHome,
+}: Props) {
 
   const durations: Duration[] = [
   {
@@ -139,7 +146,7 @@ export function SubscriptionDuration({ selectedPlan, onBack }: Props) {
 const response = result.response;
 
 // ✅ VERIFY PAYMENT
-console.log("VERIFY START");
+// console.log("VERIFY START");
 const verify = await fetch(
   "https://chef-backend-qh12.onrender.com/orders/verify-payment",
   {
@@ -157,8 +164,8 @@ const verify = await fetch(
   }
 );
 
-console.log("VERIFY STATUS =", verify.status);
-console.log("VERIFY DONE");
+// console.log("VERIFY STATUS =", verify.status);
+// console.log("VERIFY DONE");
 
 if (!verify.ok) {
   throw new Error("Payment verification failed");
@@ -187,11 +194,11 @@ const subRes = await fetch(
   }
 );
 
-console.log("SUB STATUS =", subRes.status);
+// console.log("SUB STATUS =", subRes.status);
 
 const subText = await subRes.text();
 
-console.log("SUB RESPONSE =", subText);
+// console.log("SUB RESPONSE =", subText);
 
 if (!subRes.ok) {
   throw new Error(subText);
@@ -216,19 +223,19 @@ setPaymentSuccess(true);
       <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center bg-[#FFF8F0]">
         <h1 className="text-2xl font-bold mb-2">Payment Successful 🎉</h1>
 
-        <button
-          onClick={() => (window.location.href = `/orders/${orderId}`)}
-          className="w-full bg-orange-500 text-white py-3 rounded-lg mb-3"
-        >
-          Track Order
-        </button>
+      <button
+  onClick={onViewSubscriptions}
+  className="w-full bg-orange-500 text-white py-3 rounded-lg mb-3"
+>
+  My Subscription
+</button>
 
-        <button
-          onClick={() => (window.location.href = "/")}
-          className="w-full border border-orange-500 text-orange-500 py-3 rounded-lg"
-        >
-          Go to Home
-        </button>
+<button
+  onClick={onGoHome}
+  className="w-full border border-orange-500 text-orange-500 py-3 rounded-lg"
+>
+  Go To Home
+</button>
       </div>
     );
   }

@@ -57,6 +57,7 @@ import { ChefDetails } from "./components/customer/ChefDetails";
 import { LoadingScreen } from "./components/customer/LoadingScreen";
 import { SkeletonLoader } from "./components/customer/SkeletonLoader";
 import { Network } from "@capacitor/network";
+import MySubscriptions from "./components/customer/MySubscriptions";
 
 // Screen types for navigation
 type Screen =
@@ -105,6 +106,7 @@ type Screen =
   | "subscriptionPlans"
   | "subscriptionTypeDetail"
   | "subscriptionDuration"
+  | "mySubscriptions"
   | "userDetailsForm"
   | "planPreview"
   | "tomorrowSpecials"
@@ -719,6 +721,9 @@ if (!isOnline) {
             onNavigateToEditProfile={() => setCurrentScreen("editProfile")}
             onNavigateToAddresses={() => setCurrentScreen("myAddresses")}
             onNavigateToFavorites={() => setCurrentScreen("favoriteDishes")}
+            onNavigateToSubscriptions={() =>
+            setCurrentScreen("mySubscriptions")
+             }
             onNavigateToPayments={() => setCurrentScreen("paymentMethods")}
             onNavigateToSettings={() => setCurrentScreen("settings")}
             onNavigateToHelp={() => setCurrentScreen("helpSupport")}
@@ -851,12 +856,25 @@ if (!isOnline) {
         )}
 
         {currentScreen === "subscriptionDuration" && (
-          <SubscriptionDuration
+  <SubscriptionDuration
   key="subscriptionDuration"
   selectedPlan={selectedPlan}
   onBack={() => setCurrentScreen("subscriptionTypeDetail")}
+  onViewSubscriptions={() =>
+    setCurrentScreen("mySubscriptions")
+  }
+  onGoHome={() =>
+    setCurrentScreen("customerHome")
+  }
 />
         )}
+
+
+        {currentScreen === "mySubscriptions" && (
+  <MySubscriptions
+    onBack={() => setCurrentScreen("profile")}
+  />
+)}
 
         {currentScreen === "userDetailsForm" && (
           <UserDetailsForm
