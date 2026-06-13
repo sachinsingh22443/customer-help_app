@@ -89,16 +89,17 @@ export function SubscriptionDuration({ selectedPlan, onBack }: Props) {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          items: [
-            {
-              menu_id: selectedPlan.menu_id,
-              quantity: 1,
-            },
-          ],
-          amount: finalPrice, // 🔥 IMPORTANT FIX
-          address: localStorage.getItem("address") || "Default Address",
-          payment_method: "card",
-        }),
+  items: [
+    {
+      menu_id: selectedPlan.menu_id,
+      quantity: 1,
+    },
+  ],
+  amount: finalPrice,
+  is_subscription: true,
+  address: localStorage.getItem("address") || "Default Address",
+  payment_method: "card",
+})
       });
 
       const orderData = await orderRes.json();
