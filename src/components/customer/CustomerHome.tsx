@@ -14,6 +14,8 @@ import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { useCart } from "../../contexts/CartContext";
 import Location from "./Location";
 
+
+
 interface CustomerHomeProps {
   onNavigateToSubscription: () => void;
   onNavigateToTomorrowSpecials: (category?: string) => void; // 🔥 FIX
@@ -53,6 +55,15 @@ export function CustomerHome({
     if (savedCity) setLocationName(savedCity);
   }, []);
 
+
+  useEffect(() => {
+  if (showLocation) {
+    window.scrollTo({
+      top: document.body.scrollHeight,
+      behavior: "smooth",
+    });
+  }
+}, [showLocation]);
   // =========================
   // 🔥 FETCH CHEFS
   // =========================
