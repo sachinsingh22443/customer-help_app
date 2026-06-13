@@ -165,7 +165,7 @@ if (!verify.ok) {
 }
 
 // ✅ CREATE SUBSCRIPTION
-await fetch(
+const subRes = await fetch(
   "https://chef-backend-qh12.onrender.com/subscriptions/",
   {
     method: "POST",
@@ -186,6 +186,16 @@ await fetch(
     }),
   }
 );
+
+console.log("SUB STATUS =", subRes.status);
+
+const subText = await subRes.text();
+
+console.log("SUB RESPONSE =", subText);
+
+if (!subRes.ok) {
+  throw new Error(subText);
+}
 
 // ✅ SUCCESS SCREEN
 setOrderId(orderData.id);
