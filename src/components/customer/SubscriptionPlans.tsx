@@ -151,6 +151,7 @@ export function SubscriptionPlans({ onSelectPlan, onBack }: SubscriptionPlansPro
               onClick={() =>
   onSelectPlan({
     plan_id: plan.id,
+    chef_name: plan.chef_name,
 
     // 🔥 ADD THESE (MOST IMPORTANT)
     title: plan.title,
@@ -162,7 +163,7 @@ meal_type: plan.meal_type,
 calories_per_day: plan.calories_per_day,
 duration_days: plan.duration_days,
 
-tagline: plan.tagline,
+    tagline: plan.tagline,
     description: plan.description,
     emoji: plan.emoji,
     color: plan.color,
@@ -191,10 +192,28 @@ tagline: plan.tagline,
                   </h3>
 
                   {plan.chef_name && (
-                    <p className="text-xs text-gray-400">
-                      {plan.chef_name} • {plan.distance} km away
-                    </p>
-                  )}
+  <div className="mt-2 flex items-center justify-between">
+    <div>
+      <p className="text-xs text-gray-500">
+        Created By
+      </p>
+
+      <p className="font-semibold text-orange-600">
+        👨‍🍳 {plan.chef_name}
+      </p>
+    </div>
+
+    <div className="text-right">
+      <p className="text-xs text-gray-500">
+        Distance
+      </p>
+
+      <p className="font-medium">
+        📍 {plan.distance} km
+      </p>
+    </div>
+  </div>
+)}
 
                   {plan.description && (
                     <p className="text-sm text-gray-500 mb-2">

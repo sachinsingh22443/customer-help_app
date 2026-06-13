@@ -11,6 +11,7 @@ import {
   Award,
   Lock,
   Trash2,
+  Calendar,
 } from "lucide-react";
 
 const BASE_URL = "https://chef-backend-qh12.onrender.com";
@@ -34,7 +35,8 @@ interface ProfileProps {
   onNavigateToSettings?: () => void;
   onNavigateToHelp?: () => void;
   onNavigateToChangePassword?: () => void;
-  onNavigateToDeleteAccount?: () => void; // 🔥 NEW
+  onNavigateToSubscriptions?: () => void;
+  onNavigateToDeleteAccount?: () => void;
   onLogout?: () => void;
 }
 
@@ -45,6 +47,7 @@ export function Profile({
   onNavigateToSettings,
   onNavigateToHelp,
   onNavigateToChangePassword,
+  onNavigateToSubscriptions,
   onNavigateToDeleteAccount,
   onLogout,
 }: ProfileProps) {
@@ -79,6 +82,8 @@ export function Profile({
     if (id === "help" && onNavigateToHelp) onNavigateToHelp();
     if (id === "change-password" && onNavigateToChangePassword) onNavigateToChangePassword();
     if (id === "delete-account" && onNavigateToDeleteAccount) onNavigateToDeleteAccount();
+    if (id === "subscriptions" && onNavigateToSubscriptions)
+  onNavigateToSubscriptions();
   };
 
   const menuItems = [
@@ -88,6 +93,12 @@ export function Profile({
     { id: "change-password", icon: Lock, label: "Change Password", color: "from-[#FF7A30] to-[#5F2EEA]" },
     { id: "settings", icon: Settings, label: "Settings", color: "from-[#171717] to-[#3a3a3a]" },
     { id: "help", icon: HelpCircle, label: "Help & Support", color: "from-[#FF7A30] to-[#ff9d5c]" },
+    {
+  id: "subscriptions",
+  icon: Calendar,
+  label: "My Subscriptions",
+  color: "from-[#5F2EEA] to-[#8860f5]"
+},
   ];
 
   const handleLogout = () => {
@@ -180,6 +191,10 @@ export function Profile({
             </button>
           );
         })}
+
+        <button onClick={onNavigateToSubscriptions}>
+       My Subscriptions
+       </button>
 
         {/* 🔥 DELETE ACCOUNT */}
         <button

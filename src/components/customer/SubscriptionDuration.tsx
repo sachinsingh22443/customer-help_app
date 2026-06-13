@@ -7,7 +7,11 @@ interface SelectedPlan {
   plan_id: string;
   title: string;
   price: number;
-
+  
+  chef_name?: string;
+  plan_type?: string;
+  tagline?: string;
+  emoji?: string;
   chef_id: string;
   menu_id: string;
   menu_name: string;
@@ -221,7 +225,13 @@ setPaymentSuccess(true);
   if (paymentSuccess) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center bg-[#FFF8F0]">
-        <h1 className="text-2xl font-bold mb-2">Payment Successful 🎉</h1>
+        <p className="text-gray-500 mb-6">
+           Your subscription has been activated successfully.
+         </p>
+
+         <p className="text-sm text-orange-600 font-medium mb-4">
+         {selectedPlan.title}
+         </p>
 
       <button
   onClick={onViewSubscriptions}
@@ -250,7 +260,7 @@ setPaymentSuccess(true);
         </button>
 
         <h1 className="text-white text-xl font-semibold mb-2">
-          Select Duration
+          Subscription Summary
         </h1>
       </div>
 
@@ -262,19 +272,37 @@ setPaymentSuccess(true);
             ₹{selectedPlan.price}
           </p>
 
+          {selectedPlan.tagline && (
+      <p className="text-xs text-gray-500">
+        {selectedPlan.tagline}
+       </p>
+        )}
+
+          {selectedPlan.chef_name && (
+         <p className="text-sm font-medium text-orange-600">
+          👨‍🍳 {selectedPlan.chef_name}
+          </p>
+         )}
+
           <p className="text-sm text-gray-500">
-  {selectedPlan.goal}
-</p>
+          {selectedPlan.goal}
+           </p>
 
-<p className="text-sm text-gray-500">
-  {selectedPlan.diet_type}
-</p>
+         <p className="text-sm text-gray-500">
+         {selectedPlan.diet_type}
+        </p>
 
-<p className="text-sm text-gray-500">
-  🔥 {selectedPlan.calories_per_day} kcal/day
-</p>
+        <p className="text-sm text-gray-500">
+      {selectedPlan.plan_type === "normal" && "🥗 Normal Diet"}
+      {selectedPlan.plan_type === "dietician" && "👨‍⚕️ Dietician Support"}
+      {selectedPlan.plan_type === "gym" && "💪 Gym + Diet + Trainer"}
+      </p>
+
+         <p className="text-sm text-gray-500">
+          🔥 {selectedPlan.calories_per_day} kcal/day
+         </p>
         </div>
-      </div>
+        </div>
 
       {error && (
         <p className="text-red-500 text-center mt-4">{error}</p>

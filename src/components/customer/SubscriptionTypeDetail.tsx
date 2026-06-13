@@ -5,6 +5,7 @@ interface Plan {
   title: string;
   price: number;
   description?: string;
+  plan_type?: string;
   tagline?: string;
   emoji?: string;
   color?: string;
@@ -12,6 +13,7 @@ interface Plan {
   includes?: string[];
 
   chef_id: string;
+  chef_name?: string;
   menu_id: string;
   menu_name: string;
 
@@ -69,31 +71,66 @@ export function SubscriptionTypeDetail({
           ₹{selectedPlan.price}
         </p>
 
-        <div className="flex flex-wrap gap-2 mt-3">
-     <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
+
+        {selectedPlan.chef_name && (
+  <div className="mt-3 bg-white/20 rounded-xl px-4 py-3">
+    <p className="text-white/80 text-xs">
+      Created By
+    </p>
+
+    <p className="text-white font-semibold">
+      👨‍🍳 {selectedPlan.chef_name}
+    </p>
+  </div>
+)}
+
+    <div className="flex flex-wrap gap-2 mt-3">
+  <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
     {selectedPlan.goal}
   </span>
 
   <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
     {selectedPlan.diet_type}
   </span>
+
+  <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
+    {selectedPlan.plan_type === "normal" && "🥗 Normal"}
+
+    {selectedPlan.plan_type === "dietician" &&
+      "👨‍⚕️ Dietician"}
+
+    {selectedPlan.plan_type === "gym" &&
+      "💪 Gym + Trainer"}
+  </span>
 </div>
+
+
       </div>
 
-      <div className="p-6 space-y-4">
+  <div className="p-6 space-y-4">
         
-        <div className="bg-white rounded-2xl p-4 shadow">
+  <div className="bg-white rounded-2xl p-4 shadow">
   <h3 className="font-semibold mb-2">
     Plan Details
   </h3>
 
-  <p>🔥 {selectedPlan.calories_per_day} kcal/day</p>
-
-  <p>⏳ {selectedPlan.duration_days} Days</p>
+  <div className="space-y-2">
+  <p>
+    🔥 Calories: {selectedPlan.calories_per_day} kcal/day
+  </p>
 
   <p>
-    🍽️ {(selectedPlan.meal_type || []).join(", ")}
+    ⏳ Duration: {selectedPlan.duration_days} Days
   </p>
+
+  <p>
+    🍽️ Meals: {(selectedPlan.meal_type || []).join(", ")}
+  </p>
+
+  <p>
+    💰 Price: ₹{selectedPlan.price}
+  </p>
+</div>
 </div>
 
 
@@ -101,11 +138,42 @@ export function SubscriptionTypeDetail({
           <p>{selectedPlan.description}</p>
         )}
 
-        {(selectedPlan.features || []).map((f, i) => (
-          <div key={i} className="flex gap-2">
-            <Check size={16} /> {f}
-          </div>
-        ))}
+        <div className="bg-white rounded-2xl p-4 shadow">
+  <h3 className="font-semibold mb-3">
+    Plan Features
+  </h3>
+
+  {(selectedPlan.features || []).map((f, i) => (
+    <div
+      key={i}
+      className="flex items-center gap-2 mb-2"
+    >
+      <Check size={16} />
+      {f}
+    </div>
+  ))}
+</div>
+
+
+  {(selectedPlan.includes || []).length > 0 && (
+  <div className="bg-white rounded-2xl p-4 shadow">
+    <h3 className="font-semibold mb-3">
+      What's Included
+    </h3>
+
+    {(selectedPlan.includes || []).map((item, i) => (
+      <div
+        key={i}
+        className="flex items-center gap-2 mb-2"
+      >
+        <Check size={16} />
+        {item}
+      </div>
+    ))}
+  </div>
+)}
+
+
 
       </div>
 
