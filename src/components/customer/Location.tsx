@@ -72,8 +72,7 @@ console.log(
   bestPosition.coords.accuracy
 );
 
-  lat = position.coords.latitude;
-  lng = position.coords.longitude;
+  
 
 } else {
   const position = await new Promise<GeolocationPosition>(
