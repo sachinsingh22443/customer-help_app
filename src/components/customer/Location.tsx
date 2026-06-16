@@ -67,10 +67,10 @@ for (let i = 0; i < 3; i++) {
 lat = bestPosition.coords.latitude;
 lng = bestPosition.coords.longitude;
 
-console.log(
-  "Best Accuracy:",
-  bestPosition.coords.accuracy
-);
+// console.log(
+//   "Best Accuracy:",
+//   bestPosition.coords.accuracy
+// );
 
   
 
@@ -94,9 +94,9 @@ console.log(
 }
 
 
-      console.log("✅ GPS Coordinates");
-      console.log("Latitude:", lat);
-      console.log("Longitude:", lng);
+      // console.log("✅ GPS Coordinates");
+      // console.log("Latitude:", lat);
+      // console.log("Longitude:", lng);
 
      await loader?.load();
 
@@ -123,7 +123,7 @@ geocoder.geocode(
   }
 );
     } catch (err: any) {
-      console.error("Location Error:", err);
+      // console.error("Location Error:", err);
 
       setError(err?.message || "Unable to fetch location");
       setLoading(false);
@@ -136,10 +136,7 @@ const [loader, setLoader] = useState<Loader | null>(null);
 
 useEffect(() => {
 
-  console.log(
-    "API KEY:",
-    import.meta.env.VITE_GOOGLE_MAPS_API_KEY
-  );
+  
   const mapsLoader = new Loader({
     apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
     version: "weekly",
@@ -161,8 +158,8 @@ const searchPlaces = async (query: string) => {
   try {
     await loader.load();
 
-    console.log("Google:", !!window.google);
-    console.log("Places:", !!window.google?.maps?.places);
+    // console.log("Google:", !!window.google);
+    // console.log("Places:", !!window.google?.maps?.places);
 
     const service =
       new google.maps.places.AutocompleteService();
@@ -173,21 +170,21 @@ const searchPlaces = async (query: string) => {
         componentRestrictions: { country: "in" },
       },
       (predictions: any, status: any) => {
-        alert(
-          `STATUS: ${status}\nCOUNT: ${
-            predictions?.length || 0
-          }`
-        );
+        // alert(
+        //   `STATUS: ${status}\nCOUNT: ${
+        //     predictions?.length || 0
+        //   }`
+        // );
 
-        console.log("STATUS:", status);
-        console.log("PREDICTIONS:", predictions);
+        // console.log("STATUS:", status);
+        // console.log("PREDICTIONS:", predictions);
 
         setSuggestions(predictions || []);
       }
     );
   } catch (err) {
-    alert("ERROR: " + JSON.stringify(err));
-    console.error(err);
+    // alert("ERROR: " + JSON.stringify(err));
+    setError("Location search failed");
   }
 };
 
