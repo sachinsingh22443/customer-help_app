@@ -1,5 +1,10 @@
 import { useState } from "react";
 import { Geolocation } from "@capacitor/geolocation";
+import { Loader } from "@googlemaps/js-api-loader";
+import { useEffect } from "react";
+// import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
+
+declare const google: any;
 
 type Props = {
   onLocationSelect: (lat: number, lng: number, city: string) => void;
@@ -15,39 +20,7 @@ export default function Location({
   const [error, setError] = useState("");
 
   // Reverse Geocoding
-  const getCityName = async (lat: number, lng: number) => {
-    try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`
-      );
-
-      if (!res.ok) {
-        throw new Error("Reverse geocoding failed");
-      }
-
-      const data = await res.json();
-
-      console.log("📍 Reverse Response:", data);
-
-      const address = data.address || {};
-
-      const locationName =
-        address.village ||
-        address.suburb ||
-        address.town ||
-        address.city ||
-        address.county ||
-        address.state_district ||
-        address.state ||
-        data.display_name ||
-        "Unknown Location";
-
-      return locationName;
-    } catch (err) {
-      console.error("Reverse Geocoding Error:", err);
-      return "Unknown Location";
-    }
-  };
+  
 
   // Current Location
   const handleAutoLocation = async () => {
@@ -69,29 +42,44 @@ export default function Location({
       }
 
       const position = await Geolocation.getCurrentPosition({
-        enableHighAccuracy: true,
-        timeout: 30000,
-        maximumAge: 0,
-      });
+  enableHighAccuracy: true,
+  timeout: 60000,
+  maximumAge: 0,
+});
 
       const lat = position.coords.latitude;
       const lng = position.coords.longitude;
+
 
       console.log("✅ GPS Coordinates");
       console.log("Latitude:", lat);
       console.log("Longitude:", lng);
       console.log("Accuracy:", position.coords.accuracy);
 
-      const locationName = await getCityName(lat, lng);
+     await loader?.load();
 
-      localStorage.setItem("lat", lat.toString());
-      localStorage.setItem("lng", lng.toString());
-      localStorage.setItem("location_name", locationName);
+const geocoder = new google.maps.Geocoder();
 
-      onLocationSelect(lat, lng, locationName);
+geocoder.geocode(
+  {
+    location: { lat, lng },
+  },
+  (results: any, status: any) => {
+    const locationName =
+      status === "OK" && results?.[0]
+        ? results[0].formatted_address
+        : "Current Location";
 
-      setLoading(false);
-      onClose();
+    localStorage.setItem("lat", lat.toString());
+    localStorage.setItem("lng", lng.toString());
+    localStorage.setItem("location_name", locationName);
+
+    onLocationSelect(lat, lng, locationName);
+
+    setLoading(false);
+    onClose();
+  }
+);
     } catch (err: any) {
       console.error("Location Error:", err);
 
@@ -100,52 +88,87 @@ export default function Location({
     }
   };
 
-  // Manual Search
-  const handleManualLocation = async () => {
-    if (!manualLocation.trim()) {
-      setError("Please enter a location");
-      return;
+
+const [suggestions, setSuggestions] = useState<any[]>([]);
+const [loader, setLoader] = useState<Loader | null>(null);
+
+useEffect(() => {
+  const mapsLoader = new Loader({
+    apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+    version: "weekly",
+    libraries: ["places"],
+  });
+
+  setLoader(mapsLoader);
+}, []);
+
+
+const searchPlaces = async (query: string) => {
+  if (!loader || query.length < 3) {
+    setSuggestions([]);
+    return;
+  }
+
+  await loader.load();
+
+  const service = new google.maps.places.AutocompleteService();
+
+  service.getPlacePredictions(
+    {
+      input: query,
+      componentRestrictions: { country: "in" },
+    },
+    (predictions) => {
+      setSuggestions(predictions || []);
     }
+  );
+};
 
-    try {
-      setLoading(true);
-      setError("");
 
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(
-          manualLocation
-        )}&limit=1`
-      );
+const handlePlaceSelect = async (
+  placeId: string,
+  description: string
+) => {
+  if (!loader) return;
 
-      const data = await res.json();
+  await loader.load();
 
-      console.log("🔍 Search Result:", data);
+  const geocoder = new google.maps.Geocoder();
 
-      if (data.length === 0) {
-        setError("Location not found");
-        setLoading(false);
-        return;
+  geocoder.geocode(
+    { placeId },
+    (results, status) => {
+      if (
+        status === "OK" &&
+        results &&
+        results[0]
+      ) {
+        const loc = results[0].geometry.location;
+
+        const lat = loc.lat();
+        const lng = loc.lng();
+
+        localStorage.setItem("lat", lat.toString());
+        localStorage.setItem("lng", lng.toString());
+        localStorage.setItem(
+          "location_name",
+          description
+        );
+         
+        setSuggestions([]);
+        setManualLocation(description);
+
+        onLocationSelect(
+          lat,
+          lng,
+          description
+        );
+
+        onClose();
       }
-
-      const lat = parseFloat(data[0].lat);
-      const lng = parseFloat(data[0].lon);
-
-      const locationName = await getCityName(lat, lng);
-
-      localStorage.setItem("lat", lat.toString());
-      localStorage.setItem("lng", lng.toString());
-      localStorage.setItem("location_name", locationName);
-
-      onLocationSelect(lat, lng, locationName);
-
-      setLoading(false);
-      onClose();
-    } catch (err) {
-      console.error(err);
-      setError("Something went wrong");
-      setLoading(false);
     }
-  };
+  );
+};
 
   return (
     <div className="bg-white w-full max-w-md p-6 rounded-2xl shadow-xl relative">
@@ -174,17 +197,33 @@ export default function Location({
         type="text"
         placeholder="Search village, area, city..."
         value={manualLocation}
-        onChange={(e) => setManualLocation(e.target.value)}
+        onChange={(e) => {
+     setManualLocation(e.target.value);
+     searchPlaces(e.target.value);
+     }}
         className="w-full border p-3 rounded-xl mb-3 outline-none focus:ring-2 focus:ring-orange-400"
       />
 
-      <button
-        onClick={handleManualLocation}
-        disabled={loading}
-        className="w-full bg-green-500 text-white py-3 rounded-xl font-medium disabled:opacity-50"
+      {suggestions.length > 0 && (
+  <div className="border rounded-xl max-h-52 overflow-auto mb-3">
+    {suggestions.map((item: any) => (
+      <div
+        key={item.place_id}
+        className="p-3 cursor-pointer hover:bg-gray-100 border-b"
+        onClick={() =>
+          handlePlaceSelect(
+            item.place_id,
+            item.description
+          )
+        }
       >
-        Search Location
-      </button>
+        {item.description}
+      </div>
+    ))}
+  </div>
+)}
+
+      
 
       {error && (
         <p className="text-red-500 text-sm mt-3 text-center">
