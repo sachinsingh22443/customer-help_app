@@ -135,11 +135,18 @@ const [suggestions, setSuggestions] = useState<any[]>([]);
 const [loader, setLoader] = useState<Loader | null>(null);
 
 useEffect(() => {
+
+  console.log(
+    "API KEY:",
+    import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+  );
   const mapsLoader = new Loader({
     apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
     version: "weekly",
     libraries: ["places"],
   });
+
+
 
   setLoader(mapsLoader);
 }, []);
