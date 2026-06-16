@@ -28,33 +28,76 @@ export default function Location({
       setLoading(true);
       setError("");
 
-      const permission = await Geolocation.requestPermissions();
+      if (window.Capacitor?.isNativePlatform()) {
+           const permission = await Geolocation.requestPermissions();
 
-      console.log("Permission:", permission);
+  if (
+    permission.location !== "granted" &&
+    permission.coarseLocation !== "granted"
+  ) {
+    setError("Location permission denied");
+    setLoading(false);
+    return;
+  }
+}
 
-      if (
-        permission.location !== "granted" &&
-        permission.coarseLocation !== "granted"
-      ) {
-        setError("Location permission denied");
-        setLoading(false);
-        return;
-      }
+      
 
-      const position = await Geolocation.getCurrentPosition({
-  enableHighAccuracy: true,
-  timeout: 60000,
-  maximumAge: 0,
-});
+  let lat: number;
+let lng: number;
 
-      const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
+if (window.Capacitor?.isNativePlatform()) {
+    let bestPosition = null;
+
+for (let i = 0; i < 3; i++) {
+  const pos = await Geolocation.getCurrentPosition({
+    enableHighAccuracy: true,
+    timeout: 30000,
+    maximumAge: 0,
+  });
+
+  if (
+    !bestPosition ||
+    pos.coords.accuracy < bestPosition.coords.accuracy
+  ) {
+    bestPosition = pos;
+  }
+}
+
+lat = bestPosition.coords.latitude;
+lng = bestPosition.coords.longitude;
+
+console.log(
+  "Best Accuracy:",
+  bestPosition.coords.accuracy
+);
+
+  lat = position.coords.latitude;
+  lng = position.coords.longitude;
+
+} else {
+  const position = await new Promise<GeolocationPosition>(
+    (resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(
+        resolve,
+        reject,
+        {
+          enableHighAccuracy: true,
+          timeout: 60000,
+        }
+      );
+    }
+  );
+
+  lat = position.coords.latitude;
+  lng = position.coords.longitude;
+
+}
 
 
       console.log("✅ GPS Coordinates");
       console.log("Latitude:", lat);
       console.log("Longitude:", lng);
-      console.log("Accuracy:", position.coords.accuracy);
 
      await loader?.load();
 
