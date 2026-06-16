@@ -151,19 +151,37 @@ const searchPlaces = async (query: string) => {
     return;
   }
 
-  await loader.load();
+  try {
+    await loader.load();
 
-  const service = new google.maps.places.AutocompleteService();
+    console.log("Google:", !!window.google);
+    console.log("Places:", !!window.google?.maps?.places);
 
-  service.getPlacePredictions(
-    {
-      input: query,
-      componentRestrictions: { country: "in" },
-    },
-    (predictions) => {
-      setSuggestions(predictions || []);
-    }
-  );
+    const service =
+      new google.maps.places.AutocompleteService();
+
+    service.getPlacePredictions(
+      {
+        input: query,
+        componentRestrictions: { country: "in" },
+      },
+      (predictions: any, status: any) => {
+        alert(
+          `STATUS: ${status}\nCOUNT: ${
+            predictions?.length || 0
+          }`
+        );
+
+        console.log("STATUS:", status);
+        console.log("PREDICTIONS:", predictions);
+
+        setSuggestions(predictions || []);
+      }
+    );
+  } catch (err) {
+    alert("ERROR: " + JSON.stringify(err));
+    console.error(err);
+  }
 };
 
 
