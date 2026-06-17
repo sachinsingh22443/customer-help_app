@@ -49,13 +49,13 @@ export function HelpSupport({ onBack }: HelpSupportProps) {
 
   // ================= CONTACT =================
   const handleCall = () => window.location.href = "tel:+9118001234567";
-  const handleEmail = () => window.location.href = "mailto:support@eatunity.com";
+  const handleEmail = () => window.location.href = "mailto:supporteatunity@gmail.com.com";
   const handleChat = () => alert("Live chat coming soon 🚀");
 
   const contactMethods = [
     { icon: MessageCircle, title: "Live Chat", subtitle: "2 min response", action: handleChat },
     { icon: Phone, title: "Call Us", subtitle: "+91 7014929514", action: handleCall },
-    { icon: Mail, title: "Email", subtitle: "support@eatunity.com", action: handleEmail },
+    { icon: Mail, title: "Email", subtitle: "supporteatunity@gmail.com", action: handleEmail },
   ];
 
   // ================= FAQ DATA =================
