@@ -100,7 +100,8 @@ export function LoginScreen({ onLogin, onForgotPassword }: LoginScreenProps) {
 
     if (res.ok) {
   localStorage.setItem("token", data.access_token);
-  localStorage.setItem("user_id", data.user_id);
+localStorage.setItem("refresh_token", data.refresh_token);
+localStorage.setItem("user_id", data.user_id);
 
   setPhone("");
 setPassword("");
@@ -153,9 +154,8 @@ setShowOtpInput(false);
 
     if (res.ok) {
       localStorage.setItem("token", data.access_token);
-      // console.log("TOKEN SAVED:", data.access_token);
-      // alert("TOKEN SAVED");
-      localStorage.setItem("user_id", data.user_id);
+     localStorage.setItem("refresh_token", data.refresh_token);
+     localStorage.setItem("user_id", data.user_id);
 
       onLogin();
     } else {

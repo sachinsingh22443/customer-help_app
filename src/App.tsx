@@ -153,8 +153,9 @@ function AppContent() {
 
 useEffect(() => {
   const checkAuth = async () => {
-    const token = localStorage.getItem("token");
-    
+
+    let token = localStorage.getItem("token");
+    const refreshToken = localStorage.getItem("refresh_token");
 
     if (!token) {
       setCurrentScreen("login");
@@ -162,41 +163,102 @@ useEffect(() => {
       return;
     }
 
+    const verify = async (accessToken: string) => {
+      return fetch(
+        "https://chef-backend-qh12.onrender.com/auth/verify-token",
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+    };
+
     try {
-  const res = await fetch(
-    "https://chef-backend-qh12.onrender.com/auth/verify-token",
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+
+      let res = await verify(token);
+
+      if (res.ok) {
+        setCurrentScreen("customerHome");
+        setLoading(false);
+        return;
+      }
+
+      // Access token expired
+      if (res.status === 401 && refreshToken) {
+
+        const refreshRes = await fetch(
+          "https://chef-backend-qh12.onrender.com/auth/refresh",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              refresh_token: refreshToken,
+            }),
+          }
+        );
+
+        if (!refreshRes.ok) {
+          throw new Error("Refresh Failed");
+        }
+
+        const refreshData = await refreshRes.json();
+
+        localStorage.setItem(
+          "token",
+          refreshData.access_token
+        );
+
+        if (refreshData.refresh_token) {
+          localStorage.setItem(
+            "refresh_token",
+            refreshData.refresh_token
+          );
+        }
+
+        token = refreshData.access_token;
+
+        res = await verify(token);
+
+        if (res.ok) {
+          setCurrentScreen("customerHome");
+        } else {
+          throw new Error("Verify Failed");
+        }
+
+      } else {
+
+        throw new Error("Unauthorized");
+
+      }
+
+    } catch (err) {
+
+      localStorage.removeItem("token");
+      localStorage.removeItem("refresh_token");
+      localStorage.removeItem("user_id");
+
+      const status = await Network.getStatus();
+
+      if (!status.connected) {
+        setCurrentScreen("noInternet");
+      } else {
+        setCurrentScreen("login");
+      }
+
     }
-  );
-
-  if (res.ok) {
-    setCurrentScreen("customerHome");
-  } else {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user_id");
-    setCurrentScreen("login");
-  }
-
-} catch (err) {
-  // console.error("VERIFY ERROR:", err);
-
-  const status = await Network.getStatus();
-
-  if (!status.connected) {
-    setCurrentScreen("noInternet");
-  } else {
-    setCurrentScreen("customerHome");
-  }
-}
 
     setLoading(false);
+
   };
 
   checkAuth();
+
 }, []);
+
+
 
 useEffect(() => {
   let listener: any;
@@ -729,7 +791,12 @@ if (!isOnline) {
             onNavigateToHelp={() => setCurrentScreen("helpSupport")}
             onNavigateToDeleteAccount={() => setCurrentScreen("deleteAccount")}
             onNavigateToChangePassword={() => setCurrentScreen("changePassword")}
-            onLogout={() => setCurrentScreen("login")}
+            onLogout={() => 
+              localStorage.removeItem("token");
+              localStorage.removeItem("refresh_token");
+               localStorage.removeItem("user_id");
+               localStorage.clear(); 
+              setCurrentScreen("login")}
           />
         )}
 
