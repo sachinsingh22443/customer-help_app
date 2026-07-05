@@ -791,12 +791,13 @@ if (!isOnline) {
             onNavigateToHelp={() => setCurrentScreen("helpSupport")}
             onNavigateToDeleteAccount={() => setCurrentScreen("deleteAccount")}
             onNavigateToChangePassword={() => setCurrentScreen("changePassword")}
-            onLogout={() => 
-              localStorage.removeItem("token");
-              localStorage.removeItem("refresh_token");
-               localStorage.removeItem("user_id");
-               localStorage.clear(); 
-              setCurrentScreen("login")}
+            onLogout={() => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("refresh_token");
+  localStorage.removeItem("user_id");
+  localStorage.clear();
+  setCurrentScreen("login");
+}}
           />
         )}
 
