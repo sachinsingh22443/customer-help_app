@@ -729,9 +729,10 @@ if (!isOnline) {
     key="codConfirmation"
     order={currentOrder}
     onConfirm={(order) => {
-      setSelectedOrderId(order.id);
-      setCurrentScreen("orderConfirmation");
-    }}
+    setCurrentOrder(order);
+    setSelectedOrderId(order.id);
+    setCurrentScreen("orderConfirmation");
+  }}
     onBack={() => setCurrentScreen("checkout")}
     onBackToHome={handleBackToCustomerHome}
   />

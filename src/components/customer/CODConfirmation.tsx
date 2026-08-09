@@ -18,7 +18,64 @@ export function CODConfirmation({
 
   const [loading, setLoading] = useState(false);
 
-  return (
+const handleConfirmCOD = async () => {
+  if (!order?.id) {
+    alert("Order ID missing");
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Please login again");
+      return;
+    }
+
+    const response = await fetch(
+      `https://chef-backend-qh12.onrender.com/orders/${order.id}/confirm-cod`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data?.detail || "Failed to confirm COD order"
+      );
+    }
+
+    console.log("✅ COD ORDER CONFIRMED:", data);
+
+    // Parent ko successful confirmation ke baad inform karo
+    onConfirm({
+      ...order,
+      cod_confirmed: true,
+      status: "pending",
+    });
+
+  } catch (error) {
+    console.error("❌ COD CONFIRM ERROR:", error);
+
+    alert(
+      error instanceof Error
+        ? error.message
+        : "Failed to confirm COD order"
+    );
+  } finally {
+    setLoading(false);
+  }
+};
+
+return (
     <div className="h-screen bg-[#FFF8F0] flex flex-col items-center justify-center px-6 relative overflow-hidden">
 
       <div className="absolute top-0 left-0 w-full h-48 bg-gradient-to-br from-[#0FAD6E] to-[#5F2EEA] opacity-10 rounded-b-[3rem]" />
@@ -79,11 +136,9 @@ export function CODConfirmation({
         <div className="space-y-3">
 
           <button
-            disabled={loading}
-            onClick={() => {
-              setLoading(true);
-              onConfirm(order);
-            }}
+           disabled={loading}
+           onClick={handleConfirmCOD}
+          
             className="w-full py-4 bg-[#0FAD6E] text-white rounded-2xl flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {loading ? (
