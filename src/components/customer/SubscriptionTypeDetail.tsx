@@ -1,4 +1,4 @@
-import { ChevronLeft, Check } from "lucide-react";
+import { Check } from "lucide-react";
 
 interface Plan {
   plan_id: string;
@@ -18,11 +18,13 @@ interface Plan {
   menu_name: string;
 
   goal?: string;
-diet_type?: string;
-meal_type?: string[];
+  diet_type?: string;
+  meal_type?: string[];
+  breakfast_available?: boolean;
+  breakfast_price?: number;
 
-calories_per_day?: number;
-duration_days?: number;
+  calories_per_day?: number;
+  duration_days?: number;
 }
 
 interface Props {
@@ -67,9 +69,28 @@ export function SubscriptionTypeDetail({
           </p>
         )}
 
-        <p className="text-white text-2xl mt-2">
-          ₹{selectedPlan.price}
+        <div className="mt-2">
+            <p className="text-white text-2xl font-semibold">
+            ₹{selectedPlan.price}
+          </p>
+
+          <p className="text-white/80 text-xs">
+           per 30 days
+         </p>
+        </div>
+
+
+        {selectedPlan.breakfast_available && (
+         <div className="mt-3 bg-white/20 rounded-xl px-4 py-3">
+         <p className="text-white font-medium">
+         🥣 Breakfast Available
+         </p>
+
+        <p className="text-white/80 text-sm">
+         Optional · ₹{selectedPlan.breakfast_price}/day
         </p>
+         </div>
+        )}
 
 
         {selectedPlan.chef_name && (

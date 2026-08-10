@@ -19,14 +19,17 @@ interface Plan {
   menu_name: string;
 
   goal?: string;
-diet_type?: string;
-meal_type?: string[];
+  diet_type?: string;
+  meal_type?: string[];
+  plan_type?: string;
+  calories_per_day?: number;
+  duration_days?: number;
 
-calories_per_day?: number;
-duration_days?: number;
+  tagline?: string;
+  includes?: string[];
 
-tagline?: string;
-includes?: string[];
+  breakfast_available?: boolean;
+  breakfast_price?: number;
 }
 
 interface SubscriptionPlansProps {
@@ -152,16 +155,18 @@ export function SubscriptionPlans({ onSelectPlan, onBack }: SubscriptionPlansPro
   onSelectPlan({
     plan_id: plan.id,
     chef_name: plan.chef_name,
+    plan_type: plan.plan_type,
 
     // 🔥 ADD THESE (MOST IMPORTANT)
     title: plan.title,
     price: plan.price,
     goal: plan.goal,
-diet_type: plan.diet_type,
-meal_type: plan.meal_type,
+    diet_type: plan.diet_type,
+    meal_type: plan.meal_type,
 
-calories_per_day: plan.calories_per_day,
-duration_days: plan.duration_days,
+    calories_per_day: plan.calories_per_day,
+    duration_days: plan.duration_days,
+
 
     tagline: plan.tagline,
     description: plan.description,
@@ -169,6 +174,9 @@ duration_days: plan.duration_days,
     color: plan.color,
     features: plan.features,
     includes: plan.includes,
+
+    breakfast_available: plan.breakfast_available,
+    breakfast_price: plan.breakfast_price,
 
     // existing
     chef_id: plan.chef_id,
@@ -224,6 +232,16 @@ duration_days: plan.duration_days,
                   <div className="text-orange-500 text-xl font-semibold mb-3">
                     ₹{plan.price}
                   </div>
+
+                  <p className="text-xs text-gray-500 mb-3">
+                  per 30 days
+                  </p>
+
+                  {plan.breakfast_available && (
+                  <p className="text-sm text-green-600 mb-3">
+                 🥣 Breakfast available · ₹{plan.breakfast_price}/day
+                  </p>
+                     )}
 
 
                   <div className="flex flex-wrap gap-2 mb-3">

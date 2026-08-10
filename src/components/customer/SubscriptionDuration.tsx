@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "motion/react";
-import { Calendar, TrendingUp, Zap } from "lucide-react";
+import { Calendar} from "lucide-react";
 import { Checkout as RazorpayCheckout } from "capacitor-razorpay";
 
 interface SelectedPlan {
@@ -22,6 +22,9 @@ meal_type?: string[];
 
 calories_per_day?: number;
 duration_days?: number;
+
+breakfast_available?: boolean;
+breakfast_price?: number;
 }
 
 interface Duration {
@@ -50,17 +53,34 @@ export function SubscriptionDuration({
 
   const durations: Duration[] = [
   {
-    id: "plan",
-    name: `${selectedPlan.duration_days || 30} Days`,
-    days: selectedPlan.duration_days || 30,
+    id: "7",
+    name: "7 Days",
+    days: 7,
     discount: 0,
     icon: Calendar,
     color: "from-[#5F2EEA] to-[#8860f5]",
+  },
+  {
+    id: "15",
+    name: "15 Days",
+    days: 15,
+    discount: 0,
+    icon: Calendar,
+    color: "from-[#FF7A30] to-[#ff9f43]",
+  },
+  {
+    id: "30",
+    name: "30 Days",
+    days: 30,
+    discount: 0,
+    icon: Calendar,
+    color: "from-[#0FAD6E] to-[#34d399]",
   },
 ];
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [breakfastEnabled, setBreakfastEnabled] = useState(false);
 
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
@@ -70,13 +90,29 @@ export function SubscriptionDuration({
   }
 
   const getEndDate = (days: number) => {
-    const d = new Date();
-    d.setDate(d.getDate() + days);
-    return d.toISOString();
-  };
+  const d = new Date();
 
-  const calculatePrice = () => {
-  return selectedPlan.price;
+  d.setDate(d.getDate() + days - 1);
+
+  return d.toISOString();
+};
+
+  const calculatePrice = (days: number) => {
+  // Plan price is the 30-day/month price
+  const planPrice =
+    (selectedPlan.price / 30) * days;
+
+  // Breakfast is charged per day
+  const breakfastTotal =
+    breakfastEnabled &&
+    selectedPlan.breakfast_available &&
+    selectedPlan.breakfast_price
+      ? selectedPlan.breakfast_price * days
+      : 0;
+
+  return Number(
+    (planPrice + breakfastTotal).toFixed(2)
+  );
 };
 
   const handleSubscribe = async (duration: Duration) => {
@@ -114,7 +150,7 @@ if (activeData.has_active_subscription) {
 
 setLoading(true);
 
-const finalPrice = calculatePrice();
+const finalPrice = calculatePrice(duration.days);
 
       // 🔥 CREATE ORDER (SEND EXACT AMOUNT)
       const orderRes = await fetch("https://chef-backend-qh12.onrender.com/orders/", {
@@ -124,7 +160,7 @@ const finalPrice = calculatePrice();
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-  items: [
+         items: [
     {
       menu_id: selectedPlan.menu_id,
       quantity: 1,
@@ -211,8 +247,23 @@ const subRes = await fetch(
       chef_id: selectedPlan.chef_id,
       menu_id: selectedPlan.menu_id,
       plan_id: selectedPlan.plan_id,
-      meals_per_day: 2,
-      delivery_days: ["Mon", "Tue", "Wed"],
+      duration_days: duration.days,
+      meals_per_day: breakfastEnabled ? 3 : 2,
+
+      breakfast_enabled: breakfastEnabled,
+
+      breakfast_price: breakfastEnabled
+      ? selectedPlan.breakfast_price
+      : 0,
+      delivery_days: [
+      "Mon",
+     "Tue",
+     "Wed",
+     "Thu",
+     "Fri",
+     "Sat",
+     "Sun",
+     ],
       delivery_time: "Lunch",
       address: localStorage.getItem("address") || "Default Address",
       start_date: new Date().toISOString(),
@@ -296,7 +347,7 @@ setPaymentSuccess(true);
           </p>
 
           {selectedPlan.tagline && (
-      <p className="text-xs text-gray-500">
+        <p className="text-xs text-gray-500">
         {selectedPlan.tagline}
        </p>
         )}
@@ -316,16 +367,64 @@ setPaymentSuccess(true);
         </p>
 
         <p className="text-sm text-gray-500">
-      {selectedPlan.plan_type === "normal" && "🥗 Normal Diet"}
-      {selectedPlan.plan_type === "dietician" && "👨‍⚕️ Dietician Support"}
-      {selectedPlan.plan_type === "gym" && "💪 Gym + Diet + Trainer"}
-      </p>
+        {selectedPlan.plan_type === "normal" && "🥗 Normal Diet"}
+        {selectedPlan.plan_type === "dietician" && "👨‍⚕️ Dietician Support"}
+        {selectedPlan.plan_type === "gym" && "💪 Gym + Diet + Trainer"}
+        </p>
 
          <p className="text-sm text-gray-500">
           🔥 {selectedPlan.calories_per_day} kcal/day
          </p>
         </div>
         </div>
+
+
+
+
+
+        {selectedPlan.breakfast_available && (
+  <div className="px-6 mt-6">
+    <div className="bg-white p-5 rounded-2xl shadow-sm">
+
+      <div className="flex items-center justify-between">
+
+        <div>
+          <h3 className="font-semibold text-gray-900">
+            🥣 Breakfast
+          </h3>
+
+          <p className="text-sm text-gray-500">
+            Optional meal
+          </p>
+
+          <p className="text-sm text-orange-500 font-semibold mt-1">
+            ₹{selectedPlan.breakfast_price}/day
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() =>
+            setBreakfastEnabled((prev) => !prev)
+          }
+          className={`px-4 py-2 rounded-xl font-semibold ${
+            breakfastEnabled
+              ? "bg-green-500 text-white"
+              : "bg-orange-500 text-white"
+          }`}
+        >
+          {breakfastEnabled
+            ? "✓ Added"
+            : "+ Add Breakfast"}
+        </button>
+
+      </div>
+
+      
+
+    </div>
+  </div>
+)}
 
       {error && (
         <p className="text-red-500 text-center mt-4">{error}</p>
@@ -335,47 +434,63 @@ setPaymentSuccess(true);
       <div className="px-6 mt-6 space-y-4">
 
         {durations.map((d, index) => {
-          const Icon = d.icon;
+  const Icon = d.icon;
+  const finalPrice = calculatePrice(d.days);
 
-          const finalPrice = calculatePrice();
+  return (
+    <motion.div
+      key={d.id}
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.1 }}
+    >
+      <button
+        onClick={() => handleSubscribe(d)}
+        disabled={loading}
+        className={`w-full p-5 rounded-xl shadow-md transition-all ${
+          loading
+            ? "bg-gray-200 opacity-70 cursor-not-allowed"
+            : "bg-white hover:shadow-lg active:scale-95"
+        }`}
+      >
+        <div className="flex items-center gap-4">
 
-          return (
-            <motion.div
-              key={d.id}
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <button
-  onClick={() => handleSubscribe(d)}
-  disabled={loading}
-  className={`w-full p-5 rounded-xl shadow-md transition-all ${
-    loading
-      ? "bg-gray-200 opacity-70 cursor-not-allowed"
-      : "bg-white hover:shadow-lg active:scale-95"
-  }`}
->
-                <div className="flex items-center gap-4">
+          <div
+            className={`w-14 h-14 bg-gradient-to-br ${d.color} rounded-xl flex items-center justify-center`}
+          >
+            <Icon className="text-white" />
+          </div>
 
-                  <div className={`w-14 h-14 bg-gradient-to-br ${d.color} rounded-xl flex items-center justify-center`}>
-                    <Icon className="text-white" />
-                  </div>
+          <div className="flex-1 text-left">
+            <h3 className="text-lg font-semibold">
+              {loading ? "Processing..." : d.name}
+            </h3>
+        <p className="text-sm text-gray-500">
+         Subscription: ₹
+          {((selectedPlan.price / 30) * d.days).toFixed(2)}
+        </p>
 
-                  <div className="flex-1 text-left">
-  <h3 className="text-lg font-semibold">
-    {loading ? "Processing..." : d.name}
-  </h3>
+            {breakfastEnabled &&
+              selectedPlan.breakfast_available &&
+              selectedPlan.breakfast_price && (
+                <p className="text-sm text-green-600">
+                  Breakfast: ₹
+                  {selectedPlan.breakfast_price * d.days}
+                </p>
+              )}
 
-  <p className="text-orange-500 font-semibold">
-    ₹{finalPrice}
-  </p>
-</div>
+            <p className="text-xl font-bold text-orange-500 mt-2">
+              Total: ₹{finalPrice}
+            </p>
+          </div>
 
-                </div>
-              </button>
-            </motion.div>
-          );
-        })}
+        </div>
+      </button>
+    </motion.div>
+  );
+})}
+          
+
 
       </div>
     </div>
