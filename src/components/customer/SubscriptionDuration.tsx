@@ -736,28 +736,27 @@ setPaymentSuccess(true);
               <button
                 onClick={() => {
 
-                  setSelectedDuration(d);
+  setSelectedDuration(d);
 
-                  // Breakfast available hai
-                  // to pehle breakfast selection screen.
-                  if (
-                    selectedPlan.breakfast_available &&
-                    selectedPlan.breakfast_price
-                  ) {
+  // 🍳 Chef ne breakfast price set ki hai
+  // to breakfast selection screen show karo
+  if (
+    selectedPlan.breakfast_price != null &&
+    Number(selectedPlan.breakfast_price) > 0
+  ) {
 
-                    setBreakfastEnabled(false);
+    setBreakfastEnabled(false);
+    setShowBreakfastSelection(true);
 
-                    setShowBreakfastSelection(true);
+  } else {
 
-                  } else {
+    // Breakfast configured nahi hai
+    // to direct payment
+    handleSubscribe(d);
 
-                    // Breakfast available nahi hai
-                    // to direct payment.
-                    handleSubscribe(d);
+  }
 
-                  }
-
-                }}
+}}
                 disabled={loading}
                 className={`w-full p-5 rounded-xl shadow-md transition-all ${
                   loading
