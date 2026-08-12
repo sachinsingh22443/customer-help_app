@@ -54,6 +54,7 @@ import { UserDetailsForm } from "./components/customer/UserDetailsForm";
 import { PlanPreview } from "./components/customer/PlanPreview";
 import { TomorrowSpecials } from "./components/customer/TomorrowSpecials";
 import { ChefDetails } from "./components/customer/ChefDetails";
+import { AllChefs } from "./components/customer/AllChefs";
 import { LoadingScreen } from "./components/customer/LoadingScreen";
 import { SkeletonLoader } from "./components/customer/SkeletonLoader";
 import { Network } from "@capacitor/network";
@@ -111,6 +112,7 @@ type Screen =
   | "planPreview"
   | "tomorrowSpecials"
   | "chefDetails"
+  | "allChefs"
   | "deleteAccount"
 
 export default function App() {
@@ -1012,6 +1014,7 @@ if (!isOnline) {
         )}
 
         {currentScreen === "chefDetails" && (
+
           <ChefDetails
             key="chefDetails"
             chefId={selectedChefId}
@@ -1019,6 +1022,14 @@ if (!isOnline) {
         onNavigateToDish={handleNavigateToDishDetail}
           />
         )}
+
+        {currentScreen === "allChefs" && (
+  <AllChefs
+    key="allChefs"
+    onBack={handleBackToCustomerHome}
+    onNavigateToChefDetails={handleNavigateToChefDetails}
+  />
+)} 
       </AnimatePresence>
       {showBottomNav && (
         <BottomNavigation
