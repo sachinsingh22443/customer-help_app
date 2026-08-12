@@ -189,63 +189,71 @@ useEffect(() => {
 
       let res = await verify(token);
 
-      if (res.ok) {
-        setCurrentScreen("customerHome");
-        setAuthReady(true);
-      } else {
-  throw new Error("Verify Failed");
+if (res.ok) {
+  // Access token valid
+  setCurrentScreen("customerHome");
+  setAuthReady(true);
+
+} else if (res.status === 401 && refreshToken) {
+
+  // =====================================================
+  // ACCESS TOKEN EXPIRED
+  // USE REFRESH TOKEN
+  // =====================================================
+
+  const refreshRes = await fetch(
+    "https://chef-backend-qh12.onrender.com/auth/refresh",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        refresh_token: refreshToken,
+      }),
+    }
+  );
+
+  // Refresh token invalid / expired
+  if (!refreshRes.ok) {
+    throw new Error("Refresh Failed");
+  }
+
+  const refreshData = await refreshRes.json();
+
+  // Save new access token
+  localStorage.setItem(
+    "token",
+    refreshData.access_token
+  );
+
+  // Save rotated refresh token if backend sends one
+  if (refreshData.refresh_token) {
+    localStorage.setItem(
+      "refresh_token",
+      refreshData.refresh_token
+    );
+  }
+
+  // Update current token
+  token = refreshData.access_token;
+
+  // Verify new access token
+  res = await verify(token);
+
+  if (res.ok) {
+    setCurrentScreen("customerHome");
+    setAuthReady(true);
+  } else {
+    throw new Error("Verify Failed");
+  }
+
+} else {
+
+  // Token invalid and no refresh token
+  throw new Error("Unauthorized");
+
 }
-
-      // Access token expired
-      if (res.status === 401 && refreshToken) {
-
-        const refreshRes = await fetch(
-          "https://chef-backend-qh12.onrender.com/auth/refresh",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              refresh_token: refreshToken,
-            }),
-          }
-        );
-
-        if (!refreshRes.ok) {
-          throw new Error("Refresh Failed");
-        }
-
-        const refreshData = await refreshRes.json();
-
-        localStorage.setItem(
-          "token",
-          refreshData.access_token
-        );
-
-        if (refreshData.refresh_token) {
-          localStorage.setItem(
-            "refresh_token",
-            refreshData.refresh_token
-          );
-        }
-
-        token = refreshData.access_token;
-
-        res = await verify(token);
-
-        if (res.ok) {
-          setCurrentScreen("customerHome");
-          setAuthReady(true);
-        } else {
-          throw new Error("Verify Failed");
-        }
-
-      } else {
-
-        throw new Error("Unauthorized");
-
-      }
 
     } catch (err) {
 
