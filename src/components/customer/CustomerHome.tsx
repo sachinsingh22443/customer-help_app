@@ -26,6 +26,7 @@ interface CustomerHomeProps {
   onNavigateToSearch?: () => void;
   onNavigateToNotifications?: () => void;
   onNavigateToSpecialDetail: (item: any) => void;
+  onNavigateToAllChefs: () => void;
 }
 
 export function CustomerHome({
@@ -36,6 +37,7 @@ export function CustomerHome({
   onNavigateToCart,
   onNavigateToNotifications,
   onNavigateToSpecialDetail,
+   onNavigateToAllChefs,
 }: CustomerHomeProps) {
 
   const { getTotalItems } = useCart();

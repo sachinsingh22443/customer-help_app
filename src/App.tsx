@@ -595,6 +595,10 @@ if (!isOnline) {
        onNavigateToSearch={handleNavigateToGlobalSearch}
        onNavigateToNotifications={handleNavigateToNotifications}
        onNavigateToSpecialDetail={handleNavigateToSpecialDetail} // 🔥 ADD THIS
+       onNavigateToAllChefs={() => {
+     setCurrentScreen("allChefs");
+      }}
+
        />
         )}
 
