@@ -295,21 +295,10 @@ setPaymentSuccess(true);
     } catch (err: any) {
   console.log("Subscription payment error:", err);
 
-  const code =
-    err?.code ||
-    err?.response?.code ||
-    "";
+  const code = err?.code || "";
+  const description = err?.description || "";
+  const message = err?.message || "";
 
-  const description =
-    err?.description ||
-    err?.response?.description ||
-    "";
-
-  const message =
-    err?.message ||
-    "";
-
-  // User manually exited/cancelled Razorpay
   const isPaymentCancelled =
     code === "BAD_REQUEST_ERROR" ||
     code === "PAYMENT_CANCELLED" ||
@@ -411,10 +400,11 @@ setPaymentSuccess(true);
 
           <button
             onClick={() => {
-              setShowBreakfastSelection(false);
-              setSelectedDuration(null);
-              setBreakfastEnabled(false);
-            }}
+  setError("");
+  setShowBreakfastSelection(false);
+  setSelectedDuration(null);
+  setBreakfastEnabled(false);
+}}
             className="text-white mb-6"
           >
             ← Back
@@ -769,24 +759,19 @@ setPaymentSuccess(true);
               <button
                 onClick={() => {
 
+  // Clear previous error whenever user selects a duration
+  setError("");
+
   setSelectedDuration(d);
 
-  // 🍳 Chef ne breakfast price set ki hai
-  // to breakfast selection screen show karo
   if (
     selectedPlan.breakfast_price != null &&
     Number(selectedPlan.breakfast_price) > 0
   ) {
-
     setBreakfastEnabled(false);
     setShowBreakfastSelection(true);
-
   } else {
-
-    // Breakfast configured nahi hai
-    // to direct payment
     handleSubscribe(d);
-
   }
 
 }}
