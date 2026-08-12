@@ -21,7 +21,6 @@ diet_type?: string;
 meal_type?: string[];
 
 calories_per_day?: number;
-duration_days?: number;
 
 breakfast_available?: boolean;
 breakfast_price?: number;
@@ -81,6 +80,11 @@ export function SubscriptionDuration({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [breakfastEnabled, setBreakfastEnabled] = useState(false);
+  const [selectedDuration, setSelectedDuration] =
+  useState<Duration | null>(null);
+
+  const [showBreakfastSelection, setShowBreakfastSelection] =
+  useState(false);
 
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
@@ -296,203 +300,519 @@ setPaymentSuccess(true);
   };
 
   // 🔥 SUCCESS SCREEN
+    // =========================================================
+  // PAYMENT SUCCESS SCREEN
+  // =========================================================
+
   if (paymentSuccess) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center bg-[#FFF8F0]">
+
+        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-5">
+          <span className="text-4xl">✓</span>
+        </div>
+
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          Subscription Activated
+        </h1>
+
         <p className="text-gray-500 mb-6">
-           Your subscription has been activated successfully.
-         </p>
+          Your subscription has been activated successfully.
+        </p>
 
-         <p className="text-sm text-orange-600 font-medium mb-4">
-         {selectedPlan.title}
-         </p>
+        <p className="text-sm text-orange-600 font-medium mb-4">
+          {selectedPlan.title}
+        </p>
 
-      <button
-  onClick={onViewSubscriptions}
-  className="w-full bg-orange-500 text-white py-3 rounded-lg mb-3"
->
-  My Subscription
-</button>
+        {orderId && (
+          <p className="text-xs text-gray-400 mb-6">
+            Order ID: {orderId}
+          </p>
+        )}
 
-<button
-  onClick={onGoHome}
-  className="w-full border border-orange-500 text-orange-500 py-3 rounded-lg"
->
-  Go To Home
-</button>
+        <button
+          onClick={onViewSubscriptions}
+          className="w-full bg-orange-500 text-white py-3 rounded-lg mb-3"
+        >
+          My Subscription
+        </button>
+
+        <button
+          onClick={onGoHome}
+          className="w-full border border-orange-500 text-orange-500 py-3 rounded-lg"
+        >
+          Go To Home
+        </button>
+
       </div>
     );
   }
+
+
+  // =========================================================
+  // BREAKFAST SELECTION SCREEN
+  // =========================================================
+
+  if (showBreakfastSelection && selectedDuration) {
+
+    const subscriptionPrice =
+      (selectedPlan.price / 30) *
+      selectedDuration.days;
+
+    const breakfastTotal =
+      breakfastEnabled &&
+      selectedPlan.breakfast_available &&
+      selectedPlan.breakfast_price
+        ? selectedPlan.breakfast_price *
+          selectedDuration.days
+        : 0;
+
+    const totalPrice =
+      subscriptionPrice + breakfastTotal;
+
+    return (
+      <div className="min-h-screen bg-[#FFF8F0] pb-8">
+
+        {/* HEADER */}
+        <div className="bg-gradient-to-br from-[#FF7A30] via-[#5F2EEA] to-[#0FAD6E] px-6 pt-12 pb-8 rounded-b-[2rem]">
+
+          <button
+            onClick={() => {
+              setShowBreakfastSelection(false);
+              setSelectedDuration(null);
+              setBreakfastEnabled(false);
+            }}
+            className="text-white mb-6"
+          >
+            ← Back
+          </button>
+
+          <h1 className="text-white text-xl font-semibold">
+            Choose Your Meals
+          </h1>
+
+          <p className="text-white/90 text-sm mt-1">
+            Select your meals for this subscription
+          </p>
+
+        </div>
+
+
+        {/* CONTENT */}
+        <div className="px-6 mt-6 space-y-4">
+
+          {/* SELECTED DURATION */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm">
+
+            <div className="flex justify-between items-center">
+
+              <div>
+                <p className="text-xs text-gray-500">
+                  Selected Duration
+                </p>
+
+                <h2 className="text-lg font-semibold text-gray-900">
+                  {selectedDuration.name}
+                </h2>
+              </div>
+
+              <div className="text-right">
+
+                <p className="text-xs text-gray-500">
+                  Subscription
+                </p>
+
+                <p className="text-lg font-bold text-orange-500">
+                  ₹{subscriptionPrice.toFixed(2)}
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          {/* BREAKFAST */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm">
+
+            <div className="flex items-start justify-between gap-4">
+
+              <div className="flex-1">
+
+                <div className="flex items-center gap-2">
+
+                  <span className="text-2xl">
+                    🍳
+                  </span>
+
+                  <div>
+                    <h3 className="font-semibold text-gray-900">
+                      Breakfast
+                    </h3>
+
+                    <p className="text-sm text-gray-500">
+                      ₹{selectedPlan.breakfast_price}/day
+                    </p>
+                  </div>
+
+                </div>
+
+                <p className="text-xs text-gray-500 mt-3">
+                  Breakfast is optional. You can choose
+                  whether you want breakfast with your
+                  subscription.
+                </p>
+
+              </div>
+
+            </div>
+
+
+            {/* ADD BREAKFAST */}
+            <button
+              type="button"
+              onClick={() => {
+                setBreakfastEnabled(true);
+              }}
+              className={`w-full mt-4 py-3 rounded-xl font-semibold transition ${
+                breakfastEnabled
+                  ? "bg-green-500 text-white"
+                  : "bg-orange-500 text-white"
+              }`}
+            >
+              {breakfastEnabled
+                ? "✓ Breakfast Added"
+                : "Add Breakfast"}
+            </button>
+
+
+            {/* NO BREAKFAST */}
+            <button
+              type="button"
+              onClick={() => {
+                setBreakfastEnabled(false);
+              }}
+              className={`w-full mt-3 py-3 rounded-xl font-semibold border transition ${
+                !breakfastEnabled
+                  ? "border-orange-500 text-orange-500 bg-orange-50"
+                  : "border-gray-200 text-gray-700 bg-white"
+              }`}
+            >
+              {!breakfastEnabled
+                ? "✓ No Breakfast"
+                : "Don't Add Breakfast"}
+            </button>
+
+          </div>
+
+
+          {/* PRICE SUMMARY */}
+          <div className="bg-white rounded-2xl p-5 shadow-sm">
+
+            <h3 className="font-semibold text-gray-900 mb-4">
+              Price Summary
+            </h3>
+
+            {/* SUBSCRIPTION */}
+            <div className="flex justify-between items-center mb-3">
+
+              <span className="text-sm text-gray-600">
+                Subscription ({selectedDuration.days} days)
+              </span>
+
+              <span className="font-semibold">
+                ₹{subscriptionPrice.toFixed(2)}
+              </span>
+
+            </div>
+
+
+            {/* BREAKFAST */}
+            {breakfastEnabled && (
+              <div className="flex justify-between items-center mb-3">
+
+                <span className="text-sm text-gray-600">
+                  Breakfast ({selectedDuration.days} days)
+                </span>
+
+                <span className="font-semibold text-green-600">
+                  ₹{breakfastTotal.toFixed(2)}
+                </span>
+
+              </div>
+            )}
+
+
+            <div className="border-t pt-4 mt-4 flex justify-between items-center">
+
+              <span className="font-bold text-gray-900">
+                Total
+              </span>
+
+              <span className="text-2xl font-bold text-orange-500">
+                ₹{totalPrice.toFixed(2)}
+              </span>
+
+            </div>
+
+          </div>
+
+
+          {/* CONTINUE PAYMENT */}
+          <button
+            onClick={() =>
+              handleSubscribe(selectedDuration)
+            }
+            disabled={loading}
+            className={`w-full py-4 rounded-xl font-bold text-white transition ${
+              loading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-orange-500 hover:bg-orange-600 active:scale-[0.98]"
+            }`}
+          >
+            {loading
+              ? "Processing..."
+              : `Continue to Payment • ₹${totalPrice.toFixed(2)}`}
+          </button>
+
+        </div>
+
+      </div>
+    );
+  }
+
+
+  // =========================================================
+  // DURATION SELECTION SCREEN
+  // =========================================================
 
   return (
     <div className="min-h-screen bg-[#FFF8F0] pb-8">
 
       {/* HEADER */}
       <div className="bg-gradient-to-br from-[#FF7A30] via-[#5F2EEA] to-[#0FAD6E] px-6 pt-12 pb-8 rounded-b-[2rem]">
-        <button onClick={onBack} className="text-white mb-6">
+
+        <button
+          onClick={onBack}
+          className="text-white mb-6"
+        >
           ← Back
         </button>
 
         <h1 className="text-white text-xl font-semibold mb-2">
-          Subscription Summary
+          Choose Subscription Duration
         </h1>
+
+        <p className="text-white/90 text-sm">
+          Select how many days you want your subscription
+        </p>
+
       </div>
+
 
       {/* PLAN INFO */}
       <div className="px-6 mt-4">
+
         <div className="bg-white p-4 rounded-xl shadow-sm">
-          <h2 className="font-semibold">{selectedPlan.title}</h2>
-          <p className="text-orange-500 font-bold">
-            ₹{selectedPlan.price}
-          </p>
 
-          {selectedPlan.tagline && (
-        <p className="text-xs text-gray-500">
-        {selectedPlan.tagline}
-       </p>
-        )}
+          <div className="flex justify-between items-start gap-3">
 
-          {selectedPlan.chef_name && (
-         <p className="text-sm font-medium text-orange-600">
-          👨‍🍳 {selectedPlan.chef_name}
-          </p>
-         )}
+            <div>
 
-          <p className="text-sm text-gray-500">
-          {selectedPlan.goal}
-           </p>
+              <h2 className="font-semibold text-gray-900">
+                {selectedPlan.emoji || "🍱"}{" "}
+                {selectedPlan.title}
+              </h2>
 
-         <p className="text-sm text-gray-500">
-         {selectedPlan.diet_type}
-        </p>
+              {selectedPlan.tagline && (
+                <p className="text-xs text-gray-500 mt-1">
+                  {selectedPlan.tagline}
+                </p>
+              )}
 
-        <p className="text-sm text-gray-500">
-        {selectedPlan.plan_type === "normal" && "🥗 Normal Diet"}
-        {selectedPlan.plan_type === "dietician" && "👨‍⚕️ Dietician Support"}
-        {selectedPlan.plan_type === "gym" && "💪 Gym + Diet + Trainer"}
-        </p>
+              {selectedPlan.chef_name && (
+                <p className="text-sm font-medium text-orange-600 mt-2">
+                  👨‍🍳 {selectedPlan.chef_name}
+                </p>
+              )}
 
-         <p className="text-sm text-gray-500">
-          🔥 {selectedPlan.calories_per_day} kcal/day
-         </p>
+            </div>
+
+            <div className="text-right">
+
+              <p className="text-xs text-gray-500">
+                30 Days
+              </p>
+
+              <p className="text-lg font-bold text-orange-500">
+                ₹{selectedPlan.price}
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div className="flex flex-wrap gap-2 mt-3">
+
+            {selectedPlan.goal && (
+              <span className="bg-orange-100 text-orange-600 px-2 py-1 rounded-full text-xs">
+                {selectedPlan.goal}
+              </span>
+            )}
+
+            {selectedPlan.diet_type && (
+              <span className="bg-green-100 text-green-600 px-2 py-1 rounded-full text-xs">
+                {selectedPlan.diet_type}
+              </span>
+            )}
+
+            {selectedPlan.plan_type && (
+              <span className="bg-purple-100 text-purple-600 px-2 py-1 rounded-full text-xs">
+
+                {selectedPlan.plan_type === "normal" &&
+                  "🥗 Normal Diet"}
+
+                {selectedPlan.plan_type === "dietician" &&
+                  "👨‍⚕️ Dietician Support"}
+
+                {selectedPlan.plan_type === "gym" &&
+                  "💪 Gym + Diet + Trainer"}
+
+              </span>
+            )}
+
+          </div>
+
         </div>
-        </div>
-
-
-
-
-
-        {selectedPlan.breakfast_available && (
-  <div className="px-6 mt-6">
-    <div className="bg-white p-5 rounded-2xl shadow-sm">
-
-      <div className="flex items-center justify-between">
-
-        <div>
-          <h3 className="font-semibold text-gray-900">
-            🥣 Breakfast
-          </h3>
-
-          <p className="text-sm text-gray-500">
-            Optional meal
-          </p>
-
-          <p className="text-sm text-orange-500 font-semibold mt-1">
-            ₹{selectedPlan.breakfast_price}/day
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={() =>
-            setBreakfastEnabled((prev) => !prev)
-          }
-          className={`px-4 py-2 rounded-xl font-semibold ${
-            breakfastEnabled
-              ? "bg-green-500 text-white"
-              : "bg-orange-500 text-white"
-          }`}
-        >
-          {breakfastEnabled
-            ? "✓ Added"
-            : "+ Add Breakfast"}
-        </button>
 
       </div>
 
-      
 
-    </div>
-  </div>
-)}
-
+      {/* ERROR */}
       {error && (
-        <p className="text-red-500 text-center mt-4">{error}</p>
+        <div className="px-6 mt-4">
+
+          <div className="bg-red-50 border border-red-200 text-red-600 p-4 rounded-xl text-sm">
+            {error}
+          </div>
+
+        </div>
       )}
+
 
       {/* DURATIONS */}
       <div className="px-6 mt-6 space-y-4">
 
+        <h2 className="font-semibold text-gray-900">
+          Select Duration
+        </h2>
+
         {durations.map((d, index) => {
-  const Icon = d.icon;
-  const finalPrice = calculatePrice(d.days);
 
-  return (
-    <motion.div
-      key={d.id}
-      initial={{ opacity: 0, y: 40 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1 }}
-    >
-      <button
-        onClick={() => handleSubscribe(d)}
-        disabled={loading}
-        className={`w-full p-5 rounded-xl shadow-md transition-all ${
-          loading
-            ? "bg-gray-200 opacity-70 cursor-not-allowed"
-            : "bg-white hover:shadow-lg active:scale-95"
-        }`}
-      >
-        <div className="flex items-center gap-4">
+          const Icon = d.icon;
 
-          <div
-            className={`w-14 h-14 bg-gradient-to-br ${d.color} rounded-xl flex items-center justify-center`}
-          >
-            <Icon className="text-white" />
-          </div>
+          const subscriptionPrice =
+            (selectedPlan.price / 30) *
+            d.days;
 
-          <div className="flex-1 text-left">
-            <h3 className="text-lg font-semibold">
-              {loading ? "Processing..." : d.name}
-            </h3>
-        <p className="text-sm text-gray-500">
-         Subscription: ₹
-          {((selectedPlan.price / 30) * d.days).toFixed(2)}
-        </p>
+          return (
+            <motion.div
+              key={d.id}
+              initial={{
+                opacity: 0,
+                y: 40,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              transition={{
+                delay: index * 0.1,
+              }}
+            >
 
-            {breakfastEnabled &&
-              selectedPlan.breakfast_available &&
-              selectedPlan.breakfast_price && (
-                <p className="text-sm text-green-600">
-                  Breakfast: ₹
-                  {selectedPlan.breakfast_price * d.days}
-                </p>
-              )}
+              <button
+                onClick={() => {
 
-            <p className="text-xl font-bold text-orange-500 mt-2">
-              Total: ₹{finalPrice}
-            </p>
-          </div>
+                  setSelectedDuration(d);
 
-        </div>
-      </button>
-    </motion.div>
-  );
-})}
-          
+                  // Breakfast available hai
+                  // to pehle breakfast selection screen.
+                  if (
+                    selectedPlan.breakfast_available &&
+                    selectedPlan.breakfast_price
+                  ) {
 
+                    setBreakfastEnabled(false);
+
+                    setShowBreakfastSelection(true);
+
+                  } else {
+
+                    // Breakfast available nahi hai
+                    // to direct payment.
+                    handleSubscribe(d);
+
+                  }
+
+                }}
+                disabled={loading}
+                className={`w-full p-5 rounded-xl shadow-md transition-all ${
+                  loading
+                    ? "bg-gray-200 opacity-70 cursor-not-allowed"
+                    : "bg-white hover:shadow-lg active:scale-95"
+                }`}
+              >
+
+                <div className="flex items-center gap-4">
+
+                  {/* ICON */}
+                  <div
+                    className={`w-14 h-14 bg-gradient-to-br ${d.color} rounded-xl flex items-center justify-center`}
+                  >
+                    <Icon className="text-white" />
+                  </div>
+
+
+                  {/* CONTENT */}
+                  <div className="flex-1 text-left">
+
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {d.name}
+                    </h3>
+
+                    <p className="text-sm text-gray-500 mt-1">
+                      Subscription: ₹
+                      {subscriptionPrice.toFixed(2)}
+                    </p>
+
+                    {selectedPlan.breakfast_available &&
+                      selectedPlan.breakfast_price && (
+                        <p className="text-xs text-orange-500 mt-1">
+                          Breakfast available
+                        </p>
+                      )}
+
+                  </div>
+
+
+                  {/* ARROW */}
+                  <div className="text-gray-400 text-xl">
+                    →
+                  </div>
+
+                </div>
+
+              </button>
+
+            </motion.div>
+          );
+        })}
 
       </div>
+
     </div>
   );
 }
