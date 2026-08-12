@@ -102,16 +102,16 @@ export function SubscriptionDuration({
 };
 
   const calculatePrice = (days: number) => {
-  // Plan price is the 30-day/month price
+  // Subscription price according to selected duration
   const planPrice =
-    (selectedPlan.price / 30) * days;
+    (Number(selectedPlan.price) / 30) * days;
 
-  // Breakfast is charged per day
+  // Breakfast is optional and charged per day
   const breakfastTotal =
     breakfastEnabled &&
-    selectedPlan.breakfast_available &&
-    selectedPlan.breakfast_price
-      ? selectedPlan.breakfast_price * days
+    selectedPlan.breakfast_price != null &&
+    Number(selectedPlan.breakfast_price) > 0
+      ? Number(selectedPlan.breakfast_price) * days
       : 0;
 
   return Number(
@@ -293,10 +293,43 @@ setPaymentSuccess(true);
 
 
     } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+  console.log("Subscription payment error:", err);
+
+  const code =
+    err?.code ||
+    err?.response?.code ||
+    "";
+
+  const description =
+    err?.description ||
+    err?.response?.description ||
+    "";
+
+  const message =
+    err?.message ||
+    "";
+
+  // User manually exited/cancelled Razorpay
+  const isPaymentCancelled =
+    code === "BAD_REQUEST_ERROR" ||
+    code === "PAYMENT_CANCELLED" ||
+    code === "USER_CANCELLED" ||
+    description.toLowerCase().includes("cancel") ||
+    message.toLowerCase().includes("cancel");
+
+  if (isPaymentCancelled) {
+    setError("");
+    return;
+  }
+
+  setError(
+    description ||
+    message ||
+    "Payment could not be completed. Please try again."
+  );
+} finally {
+  setLoading(false);
+}
   };
 
   // 🔥 SUCCESS SCREEN
@@ -360,12 +393,12 @@ setPaymentSuccess(true);
       selectedDuration.days;
 
     const breakfastTotal =
-      breakfastEnabled &&
-      selectedPlan.breakfast_available &&
-      selectedPlan.breakfast_price
-        ? selectedPlan.breakfast_price *
-          selectedDuration.days
-        : 0;
+  breakfastEnabled &&
+  selectedPlan.breakfast_price != null &&
+  Number(selectedPlan.breakfast_price) > 0
+    ? Number(selectedPlan.breakfast_price) *
+      selectedDuration.days
+    : 0;
 
     const totalPrice =
       subscriptionPrice + breakfastTotal;
@@ -787,12 +820,13 @@ setPaymentSuccess(true);
                       {subscriptionPrice.toFixed(2)}
                     </p>
 
-                    {selectedPlan.breakfast_available &&
-                      selectedPlan.breakfast_price && (
-                        <p className="text-xs text-orange-500 mt-1">
-                          Breakfast available
-                        </p>
-                      )}
+                    {selectedPlan.breakfast_price != null &&
+  Number(selectedPlan.breakfast_price) > 0 && (
+    <p className="text-xs text-orange-500 mt-1">
+      🍳 Breakfast available • ₹
+      {Number(selectedPlan.breakfast_price)}/day
+    </p>
+  )}
 
                   </div>
 
