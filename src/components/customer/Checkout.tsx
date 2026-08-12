@@ -93,7 +93,7 @@ export function Checkout({
       });
 
       const data = await res.json();
-      console.log("ORDER:", data);
+      // console.log("ORDER:", data);
 
       if (!res.ok) {
         alert(data.detail || "Order failed");
@@ -112,107 +112,225 @@ export function Checkout({
   // 💳 RAZORPAY
   
   const openRazorpay = async (order: any) => {
-    console.log("STEP 1 - openRazorpay called");
-    try {
-      const token = localStorage.getItem("token");
+  try {
+    const token = localStorage.getItem("token");
 
-      const res = await fetch("https://chef-backend-qh12.onrender.com/orders/create-payment", {
+    if (!token) {
+      alert("Please login first");
+      setLoading(false);
+      return;
+    }
+
+    // ============================================
+    // CREATE RAZORPAY PAYMENT
+    // ============================================
+
+    const res = await fetch(
+      "https://chef-backend-qh12.onrender.com/orders/create-payment",
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ order_id: order.id }),
-      });
-
-      const data = await res.json();
-      console.log("STEP 2 - payment data", data);
-      alert("STEP 2");
-      console.log("PAYMENT:", data);
-
-      if (!res.ok) {
-        alert(data.detail);
-        return;
+        body: JSON.stringify({
+          order_id: order.id,
+        }),
       }
+    );
 
-      try {
-  alert("STEP 3 - Before Razorpay");
+    const data = await res.json();
 
-   console.log("STEP 3 - Before Razorpay");
-  const result = await RazorpayCheckout.open({
-    key: data.key,
-    amount: String(data.amount),
-    currency: "INR",
-    name: "Eat Unity",
-    description: "Food Order",
-    order_id: data.razorpay_order_id,
-  });
+    // console.log("Razorpay payment data:", data);
 
-  console.log("RAZORPAY RESULT:", result);
+    if (!res.ok) {
+      alert(
+        typeof data.detail === "string"
+          ? data.detail
+          : "Unable to create payment"
+      );
 
-  const response = result.response;
-
-  const verify = await fetch(
-    "https://chef-backend-qh12.onrender.com/orders/verify-payment",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        razorpay_order_id: response.razorpay_order_id,
-        razorpay_payment_id: response.razorpay_payment_id,
-        razorpay_signature: response.razorpay_signature,
-        order_id: order.id,
-      }),
+      setLoading(false);
+      return;
     }
-  );
 
-  if (!verify.ok) {
-    alert("Payment verification failed");
-    return onFailed();
-  }
+    // ============================================
+    // OPEN RAZORPAY
+    // ============================================
 
-  localStorage.removeItem("cart");
+    let result: any;
 
-  onSuccess({
-    ...order,
-    payment_status: "paid",
-  });
+    try {
+      result = await RazorpayCheckout.open({
+        key: data.key,
+        amount: String(data.amount),
+        currency: "INR",
+        name: "Eat Unity",
+        description: "Food Order",
+        order_id: data.razorpay_order_id,
+      });
+    } catch (razorpayError: any) {
+      console.log(
+        "Razorpay closed / cancelled:",
+        razorpayError
+      );
 
-} catch (err: any) {
-  console.error("PAYMENT FAILED:", err);
+      /*
+       * Razorpay plugin throws an error when
+       * customer presses Back / Exit without payment.
+       *
+       * Do NOT show the raw Razorpay JSON to customer.
+       */
 
-  alert(
-    typeof err === "object"
-      ? JSON.stringify(err)
-      : String(err)
-  );
+      setLoading(false);
 
-  onFailed();
-}
+      return;
+    }
 
-    } catch (err) {
-      console.error(err);
+    // ============================================
+    // CHECK RAZORPAY RESPONSE
+    // ============================================
+
+    const response = result?.response;
+
+    if (
+      !response?.razorpay_order_id ||
+      !response?.razorpay_payment_id ||
+      !response?.razorpay_signature
+    ) {
+      // console.log(
+      //   "Incomplete Razorpay response:",
+      //   result
+      // );
+
+      setLoading(false);
+      return;
+    }
+
+    // ============================================
+    // VERIFY PAYMENT
+    // ============================================
+
+    const verify = await fetch(
+      "https://chef-backend-qh12.onrender.com/orders/verify-payment",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          razorpay_order_id:
+            response.razorpay_order_id,
+
+          razorpay_payment_id:
+            response.razorpay_payment_id,
+
+          razorpay_signature:
+            response.razorpay_signature,
+
+          order_id: order.id,
+        }),
+      }
+    );
+
+    const verifyData = await verify.json();
+
+    // console.log(
+    //   "Payment verification:",
+    //   verifyData
+    // );
+
+    if (!verify.ok) {
+      alert(
+        typeof verifyData.detail === "string"
+          ? verifyData.detail
+          : "Payment verification failed"
+      );
+
+      setLoading(false);
       onFailed();
+      return;
     }
-  };
+
+    // ============================================
+    // PAYMENT SUCCESS
+    // ============================================
+
+    localStorage.removeItem("cart");
+
+    setLoading(false);
+
+    onSuccess({
+      ...order,
+      payment_status: "paid",
+    });
+
+  } catch (err: any) {
+    console.error(
+      "Checkout payment error:",
+      err
+    );
+
+    setLoading(false);
+
+    alert(
+      err?.message ||
+      "Payment could not be completed. Please try again."
+    );
+
+    onFailed();
+  }
+};
+
+    
+
 
   const handlePlaceOrder = async () => {
-    setLoading(true);
+  if (loading) return;
 
+  setLoading(true);
+
+  try {
     const order = await createOrder();
-    if (!order) return setLoading(false);
+
+    if (!order) {
+      setLoading(false);
+      return;
+    }
+
+    // ============================================
+    // COD
+    // ============================================
 
     if (selectedPayment === "cod") {
       localStorage.removeItem("cart");
-      onSuccess({ ...order, is_cod: true });
-      return setLoading(false);
+
+      setLoading(false);
+
+      onSuccess({
+        ...order,
+        is_cod: true,
+      });
+
+      return;
     }
 
+    // ============================================
+    // ONLINE PAYMENT
+    // ============================================
+
     await openRazorpay(order);
-  };
+
+  } catch (err) {
+    console.error(
+      "Place order error:",
+      err
+    );
+
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-[#FFF8F0] pb-24">
@@ -265,7 +383,10 @@ export function Checkout({
           {["card", "upi", "cod"].map((p) => (
             <div
               key={p}
-              onClick={() => setSelectedPayment(p)}
+             onClick={() => {
+  setSelectedPayment(p);
+  localStorage.setItem("payment_method", p);
+}}
               className={`p-4 border rounded-xl mb-2 cursor-pointer ${
                 selectedPayment === p
                   ? "border-green-500 bg-green-50"
