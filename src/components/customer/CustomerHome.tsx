@@ -13,6 +13,7 @@ import {
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { useCart } from "../../contexts/CartContext";
 import Location from "./Location";
+// import { ChevronRight } from "lucide-react";
 
 
 
@@ -202,11 +203,19 @@ export function CustomerHome({
       <div className="p-6">
         <h3 className="mb-4 font-semibold">Verified Chefs</h3>
 
+        <button
+    onClick={onNavigateToAllChefs}
+    className="text-sm text-orange-500 font-semibold flex items-center gap-1"
+  >
+    View All
+    <ChevronRight className="w-4 h-4" />
+  </button>
+
         {loadingChefs ? (
           <p>Loading...</p>
         ) : (
           <div className="flex gap-4 overflow-x-auto">
-            {chefs.map((chef) => (
+           {chefs.slice(0, 2).map((chef) => (
               <div
                 key={chef.id}
                 onClick={() => onNavigateToChefDetails(chef.id)}
