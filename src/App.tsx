@@ -141,6 +141,8 @@ function AppContent() {
   // 🔥 ADD THIS STATE (IMPORTANT)
   const [currentOrder, setCurrentOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [splashDone, setSplashDone] = useState(false);
+  const [authReady, setAuthReady] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
   useEffect(() => {
   const cart = JSON.parse(localStorage.getItem("cart") || "[]");
@@ -158,10 +160,19 @@ useEffect(() => {
     const refreshToken = localStorage.getItem("refresh_token");
 
     if (!token) {
-      setCurrentScreen("login");
-      setLoading(false);
-      return;
-    }
+  const onboardingCompleted =
+    localStorage.getItem("onboarding_completed");
+
+  if (onboardingCompleted === "true") {
+    setCurrentScreen("login");
+  } else {
+    setCurrentScreen("onboarding");
+  }
+
+  setLoading(false);
+  setAuthReady(true);
+  return;
+}
 
     const verify = async (accessToken: string) => {
       return fetch(
@@ -180,9 +191,10 @@ useEffect(() => {
 
       if (res.ok) {
         setCurrentScreen("customerHome");
-        setLoading(false);
-        return;
-      }
+        setAuthReady(true);
+      } else {
+  throw new Error("Verify Failed");
+}
 
       // Access token expired
       if (res.status === 401 && refreshToken) {
@@ -224,6 +236,7 @@ useEffect(() => {
 
         if (res.ok) {
           setCurrentScreen("customerHome");
+          setAuthReady(true);
         } else {
           throw new Error("Verify Failed");
         }
@@ -289,12 +302,17 @@ useEffect(() => {
 }, []);
 
   const handleSplashComplete = () => {
-    setCurrentScreen("onboarding");
-  };
+  setSplashDone(true);
+};
 
   const handleOnboardingComplete = () => {
-    setCurrentScreen("login");
-  };
+  localStorage.setItem(
+    "onboarding_completed",
+    "true"
+  );
+
+  setCurrentScreen("login");
+};
 
   const handleLogin = () => {
     setCurrentScreen("customerHome");
@@ -476,7 +494,15 @@ const handleNavigateToSpecialDetail = (special: any) => {
     "tomorrowSpecials",
   ].includes(currentScreen);
   
-  if (loading) {
+  if (!splashDone) {
+  return (
+    <SplashScreen
+      onComplete={handleSplashComplete}
+    />
+  );
+}
+
+if (!authReady) {
   return <LoadingScreen />;
 }
 
