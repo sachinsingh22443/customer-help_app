@@ -17,35 +17,82 @@ export function DishDetail({
   onAddToCart,
   onNavigateToChef,
 }: DishDetailProps) {
-
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // 🔥 SAFE VALUES
-  const availableQty = Number(dish?.remaining ?? dish?.quantity ?? 0);
+  // =========================================================
+  // SAFE VALUES
+  // =========================================================
+
+  const availableQty = Number(
+    dish?.remaining ?? dish?.quantity ?? 0
+  );
+
   const image =
-  dish?.image_url ||
-  dish?.image_urls?.[0] ||
-  dish?.image ||
-  dish?.photo_url ||
-  "/fallback.jpg";
+    dish?.image_url ||
+    dish?.image_urls?.[0] ||
+    dish?.image ||
+    dish?.photo_url ||
+    "/fallback.jpg";
 
   const foodType =
     dish?.food_type === "veg"
       ? "Vegetarian"
-      : dish?.food_type === "non_veg"
+      : dish?.food_type === "non-veg" ||
+        dish?.food_type === "non_veg"
       ? "Non-Vegetarian"
       : "Veg / Non-Veg";
 
-  // 🔥 IMPORTANT
+  // Tomorrow Special identification
   const isSpecial = dish?.type === "special";
 
-  // =========================
-  // ✅ ADD TO CART (FIXED)
-  // =========================
+  // =========================================================
+  // INGREDIENTS - SAFE NORMALIZATION
+  // Backend currently returns ingredients as STRING.
+  // This also supports ARRAY in future.
+  // =========================================================
+
+  const normalizedIngredients: string[] = Array.isArray(
+    dish?.ingredients
+  )
+    ? dish.ingredients
+    : typeof dish?.ingredients === "string"
+    ? dish.ingredients
+        .split(",")
+        .map((item: string) => item.trim())
+        .filter(Boolean)
+    : [];
+
+  // =========================================================
+  // PREMIUM SPECIAL VALUES
+  // =========================================================
+
+  const originalPrice = Number(dish?.original_price ?? 0);
+  const currentPrice = Number(dish?.price ?? 0);
+
+  const hasDiscount =
+    isSpecial &&
+    originalPrice > currentPrice &&
+    originalPrice > 0;
+
+  const discountPercentage = hasDiscount
+    ? Math.round(
+        ((originalPrice - currentPrice) / originalPrice) * 100
+      )
+    : 0;
+
+  // =========================================================
+  // ADD TO CART
+  // =========================================================
+
   const handleAddToCart = async () => {
     try {
+      if (availableQty <= 0) {
+        alert("Out of stock");
+        return;
+      }
+
       if (quantity > availableQty) {
         alert("Not enough stock");
         return;
@@ -67,7 +114,7 @@ export function DishDetail({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          type: isSpecial ? "special" : "menu", // 🔥 FIX
+          type: isSpecial ? "special" : "menu",
           item_id: dish.id,
           quantity: quantity,
         }),
@@ -89,7 +136,6 @@ export function DishDetail({
       alert("Added to cart ✅");
 
       onAddToCart(dish.id, quantity);
-
     } catch (err) {
       console.error("Add to cart error:", err);
       alert("Something went wrong");
@@ -98,10 +144,17 @@ export function DishDetail({
     }
   };
 
+  // =========================================================
+  // RENDER
+  // =========================================================
+
   return (
     <div className="min-h-screen bg-[#FFF8F0] pb-32">
 
-      {/* IMAGE */}
+      {/* =====================================================
+          IMAGE
+      ====================================================== */}
+
       <div className="relative h-[300px]">
         <ImageWithFallback
           src={image}
@@ -109,39 +162,91 @@ export function DishDetail({
           className="w-full h-full object-cover"
         />
 
+        {/* BACK */}
         <button
           onClick={onBack}
-          className="absolute top-10 left-4 bg-white p-2 rounded"
+          className="absolute top-10 left-4 bg-white p-2 rounded-full shadow"
         >
           <ChevronLeft />
         </button>
 
+        {/* FAVORITE */}
         <button
           onClick={() => setIsFavorite(!isFavorite)}
-          className="absolute top-10 right-4 bg-white p-2 rounded"
+          className="absolute top-10 right-4 bg-white p-2 rounded-full shadow"
         >
-          <Heart className={isFavorite ? "text-red-500" : ""} />
+          <Heart
+            className={
+              isFavorite
+                ? "text-red-500 fill-red-500"
+                : "text-gray-700"
+            }
+          />
         </button>
+
+        {/* SPECIAL BADGE */}
+        {isSpecial && (
+          <div className="absolute bottom-4 left-4 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow">
+            ⭐ Tomorrow Special
+          </div>
+        )}
       </div>
 
-      {/* CONTENT */}
+      {/* =====================================================
+          CONTENT
+      ====================================================== */}
+
       <div className="p-5">
 
+        {/* DISH NAME */}
         <h1 className="text-xl font-bold">
           {dish?.name || "Dish"}
         </h1>
 
+        {/* FOOD TYPE */}
         <p className="text-sm mt-1 text-green-600">
           {foodType}
         </p>
 
+        {/* CHEF */}
+        {dish?.chef_name && (
+          <p className="text-sm text-gray-500 mt-1">
+            👨‍🍳 {dish.chef_name}
+          </p>
+        )}
+
+        {/* DESCRIPTION */}
         <p className="text-gray-500 text-sm mt-2">
           {dish?.description || "No description available"}
         </p>
 
-        <p className="text-[#FF7A30] text-xl mt-3">
-          ₹{dish?.price || 0}
-        </p>
+        {/* =================================================
+            PRICE
+        ================================================== */}
+
+        <div className="flex items-center gap-3 mt-3">
+
+          <p className="text-[#FF7A30] text-xl font-bold">
+            ₹{currentPrice}
+          </p>
+
+          {hasDiscount && (
+            <>
+              <p className="text-gray-400 line-through text-sm">
+                ₹{originalPrice}
+              </p>
+
+              <span className="bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded">
+                {discountPercentage}% OFF
+              </span>
+            </>
+          )}
+
+        </div>
+
+        {/* =================================================
+            AVAILABILITY
+        ================================================== */}
 
         <p className="text-sm text-gray-500 mt-1">
           {availableQty > 0
@@ -149,39 +254,178 @@ export function DishDetail({
             : "Out of Stock"}
         </p>
 
-        {/* INGREDIENTS */}
-        {dish?.ingredients?.length > 0 && (
-          <div className="mt-4">
-            <h3 className="font-semibold mb-2">Ingredients</h3>
-            <ul className="text-sm text-gray-600 list-disc ml-4">
-              {dish.ingredients.map((item: string, index: number) => (
-                <li key={index}>{item}</li>
-              ))}
+        {/* =================================================
+            PREMIUM NUTRITION
+        ================================================== */}
+
+        {isSpecial &&
+          (
+            dish?.calories != null ||
+            dish?.protein != null ||
+            dish?.carbs != null ||
+            dish?.fats != null
+          ) && (
+            <div className="mt-5">
+
+              <h3 className="font-semibold mb-3">
+                Nutrition
+              </h3>
+
+              <div className="grid grid-cols-2 gap-3">
+
+                {dish?.calories != null && (
+                  <div className="bg-white rounded-xl p-3 shadow-sm">
+                    <p className="text-xs text-gray-500">
+                      Calories
+                    </p>
+                    <p className="font-semibold">
+                      {dish.calories} kcal
+                    </p>
+                  </div>
+                )}
+
+                {dish?.protein != null && (
+                  <div className="bg-white rounded-xl p-3 shadow-sm">
+                    <p className="text-xs text-gray-500">
+                      Protein
+                    </p>
+                    <p className="font-semibold">
+                      {dish.protein} g
+                    </p>
+                  </div>
+                )}
+
+                {dish?.carbs != null && (
+                  <div className="bg-white rounded-xl p-3 shadow-sm">
+                    <p className="text-xs text-gray-500">
+                      Carbs
+                    </p>
+                    <p className="font-semibold">
+                      {dish.carbs} g
+                    </p>
+                  </div>
+                )}
+
+                {dish?.fats != null && (
+                  <div className="bg-white rounded-xl p-3 shadow-sm">
+                    <p className="text-xs text-gray-500">
+                      Fats
+                    </p>
+                    <p className="font-semibold">
+                      {dish.fats} g
+                    </p>
+                  </div>
+                )}
+
+              </div>
+            </div>
+          )}
+
+        {/* =================================================
+            PREPARATION TIME
+        ================================================== */}
+
+        {isSpecial && dish?.preparation_time != null && (
+          <div className="mt-4 bg-white rounded-xl p-4 shadow-sm">
+
+            <p className="text-xs text-gray-500">
+              Preparation Time
+            </p>
+
+            <p className="font-semibold mt-1">
+              ⏱️ {dish.preparation_time} minutes
+            </p>
+
+          </div>
+        )}
+
+        {/* =================================================
+            INGREDIENTS
+        ================================================== */}
+
+        {normalizedIngredients.length > 0 && (
+          <div className="mt-5">
+
+            <h3 className="font-semibold mb-2">
+              Ingredients
+            </h3>
+
+            <ul className="text-sm text-gray-600 list-disc ml-5 space-y-1">
+
+              {normalizedIngredients.map(
+                (item: string, index: number) => (
+                  <li key={`${item}-${index}`}>
+                    {item}
+                  </li>
+                )
+              )}
+
             </ul>
           </div>
         )}
 
-        {/* CHEF */}
-        <div
-          className="mt-4 p-3 bg-white rounded shadow cursor-pointer"
-          onClick={() => onNavigateToChef(dish?.chef_id)}
-        >
-          <p className="text-sm text-gray-500">Made by</p>
-          <p className="font-medium">
-            {dish?.chef_name || "Chef"}
-          </p>
-        </div>
+        {/* =================================================
+            CUTOFF TIME - TOMORROW SPECIAL
+        ================================================== */}
+
+        {isSpecial && dish?.cutoff_time && (
+          <div className="mt-4 bg-orange-50 border border-orange-200 rounded-xl p-4">
+
+            <p className="text-xs text-gray-500">
+              Pre-order deadline
+            </p>
+
+            <p className="font-semibold text-orange-600 mt-1">
+              ⏰ Order by {dish.cutoff_time}
+            </p>
+
+          </div>
+        )}
+
+        {/* =================================================
+            CHEF
+        ================================================== */}
+
+        {dish?.chef_id && (
+          <div
+            className="mt-5 p-4 bg-white rounded-xl shadow cursor-pointer"
+            onClick={() =>
+              onNavigateToChef(dish.chef_id)
+            }
+          >
+
+            <p className="text-sm text-gray-500">
+              Made by
+            </p>
+
+            <p className="font-medium mt-1">
+              {dish?.chef_name || "Chef"}
+            </p>
+
+            <p className="text-xs text-orange-500 mt-1">
+              View Chef →
+            </p>
+
+          </div>
+        )}
 
       </div>
 
-      {/* BOTTOM BAR */}
-      <div className="left-0 right-0 bg-white p-4 flex items-center gap-3 shadow-lg">
+      {/* =====================================================
+          BOTTOM BAR
+      ====================================================== */}
+
+      <div className="fixed bottom-0 left-0 right-0 bg-white p-4 flex items-center gap-3 shadow-lg z-30">
 
         {/* QUANTITY */}
         <div className="flex items-center gap-3 bg-[#FFF8F0] px-3 py-2 rounded-lg">
 
           <button
-            onClick={() => setQuantity(Math.max(1, quantity - 1))}
+            onClick={() =>
+              setQuantity(
+                Math.max(1, quantity - 1)
+              )
+            }
             className="bg-white p-1 rounded shadow"
           >
             <Minus size={16} />
@@ -197,16 +441,20 @@ export function DishDetail({
                 setQuantity(quantity + 1);
               }
             }}
-            className="bg-white p-1 rounded shadow"
+            disabled={quantity >= availableQty}
+            className="bg-white p-1 rounded shadow disabled:opacity-40"
           >
             <Plus size={16} />
           </button>
 
         </div>
 
-        {/* BUTTON */}
+        {/* ADD TO CART */}
         <button
-          disabled={availableQty === 0 || loading}
+          disabled={
+            availableQty === 0 ||
+            loading
+          }
           onClick={handleAddToCart}
           className={`flex-1 py-3 rounded-lg font-medium ${
             availableQty === 0
@@ -218,7 +466,9 @@ export function DishDetail({
             ? "Adding..."
             : availableQty === 0
             ? "Out of Stock"
-            : `Add to Cart • ₹${(dish?.price || 0) * quantity}`}
+            : `Add to Cart • ₹${
+                currentPrice * quantity
+              }`}
         </button>
 
       </div>
