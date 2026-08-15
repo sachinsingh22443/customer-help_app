@@ -11,6 +11,7 @@ import {
   Award,
   Lock,
   Trash2,
+  History,
   Calendar,
 } from "lucide-react";
 
@@ -36,6 +37,7 @@ interface ProfileProps {
   onNavigateToHelp?: () => void;
   onNavigateToChangePassword?: () => void;
   onNavigateToSubscriptions?: () => void;
+  onNavigateToSpecialHistory?: () => void;
   onNavigateToDeleteAccount?: () => void;
   onLogout?: () => void;
 }
@@ -48,6 +50,7 @@ export function Profile({
   onNavigateToHelp,
   onNavigateToChangePassword,
   onNavigateToSubscriptions,
+  onNavigateToSpecialHistory,
   onNavigateToDeleteAccount,
   onLogout,
 }: ProfileProps) {
@@ -75,16 +78,45 @@ export function Profile({
   }, []);
 
   const handleMenuClick = (id: string) => {
-    if (id === "profile" && onNavigateToEditProfile) onNavigateToEditProfile();
-    if (id === "addresses" && onNavigateToAddresses) onNavigateToAddresses();
-    if (id === "payment" && onNavigateToPayments) onNavigateToPayments();
-    if (id === "settings" && onNavigateToSettings) onNavigateToSettings();
-    if (id === "help" && onNavigateToHelp) onNavigateToHelp();
-    if (id === "change-password" && onNavigateToChangePassword) onNavigateToChangePassword();
-    if (id === "delete-account" && onNavigateToDeleteAccount) onNavigateToDeleteAccount();
-    if (id === "subscriptions" && onNavigateToSubscriptions)
-  onNavigateToSubscriptions();
-  };
+  if (id === "profile" && onNavigateToEditProfile)
+    onNavigateToEditProfile();
+
+  if (id === "addresses" && onNavigateToAddresses)
+    onNavigateToAddresses();
+
+  if (id === "payment" && onNavigateToPayments)
+    onNavigateToPayments();
+
+  if (id === "settings" && onNavigateToSettings)
+    onNavigateToSettings();
+
+  if (id === "help" && onNavigateToHelp)
+    onNavigateToHelp();
+
+  if (
+    id === "change-password" &&
+    onNavigateToChangePassword
+  )
+    onNavigateToChangePassword();
+
+  if (
+    id === "subscriptions" &&
+    onNavigateToSubscriptions
+  )
+    onNavigateToSubscriptions();
+
+  if (
+    id === "special-history" &&
+    onNavigateToSpecialHistory
+  )
+    onNavigateToSpecialHistory();
+
+  if (
+    id === "delete-account" &&
+    onNavigateToDeleteAccount
+  )
+    onNavigateToDeleteAccount();
+};
 
   const menuItems = [
     { id: "profile", icon: User, label: "Edit Profile", color: "from-[#FF7A30] to-[#ff9d5c]" },
@@ -98,6 +130,13 @@ export function Profile({
   icon: Calendar,
   label: "My Subscriptions",
   color: "from-[#5F2EEA] to-[#8860f5]"
+},
+
+{
+  id: "special-history",
+  icon: History,
+  label: "My Special History",
+  color: "from-[#FF7A30] to-[#5F2EEA]",
 },
   ];
 
@@ -193,7 +232,7 @@ export function Profile({
         })}
 
         <button onClick={onNavigateToSubscriptions}>
-       My Subscriptions
+         My Subscriptions
        </button>
 
         {/* 🔥 DELETE ACCOUNT */}

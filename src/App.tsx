@@ -59,6 +59,7 @@ import { LoadingScreen } from "./components/customer/LoadingScreen";
 import { SkeletonLoader } from "./components/customer/SkeletonLoader";
 import { Network } from "@capacitor/network";
 import MySubscriptions from "./components/customer/MySubscriptions";
+import MySpecialHistory from "./components/customer/MySpecialHistory";
 
 // Screen types for navigation
 type Screen =
@@ -114,6 +115,7 @@ type Screen =
   | "chefDetails"
   | "allChefs"
   | "deleteAccount"
+  | "mySpecialHistory"
 
 export default function App() {
   return (
@@ -140,6 +142,7 @@ function AppContent() {
   const [orderAmount, setOrderAmount] = useState(0);
   const [cartData, setCartData] = useState<any[]>([]);
   const [selectedSpecial, setSelectedSpecial] = useState<any>(null);
+  const [directCheckoutItem, setDirectCheckoutItem] = useState<any>(null);
   // 🔥 ADD THIS STATE (IMPORTANT)
   const [currentOrder, setCurrentOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -414,6 +417,17 @@ const handleNavigateToSpecialDetail = (special: any) => {
     setCurrentScreen("checkout");
   };
 
+
+  const handleOrderNowSpecial = (special: any) => {
+  setDirectCheckoutItem({
+    ...special,
+    type: "special",
+    quantity: special.quantity || 1,
+  });
+
+  setCurrentScreen("checkout");
+};
+
   const handlePlaceOrder = () => {
     setCurrentScreen("orderConfirmation");
   };
@@ -498,7 +512,7 @@ const handleNavigateToSpecialDetail = (special: any) => {
   const showBottomNav = [
     "customerHome",
     "categoryDetail",
-    "dishDetail",
+    // "dishDetail",
     "orders",
     "profile",
     "tomorrowSpecials",
@@ -639,11 +653,12 @@ if (!isOnline) {
 
        {currentScreen === "dishDetail" && (selectedDish || selectedSpecial) && (
   <DishDetail
-    dish={selectedSpecial || selectedDish}   // 🔥 FIX
-    onBack={handleBackToCustomerHome}
-    onAddToCart={handleAddToCart}
-    onNavigateToChef={handleNavigateToChefDetails}
-  />
+  dish={selectedSpecial || selectedDish}
+  onBack={handleBackToCustomerHome}
+  onAddToCart={handleAddToCart}
+  onNavigateToChef={handleNavigateToChefDetails}
+  onOrderNow={handleOrderNowSpecial}
+/>
 )}
 
         {currentScreen === "reviewsRatings" && (
@@ -684,9 +699,10 @@ if (!isOnline) {
        
   {currentScreen === "checkout" && (
   <Checkout
-    key="checkout"
-    cartData={cartData}
-    onBack={() => setCurrentScreen("cart")}
+  key="checkout"
+  cartData={cartData}
+  directItem={directCheckoutItem}
+  onBack={() => setCurrentScreen("cart")}
     onProcessing={() => setCurrentScreen("paymentProcessing")}
 
     onSuccess={(order) => {
@@ -827,6 +843,9 @@ if (!isOnline) {
             onNavigateToSubscriptions={() =>
             setCurrentScreen("mySubscriptions")
              }
+            onNavigateToSpecialHistory={() =>
+                 setCurrentScreen("mySpecialHistory")
+            }
             onNavigateToPayments={() => setCurrentScreen("paymentMethods")}
             onNavigateToSettings={() => setCurrentScreen("settings")}
             onNavigateToHelp={() => setCurrentScreen("helpSupport")}
@@ -841,6 +860,13 @@ if (!isOnline) {
 }}
           />
         )}
+
+
+   {currentScreen === "mySpecialHistory" && (
+  <MySpecialHistory
+    onBack={() => setCurrentScreen("profile")}
+  />
+)}
 
         {currentScreen === "editProfile" && (
           <EditProfile 

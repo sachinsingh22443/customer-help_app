@@ -9,6 +9,7 @@ interface CheckoutProps {
   onFailed: () => void;
   onAddAddress: () => void;
   cartData: any[];
+  directItem?: any;
 }
 
 export function Checkout({
@@ -17,6 +18,7 @@ export function Checkout({
   onFailed,
   onAddAddress,
   cartData,
+  directItem,
 }: CheckoutProps) {
 
   const [addresses, setAddresses] = useState<any[]>([]);
@@ -56,7 +58,9 @@ export function Checkout({
     }
   };
 
-  const cartItems = cartData || [];
+  const cartItems = directItem
+  ? [directItem]
+  : (cartData || []);
 
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -303,18 +307,20 @@ export function Checkout({
     // COD
     // ============================================
 
-    if (selectedPayment === "cod") {
-      localStorage.removeItem("cart");
+    // ============================================
+// COD
+// ============================================
 
-      setLoading(false);
+if (selectedPayment === "cod") {
+  setLoading(false);
 
-      onSuccess({
-        ...order,
-        is_cod: true,
-      });
+  onSuccess({
+    ...order,
+    is_cod: true,
+  });
 
-      return;
-    }
+  return;
+}
 
     // ============================================
     // ONLINE PAYMENT

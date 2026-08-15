@@ -7,6 +7,7 @@ interface DishDetailProps {
   onBack: () => void;
   onAddToCart: (dishId: string, quantity: number) => void;
   onNavigateToChef: (chefId: string) => void;
+  onOrderNow?: (dish: any) => void;
 }
 
 const BASE_URL = "https://chef-backend-qh12.onrender.com";
@@ -16,6 +17,7 @@ export function DishDetail({
   onBack,
   onAddToCart,
   onNavigateToChef,
+  onOrderNow,
 }: DishDetailProps) {
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -82,12 +84,55 @@ export function DishDetail({
       )
     : 0;
 
+  
+  // =========================================================
+// TOMORROW SPECIAL CUTOFF
+// =========================================================
+
+const isSpecialCutoffPassed = () => {
+  if (!isSpecial || !dish?.cutoff_time) {
+    return false;
+  }
+
+  try {
+    const [hours, minutes] = String(dish.cutoff_time)
+      .split(":")
+      .map(Number);
+
+    if (
+      Number.isNaN(hours) ||
+      Number.isNaN(minutes)
+    ) {
+      return false;
+    }
+
+    const now = new Date();
+
+    const cutoff = new Date();
+    cutoff.setHours(hours);
+    cutoff.setMinutes(minutes);
+    cutoff.setSeconds(0);
+    cutoff.setMilliseconds(0);
+
+    return now > cutoff;
+  } catch {
+    return false;
+  }
+};
+
   // =========================================================
   // ADD TO CART
   // =========================================================
 
   const handleAddToCart = async () => {
     try {
+
+      if (isSpecial && isSpecialCutoffPassed()) {
+      alert(
+        `Tomorrow Special ordering closed. Order by ${dish?.cutoff_time}`
+      );
+      return;
+    }
       if (availableQty <= 0) {
         alert("Out of stock");
         return;
@@ -144,18 +189,70 @@ export function DishDetail({
     }
   };
 
+
+  // =========================================================
+// ORDER NOW - TOMORROW SPECIAL
+// =========================================================
+
+const handleOrderNow = () => {
+  if (!isSpecial) {
+    return;
+  }
+
+  // 🔥 Cutoff check
+  if (isSpecialCutoffPassed()) {
+    alert(
+      `Tomorrow Special ordering closed. Order by ${dish?.cutoff_time}`
+    );
+    return;
+  }
+
+  if (availableQty <= 0) {
+    alert("Tomorrow Special is sold out");
+    return;
+  }
+
+  if (quantity > availableQty) {
+    alert(`Only ${availableQty} plates available`);
+    return;
+  }
+
+  if (!onOrderNow) {
+    console.error("onOrderNow handler not provided");
+    return;
+  }
+
+  onOrderNow({
+    ...dish,
+    type: "special",
+    quantity,
+  });
+};
+
+  
+
+  
+
+  
+
+
   // =========================================================
   // RENDER
   // =========================================================
 
+    // =========================================================
+  // RENDER
+  // =========================================================
+
   return (
-    <div className="min-h-screen bg-[#FFF8F0] pb-32">
+    <div className="min-h-screen bg-[#FFF8F0] pb-40">
 
       {/* =====================================================
           IMAGE
       ====================================================== */}
 
       <div className="relative h-[300px]">
+
         <ImageWithFallback
           src={image}
           alt={dish?.name || "Dish"}
@@ -190,6 +287,7 @@ export function DishDetail({
             ⭐ Tomorrow Special
           </div>
         )}
+
       </div>
 
       {/* =====================================================
@@ -278,6 +376,7 @@ export function DishDetail({
                     <p className="text-xs text-gray-500">
                       Calories
                     </p>
+
                     <p className="font-semibold">
                       {dish.calories} kcal
                     </p>
@@ -289,6 +388,7 @@ export function DishDetail({
                     <p className="text-xs text-gray-500">
                       Protein
                     </p>
+
                     <p className="font-semibold">
                       {dish.protein} g
                     </p>
@@ -300,6 +400,7 @@ export function DishDetail({
                     <p className="text-xs text-gray-500">
                       Carbs
                     </p>
+
                     <p className="font-semibold">
                       {dish.carbs} g
                     </p>
@@ -311,6 +412,7 @@ export function DishDetail({
                     <p className="text-xs text-gray-500">
                       Fats
                     </p>
+
                     <p className="font-semibold">
                       {dish.fats} g
                     </p>
@@ -361,6 +463,7 @@ export function DishDetail({
               )}
 
             </ul>
+
           </div>
         )}
 
@@ -375,9 +478,17 @@ export function DishDetail({
               Pre-order deadline
             </p>
 
-            <p className="font-semibold text-orange-600 mt-1">
-              ⏰ Order by {dish.cutoff_time}
-            </p>
+            <p
+  className={`font-semibold mt-1 ${
+    isSpecialCutoffPassed()
+      ? "text-red-600"
+      : "text-orange-600"
+  }`}
+>
+  {isSpecialCutoffPassed()
+    ? "🔒 Ordering closed"
+    : `⏰ Order by ${dish.cutoff_time}`}
+</p>
 
           </div>
         )}
@@ -415,61 +526,94 @@ export function DishDetail({
           BOTTOM BAR
       ====================================================== */}
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white p-4 flex items-center gap-3 shadow-lg z-30">
+      <div className="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-lg z-30">
 
         {/* QUANTITY */}
-        <div className="flex items-center gap-3 bg-[#FFF8F0] px-3 py-2 rounded-lg">
+        <div className="flex items-center gap-3">
 
-          <button
-            onClick={() =>
-              setQuantity(
-                Math.max(1, quantity - 1)
-              )
-            }
-            className="bg-white p-1 rounded shadow"
-          >
-            <Minus size={16} />
-          </button>
+          <div className="flex items-center gap-3 bg-[#FFF8F0] px-3 py-3 rounded-xl">
 
-          <span className="min-w-[20px] text-center">
-            {quantity}
-          </span>
-
-          <button
-            onClick={() => {
-              if (quantity < availableQty) {
-                setQuantity(quantity + 1);
+            <button
+              onClick={() =>
+                setQuantity(Math.max(1, quantity - 1))
               }
-            }}
-            disabled={quantity >= availableQty}
-            className="bg-white p-1 rounded shadow disabled:opacity-40"
+              disabled={quantity <= 1}
+              className="bg-white p-1 rounded shadow disabled:opacity-40"
+            >
+              <Minus size={16} />
+            </button>
+
+            <span className="min-w-[20px] text-center font-medium">
+              {quantity}
+            </span>
+
+            <button
+              onClick={() => {
+                if (quantity < availableQty) {
+                  setQuantity(quantity + 1);
+                }
+              }}
+              disabled={
+                availableQty <= 0 ||
+                quantity >= availableQty
+              }
+              className="bg-white p-1 rounded shadow disabled:opacity-40"
+            >
+              <Plus size={16} />
+            </button>
+
+          </div>
+
+          {/* ADD TO CART */}
+          <button
+            disabled={
+              availableQty === 0 ||
+              loading ||
+              (isSpecial && isSpecialCutoffPassed())
+            }
+            onClick={handleAddToCart}
+            className={`flex-1 py-3 rounded-xl font-medium ${
+              availableQty === 0
+                ? "bg-gray-400 text-white"
+                : "bg-[#FF7A30] text-white"
+            }`}
           >
-            <Plus size={16} />
+            {loading
+  ? "Adding..."
+  : availableQty === 0
+  ? "Out of Stock"
+  : isSpecial && isSpecialCutoffPassed()
+  ? "Ordering Closed"
+  : `Add to Cart • ₹${currentPrice * quantity}`}
           </button>
 
         </div>
 
-        {/* ADD TO CART */}
-        <button
-          disabled={
-            availableQty === 0 ||
-            loading
-          }
-          onClick={handleAddToCart}
-          className={`flex-1 py-3 rounded-lg font-medium ${
-            availableQty === 0
-              ? "bg-gray-400 text-white"
-              : "bg-[#FF7A30] text-white"
-          }`}
-        >
-          {loading
-            ? "Adding..."
-            : availableQty === 0
-            ? "Out of Stock"
-            : `Add to Cart • ₹${
-                currentPrice * quantity
-              }`}
-        </button>
+        {/* =================================================
+            ORDER NOW
+            ONLY FOR TOMORROW SPECIAL
+        ================================================== */}
+
+        {isSpecial && (
+  <button
+    disabled={
+      availableQty === 0 ||
+      isSpecialCutoffPassed()
+    }
+    onClick={handleOrderNow}
+    className={`w-full mt-3 py-3 rounded-xl font-semibold ${
+      availableQty === 0 || isSpecialCutoffPassed()
+        ? "bg-gray-400 text-white"
+        : "bg-[#5F2EEA] text-white"
+    }`}
+  >
+    {availableQty === 0
+      ? "Sold Out"
+      : isSpecialCutoffPassed()
+      ? "⏰ Ordering Closed"
+      : `⭐ Order Now • ₹${currentPrice * quantity}`}
+  </button>
+)}
 
       </div>
 
