@@ -89,37 +89,65 @@ export function DishDetail({
 // TOMORROW SPECIAL CUTOFF
 // =========================================================
 
+// =========================================================
+// TOMORROW SPECIAL CUTOFF
+// Uses special_date + cutoff_time
+// =========================================================
+
 const isSpecialCutoffPassed = () => {
-  if (!isSpecial || !dish?.cutoff_time) {
+  if (
+    !isSpecial ||
+    !dish?.special_date ||
+    !dish?.cutoff_time
+  ) {
     return false;
   }
 
   try {
+    const specialDate = String(dish.special_date).split("T")[0];
+
+    const [year, month, day] = specialDate
+      .split("-")
+      .map(Number);
+
     const [hours, minutes] = String(dish.cutoff_time)
       .split(":")
       .map(Number);
 
     if (
+      !year ||
+      !month ||
+      !day ||
       Number.isNaN(hours) ||
       Number.isNaN(minutes)
     ) {
       return false;
     }
 
+    // India timezone
     const now = new Date();
 
-    const cutoff = new Date();
-    cutoff.setHours(hours);
-    cutoff.setMinutes(minutes);
-    cutoff.setSeconds(0);
-    cutoff.setMilliseconds(0);
+    // Build cutoff using the SPECIAL DATE
+    const cutoff = new Date(
+      year,
+      month - 1,
+      day,
+      hours,
+      minutes,
+      0,
+      0
+    );
 
     return now > cutoff;
-  } catch {
+  } catch (error) {
+    console.error(
+      "Special cutoff calculation error:",
+      error
+    );
+
     return false;
   }
 };
-
   // =========================================================
   // ADD TO CART
   // =========================================================
