@@ -538,7 +538,7 @@ if (!isOnline) {
 }
 
   return (
-    <div className="max-w-[390px] mx-auto min-h-screen bg-[#FFF8F0] relative overflow-hidden shadow-2xl">
+    <div className="max-w-[390px] mx-auto min-h-screen bg-[#FFF8F0] relative  shadow-2xl">
       <AnimatePresence mode="wait">
         {currentScreen === "splash" && (
           <SplashScreen key="splash" onComplete={handleSplashComplete} />
