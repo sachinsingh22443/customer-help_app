@@ -8,7 +8,6 @@ import {
   Timer,
 } from "lucide-react";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
-import { useCart } from "../../contexts/CartContext";
 
 interface TomorrowSpecialsProps {
   onBack: () => void;
@@ -21,7 +20,6 @@ export function TomorrowSpecials({
   onNavigateToSpecialDetail,
   category,
 }: TomorrowSpecialsProps) {
-  const { addItem } = useCart();
 
   const [specials, setSpecials] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -207,10 +205,10 @@ export function TomorrowSpecials({
                         special.ingredients,
 
                       // TIMING
-                      cutoff_time:
-                        special.cutoff_time,
+                      cutoff_time: special.cutoff_time,
+                      special_date: special.special_date,
 
-                      // TYPE
+// TYPE
                       type: "special",
                     })
                   }
@@ -476,60 +474,7 @@ export function TomorrowSpecials({
 
 
                       {/* PRE-ORDER */}
-                      <button
-                        onClick={(e) => {
-
-                          e.stopPropagation();
-
-                          addItem({
-
-                            id: special.id,
-
-                            name: special.dish_name,
-
-                            price: special.price,
-
-                            quantity: 1,
-
-                            image_urls: special.image_url
-                              ? [special.image_url]
-                              : [],
-
-                            type: "special",
-
-                            // EXTRA DATA
-                            chef_id: special.chef_id,
-                            chef_name: special.chef_name,
-                            food_type: special.food_type,
-
-                            original_price:
-                              special.original_price,
-
-                            calories:
-                              special.calories,
-
-                            protein:
-                              special.protein,
-
-                            carbs:
-                              special.carbs,
-
-                            fats:
-                              special.fats,
-
-                            preparation_time:
-                              special.preparation_time,
-
-                            ingredients:
-                              special.ingredients,
-                          });
-
-                        }}
-
-                        className="bg-orange-500 hover:bg-orange-600 active:scale-95 text-white px-5 py-2.5 rounded-xl font-semibold transition"
-                      >
-                        Pre-Order
-                      </button>
+                      
 
                     </div>
 
