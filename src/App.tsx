@@ -512,7 +512,6 @@ const handleNavigateToSpecialDetail = (special: any) => {
   const showBottomNav = [
     "customerHome",
     "categoryDetail",
-    // "dishDetail",
     "orders",
     "profile",
     "tomorrowSpecials",
