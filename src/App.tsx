@@ -382,11 +382,13 @@ useEffect(() => {
 };
 
 const handleNavigateToSpecialDetail = (special: any) => {
+  console.log("OPEN SPECIAL DETAIL:", special);
+
   setSelectedDish(null);
 
   setSelectedSpecial({
     ...special,
-    type: "special", // 🔥 IMPORTANT
+    type: "special",
   });
 
   setCurrentScreen("dishDetail");

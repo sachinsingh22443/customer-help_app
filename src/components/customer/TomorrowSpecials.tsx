@@ -160,58 +160,48 @@ export function TomorrowSpecials({
                     delay: index * 0.05,
                   }}
 
-                  onClick={() =>
-                    onNavigateToSpecialDetail?.({
+                  onClick={() => {
+  const selectedSpecial = {
+    id: special.id,
+    name: special.dish_name,
+    description: special.description,
 
-                      // BASIC
-                      id: special.id,
-                      name: special.dish_name,
-                      description: special.description,
+    price: special.price,
+    original_price: special.original_price,
 
-                      // PRICING
-                      price: special.price,
-                      original_price: special.original_price,
+    quantity: Number(special.remaining),
+    remaining: Number(special.remaining),
+    max_plates: special.max_plates,
+    pre_orders: special.pre_orders,
 
-                      // INVENTORY
-                      quantity: special.remaining,
-                      remaining: special.remaining,
-                      max_plates: special.max_plates,
-                      pre_orders: special.pre_orders,
+    image_urls: special.image_url
+      ? [special.image_url]
+      : [],
 
-                      // IMAGE
-                      image_urls: special.image_url
-                        ? [special.image_url]
-                        : [],
+    chef_id: special.chef_id,
+    chef_name: special.chef_name,
+    distance: special.distance,
 
-                      // CHEF
-                      chef_id: special.chef_id,
-                      chef_name: special.chef_name,
-                      distance: special.distance,
+    food_type: special.food_type,
 
-                      // FOOD
-                      food_type: special.food_type,
+    calories: special.calories,
+    protein: special.protein,
+    carbs: special.carbs,
+    fats: special.fats,
 
-                      // NUTRITION
-                      calories: special.calories,
-                      protein: special.protein,
-                      carbs: special.carbs,
-                      fats: special.fats,
+    preparation_time: special.preparation_time,
+    ingredients: special.ingredients,
 
-                      // PREMIUM INFO
-                      preparation_time:
-                        special.preparation_time,
+    cutoff_time: special.cutoff_time,
+    special_date: special.special_date,
 
-                      ingredients:
-                        special.ingredients,
+    type: "special",
+  };
 
-                      // TIMING
-                      cutoff_time: special.cutoff_time,
-                      special_date: special.special_date,
+  console.log("VIEW ALL SPECIAL CLICK:", selectedSpecial);
 
-// TYPE
-                      type: "special",
-                    })
-                  }
+  onNavigateToSpecialDetail?.(selectedSpecial);
+}}
 
                   className="bg-white rounded-2xl overflow-hidden shadow-md cursor-pointer"
                 >
