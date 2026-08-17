@@ -252,41 +252,56 @@ export default function MySubscriptions({ onBack }: Props) {
   // BREAKFAST PAYMENT
   // =========================================================
 
-  const handleAddBreakfast = async (
-    subscription: Subscription
-  ) => {
-    try {
-      const token = localStorage.getItem("token");
+  // =========================================================
+// BREAKFAST PAYMENT
+// =========================================================
 
-      if (!token) {
-        alert("Please login first");
-        return;
+const handleAddBreakfast = async (
+  subscription: Subscription
+) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Please login first");
+      return;
+    }
+
+    // -----------------------------------------
+    // 1. CREATE RAZORPAY PAYMENT ORDER
+    // -----------------------------------------
+
+    const paymentRes = await fetch(
+      "https://chef-backend-qh12.onrender.com/subscriptions/breakfast/create-payment",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          subscription_id: subscription.id,
+        }),
       }
+    );
 
-      const paymentRes = await fetch(
-        "https://chef-backend-qh12.onrender.com/subscriptions/breakfast/create-payment",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            subscription_id: subscription.id,
-          }),
-        }
+    const paymentData = await paymentRes.json();
+
+    if (!paymentRes.ok) {
+      throw new Error(
+        paymentData?.detail ||
+          "Unable to create breakfast payment"
       );
+    }
 
-      const paymentData = await paymentRes.json();
+    // -----------------------------------------
+    // 2. OPEN RAZORPAY
+    // -----------------------------------------
 
-      if (!paymentRes.ok) {
-        throw new Error(
-          paymentData.detail ||
-            "Unable to create breakfast payment"
-        );
-      }
+    let result;
 
-      const result = await RazorpayCheckout.open({
+    try {
+      result = await RazorpayCheckout.open({
         key: paymentData.key,
         amount: String(paymentData.amount),
         currency: "INR",
@@ -294,53 +309,170 @@ export default function MySubscriptions({ onBack }: Props) {
         description: "Breakfast Add-on",
         order_id: paymentData.razorpay_order_id,
       });
+    } catch (razorpayError: any) {
 
-      const response = result.response;
-
-      const verifyRes = await fetch(
-        "https://chef-backend-qh12.onrender.com/subscriptions/breakfast/verify-payment",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            subscription_id: subscription.id,
-            razorpay_order_id:
-              response.razorpay_order_id,
-            razorpay_payment_id:
-              response.razorpay_payment_id,
-            razorpay_signature:
-              response.razorpay_signature,
-          }),
-        }
+      console.log(
+        "RAZORPAY CLOSED / CANCELLED:",
+        razorpayError
       );
 
-      const verifyData = await verifyRes.json();
+      // -----------------------------------------
+      // USER PAYMENT SCREEN SE BACK/EXIT KAR GAYA
+      // -----------------------------------------
 
-      if (!verifyRes.ok) {
-        throw new Error(
-          verifyData.detail ||
-            "Breakfast payment verification failed"
-        );
+      const errorCode =
+        razorpayError?.code ||
+        razorpayError?.response?.code ||
+        "";
+
+      const errorDescription =
+        razorpayError?.description ||
+        razorpayError?.response?.description ||
+        "";
+
+      const errorMessage =
+        typeof razorpayError === "string"
+          ? razorpayError
+          : JSON.stringify(razorpayError);
+
+      const isCancelled =
+        errorCode === "PAYMENT_CANCELLED" ||
+        errorCode === "PAYMENT_CANCELED" ||
+        errorCode === "BAD_REQUEST_ERROR" ||
+        errorDescription?.toLowerCase().includes("cancel") ||
+        errorDescription?.toLowerCase().includes("dismiss") ||
+        errorMessage?.toLowerCase().includes("cancel") ||
+        errorMessage?.toLowerCase().includes("dismiss");
+
+      if (isCancelled) {
+        console.log("ℹ️ Breakfast payment cancelled by customer.");
+
+        // IMPORTANT:
+        // Yahan koi alert nahi dikhana
+        // User simply My Subscription page par rahega.
+
+        return;
       }
 
-      alert("Breakfast added successfully 🎉");
+      // Genuine Razorpay error
+      throw new Error(
+        errorDescription ||
+          "Payment could not be completed. Please try again."
+      );
+    }
 
-      await fetchSubscriptions();
-    } catch (error: any) {
-      console.error(
-        "BREAKFAST PAYMENT ERROR:",
-        error
+    // -----------------------------------------
+    // 3. PAYMENT RESPONSE
+    // -----------------------------------------
+
+    const response = result?.response;
+
+    if (
+      !response?.razorpay_order_id ||
+      !response?.razorpay_payment_id ||
+      !response?.razorpay_signature
+    ) {
+      console.log(
+        "Payment response incomplete:",
+        response
       );
 
       alert(
-        error?.message ||
-          "Breakfast payment failed"
+        "Payment was not completed. Please try again."
+      );
+
+      return;
+    }
+
+    // -----------------------------------------
+    // 4. VERIFY PAYMENT
+    // -----------------------------------------
+
+    const verifyRes = await fetch(
+      "https://chef-backend-qh12.onrender.com/subscriptions/breakfast/verify-payment",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          subscription_id: subscription.id,
+          razorpay_order_id:
+            response.razorpay_order_id,
+          razorpay_payment_id:
+            response.razorpay_payment_id,
+          razorpay_signature:
+            response.razorpay_signature,
+        }),
+      }
+    );
+
+    const verifyData = await verifyRes.json();
+
+    if (!verifyRes.ok) {
+      throw new Error(
+        verifyData?.detail ||
+          "Breakfast payment verification failed"
       );
     }
-  };
+
+    // -----------------------------------------
+    // 5. SUCCESS
+    // -----------------------------------------
+
+    console.log(
+      "✅ BREAKFAST PAYMENT VERIFIED:",
+      verifyData
+    );
+
+    alert("Breakfast added successfully 🎉");
+
+    // Refresh subscription + today's meals
+    await fetchSubscriptions();
+
+  } catch (error: any) {
+
+    console.error(
+      "BREAKFAST PAYMENT ERROR:",
+      error
+    );
+
+    // -----------------------------------------
+    // FINAL SAFETY:
+    // Cancel/exit errors ko user ko mat dikhao
+    // -----------------------------------------
+
+    const errorText =
+      typeof error === "string"
+        ? error
+        : JSON.stringify(error);
+
+    const lowerError =
+      errorText.toLowerCase();
+
+    const isCancelled =
+      lowerError.includes("cancel") ||
+      lowerError.includes("canceled") ||
+      lowerError.includes("cancelled") ||
+      lowerError.includes("dismiss") ||
+      lowerError.includes("bad_request_error");
+
+    if (isCancelled) {
+      console.log(
+        "ℹ️ User cancelled breakfast payment."
+      );
+
+      return;
+    }
+
+    // Genuine error only
+    alert(
+      error?.message ||
+        "Breakfast payment failed. Please try again."
+    );
+  }
+};
 
   // =========================================================
   // MEAL TOGGLE
