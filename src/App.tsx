@@ -155,6 +155,10 @@ function AppContent() {
 }, []);
 
 
+useEffect(() => {
+  console.log("CURRENT SCREEN:", currentScreen);
+  console.log("SELECTED DISH:", selectedDish);
+}, [currentScreen, selectedDish]);
 
 
 
@@ -382,14 +386,32 @@ useEffect(() => {
 };
 
 const handleNavigateToSpecialDetail = (special: any) => {
-  console.log("OPEN SPECIAL DETAIL:", special);
-
-  setSelectedDish(null);
-
-  setSelectedSpecial({
+  const specialDish = {
     ...special,
+
+    // Force Tomorrow Special
     type: "special",
-  });
+
+    // Stock
+    quantity: Number(
+      special.remaining ?? special.quantity ?? 0
+    ),
+
+    remaining: Number(
+      special.remaining ?? special.quantity ?? 0
+    ),
+  };
+
+  console.log("OPENING TOMORROW SPECIAL:", specialDish);
+
+  
+
+  // Clear old normal dish
+  setSelectedDish(null);
+  setSelectedSpecial(null);
+
+  // Save special as selected dish
+  setSelectedDish(specialDish);
 
   setCurrentScreen("dishDetail");
 };
@@ -416,8 +438,12 @@ const handleNavigateToSpecialDetail = (special: any) => {
   };
 
   const handleNavigateToCheckout = () => {
-    setCurrentScreen("checkout");
-  };
+  // Cart se checkout ja rahe hain,
+  // isliye purana Order Now direct item hatao.
+  setDirectCheckoutItem(null);
+
+  setCurrentScreen("checkout");
+};
 
 
   const handleOrderNowSpecial = (special: any) => {
@@ -652,14 +678,15 @@ if (!isOnline) {
           />
         )}
 
-       {currentScreen === "dishDetail" && (selectedDish || selectedSpecial) && (
+  {currentScreen === "dishDetail" && selectedDish && (
   <DishDetail
-  dish={selectedSpecial || selectedDish}
-  onBack={handleBackToCustomerHome}
-  onAddToCart={handleAddToCart}
-  onNavigateToChef={handleNavigateToChefDetails}
-  onOrderNow={handleOrderNowSpecial}
-/>
+    key={`dish-detail-${selectedDish.id}-${selectedDish.type}`}
+    dish={selectedDish}
+    onBack={handleBackToCustomerHome}
+    onAddToCart={handleAddToCart}
+    onNavigateToChef={handleNavigateToChefDetails}
+    onOrderNow={handleOrderNowSpecial}
+  />
 )}
 
         {currentScreen === "reviewsRatings" && (

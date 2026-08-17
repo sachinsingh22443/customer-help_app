@@ -58,14 +58,20 @@ export function Checkout({
     }
   };
 
-  const cartItems = directItem
-  ? [directItem]
-  : (cartData || []);
+  const cartItems =
+  directItem != null
+    ? [directItem]
+    : Array.isArray(cartData)
+      ? cartData
+      : [];
 
   const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
+  (sum, item) =>
+    sum + Number(item.price || 0) * Number(item.quantity || 0),
+  0
+);
+
+
 
   // const delivery = 0;
   // const tax = ;
