@@ -82,11 +82,7 @@ export function DishDetail({
   // =========================================================
 
   const isSpecial =
-    dish?.type === "special" ||
-    !!dish?.special_date ||
-    !!dish?.cutoff_time ||
-    dish?.max_plates != null ||
-    dish?.pre_orders != null;
+  String(dish?.type || "").toLowerCase() === "special";
 
 
   // =========================================================
