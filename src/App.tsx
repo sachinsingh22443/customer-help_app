@@ -127,7 +127,73 @@ export default function App() {
 
 function AppContent() {
   const { toastMessage } = useCart();
-  const [currentScreen, setCurrentScreen] = useState<Screen>("splash");
+  const [screenHistory, setScreenHistory] =
+  useState<Screen[]>(["splash"]);
+
+  const currentScreen =
+  screenHistory[screenHistory.length - 1];
+
+  // =========================================================
+// GLOBAL NAVIGATION HISTORY
+// =========================================================
+
+const navigateTo = (screen: Screen) => {
+  setScreenHistory((prev) => [
+    ...prev,
+    screen,
+  ]);
+};
+
+// =========================================================
+// REPLACE CURRENT SCREEN
+// Use for login/auth/network redirects
+// =========================================================
+
+const replaceScreen = (screen: Screen) => {
+  setScreenHistory([screen]);
+};
+
+// =========================================================
+// GO BACK
+// =========================================================
+
+const goBack = () => {
+  setScreenHistory((prev) => {
+
+    if (prev.length <= 1) {
+      return prev;
+    }
+
+    return prev.slice(
+      0,
+      prev.length - 1
+    );
+  });
+};
+
+// =========================================================
+// GO HOME
+// Use only when user explicitly needs Home
+// =========================================================
+
+const goHome = () => {
+  setScreenHistory([
+    "customerHome",
+  ]);
+};
+
+// =========================================================
+// NORMAL NAVIGATION
+// =========================================================
+
+const setCurrentScreen = (screen: Screen) => {
+  setScreenHistory((prev) => [
+    ...prev,
+    screen,
+  ]);
+};
+
+
   const [activeTab, setActiveTab] = useState<"home" | "orders" | "profile" | "specials">("home");
   const [selectedCategory, setSelectedCategory] = useState<"healthy" | "protein" | "tiffin" | "diet">("healthy");
   const [selectedDish, setSelectedDish] = useState<any>(null);
@@ -524,18 +590,27 @@ const handleNavigateToSpecialDetail = (special: any) => {
   }
 };
 
-  const handleTabChange = (tab: "home" | "orders" | "profile" | "specials") => {
-    setActiveTab(tab);
-    if (tab === "home") {
-      setCurrentScreen("customerHome");
-    } else if (tab === "orders") {
-      setCurrentScreen("orders");
-    } else if (tab === "profile") {
-      setCurrentScreen("profile");
-    } else if (tab === "specials") {
-      setCurrentScreen("tomorrowSpecials");
-    }
-  };
+  const handleTabChange = (
+  tab: "home" | "orders" | "profile" | "specials"
+) => {
+  setActiveTab(tab);
+
+  let targetScreen: Screen;
+
+  if (tab === "home") {
+    targetScreen = "customerHome";
+  } else if (tab === "orders") {
+    targetScreen = "orders";
+  } else if (tab === "profile") {
+    targetScreen = "profile";
+  } else {
+    targetScreen = "tomorrowSpecials";
+  }
+
+  // Bottom navigation is a root navigation action.
+  // Clear previous detail screens.
+  setScreenHistory([targetScreen]);
+};
 
   const showBottomNav = [
     "customerHome",
@@ -648,14 +723,7 @@ if (!isOnline) {
         {currentScreen === "globalSearch" && (
           <GlobalSearch
             key="globalSearch"
-            onBack={() => {
-           if (selectedSpecial) {
-           setCurrentScreen("tomorrowSpecials");
-          } else {
-           setCurrentScreen("categoryDetail");
-          }
-         
-        }}
+            onBack={goBack}
             onSelectDish={handleNavigateToDishDetail}
             onSelectChef={handleNavigateToChefDetails}
           />
@@ -663,26 +731,26 @@ if (!isOnline) {
 
         {currentScreen === "notifications" && (
           <Notifications
-            key="notifications"
-            onBack={() => setCurrentScreen("customerHome")}
-          />
+         key="notifications"
+          onBack={goBack}
+        />
         )}
 
         {currentScreen === "categoryDetail" && (
           <CategoryDetail
-            key="categoryDetail"
-            category={selectedCategory}
-            onBack={handleBackToCustomerHome}
-            onAddToCart={handleAddToCart}
-            onNavigateToDish={handleNavigateToDishDetail}
-          />
+  key="categoryDetail"
+  category={selectedCategory}
+  onBack={goBack}
+  onAddToCart={handleAddToCart}
+  onNavigateToDish={handleNavigateToDishDetail}
+/>
         )}
 
   {currentScreen === "dishDetail" && selectedDish && (
   <DishDetail
     key={`dish-detail-${selectedDish.id}-${selectedDish.type}`}
     dish={selectedDish}
-    onBack={handleBackToCustomerHome}
+    onBack={goBack}
     onAddToCart={handleAddToCart}
     onNavigateToChef={handleNavigateToChefDetails}
     onOrderNow={handleOrderNowSpecial}
@@ -691,37 +759,37 @@ if (!isOnline) {
 
         {currentScreen === "reviewsRatings" && (
           <ReviewsRatings
-            key="reviewsRatings"
-            dish={selectedDish}
-            onBack={() => setCurrentScreen("dishDetail")}
-            onWriteReview={handleNavigateToWriteReview}
-          />
+  key="reviewsRatings"
+  dish={selectedDish}
+  onBack={goBack}
+  onWriteReview={handleNavigateToWriteReview}
+/>
         )}
 
         {currentScreen === "writeReview" && (
           <WriteReview
-            key="writeReview"
-            dishId={selectedDish?.id}
-            dishName="Paneer Butter Masala"
-            onBack={() => setCurrentScreen("reviewsRatings")}
-            onSubmit={handleSubmitReview}
-          />
+  key="writeReview"
+  dishId={selectedDish?.id}
+  dishName="Paneer Butter Masala"
+  onBack={goBack}
+  onSubmit={handleSubmitReview}
+/>
         )}
 
         {currentScreen === "cart" && (
         <Cart
-        key="cart"
-        onBack={handleBackToCustomerHome}
-        onCheckout={handleNavigateToCheckout}
-        setCartData={setCartData} // 🔥 ADD THIS
-        />
+  key="cart"
+  onBack={goBack}
+  onCheckout={handleNavigateToCheckout}
+  setCartData={setCartData}
+/>
         )}
 
         {currentScreen === "emptyCart" && (
           <EmptyCart
-            key="emptyCart"
-            onBack={handleBackToCustomerHome}
-          />
+  key="emptyCart"
+  onBack={goBack}
+/>
         )}
 
        
@@ -730,7 +798,7 @@ if (!isOnline) {
   key="checkout"
   cartData={cartData}
   directItem={directCheckoutItem}
-  onBack={() => setCurrentScreen("cart")}
+  onBack={goBack}
     onProcessing={() => setCurrentScreen("paymentProcessing")}
 
     onSuccess={(order) => {
@@ -824,10 +892,10 @@ if (!isOnline) {
 
         {currentScreen === "orderTracking" && (
           <OrderTracking
-            key="orderTracking"
-            orderId={selectedOrderId}
-            onBack={handleBackToCustomerHome}
-          />
+  key="orderTracking"
+  orderId={selectedOrderId}
+  onBack={goBack}
+/>
         )}
 
         {currentScreen === "orders" && (
@@ -892,22 +960,22 @@ if (!isOnline) {
 
    {currentScreen === "mySpecialHistory" && (
   <MySpecialHistory
-    onBack={() => setCurrentScreen("profile")}
-  />
+  onBack={goBack}
+/>
 )}
 
         {currentScreen === "editProfile" && (
-          <EditProfile 
-            key="editProfile"
-            onBack={() => setCurrentScreen("profile")}
-            onSave={() => setCurrentScreen("profile")}
-          />
+          <EditProfile
+  key="editProfile"
+  onBack={goBack}
+  onSave={() => goBack()}
+/>
         )}
 
         {currentScreen === "myAddresses" && (
           <MyAddresses 
             key="myAddresses"
-            onBack={() => setCurrentScreen("profile")}
+            onBack={goBack}
             onAddAddress={() => {
               setSelectedAddressId(undefined);
               setCurrentScreen("addAddress");
@@ -920,27 +988,24 @@ if (!isOnline) {
         )}
 
         {currentScreen === "addAddress" && (
-          <AddAddress 
-            key="addAddress"
-            addressId={selectedAddressId}
-            onBack={() => setCurrentScreen("checkout")}
-            onSave={() => {
-            setCurrentScreen("checkout");
-            }}
-          />
+          <AddAddress
+  key="addAddress"
+  addressId={selectedAddressId}
+  onBack={goBack}
+  onSave={() => goBack()}
+/>
         )}
 
         {currentScreen === "favoriteDishes" && (
-          <FavoriteDishes 
-            key="favoriteDishes"
-            onBack={() => setCurrentScreen("profile")}
-            onViewDish={handleNavigateToDishDetail}
+          <FavoriteDishes
+          key="favoriteDishes"
+          onBack={goBack}
           />
         )}
 
         {currentScreen === "paymentMethods" && (
           <PaymentMethods 
-          onBack={() => setCurrentScreen("profile")}
+          onBack={goBack}
           onAddCard={() => console.log("Add card")}
   
           onSelect={(method) => {
@@ -951,17 +1016,17 @@ if (!isOnline) {
         )}
 
         {currentScreen === "settings" && (
-          <Settings 
-            key="settings"
-            onBack={() => setCurrentScreen("profile")}
-          />
+          <Settings
+  key="settings"
+  onBack={goBack}
+/>
         )}
 
         {currentScreen === "helpSupport" && (
-          <HelpSupport 
-            key="helpSupport"
-            onBack={() => setCurrentScreen("profile")}
-          />
+          <HelpSupport
+  key="helpSupport"
+  onBack={goBack}
+/>
         )}
 
         {currentScreen === "noInternet" && (
@@ -1003,7 +1068,7 @@ if (!isOnline) {
           <SubscriptionPlans
             key="subscriptionPlans"
             onSelectPlan={handleSelectPlan}
-            onBack={handleBackToCustomerHome}
+            onBack={goBack}
           />
         )}
 
@@ -1011,7 +1076,7 @@ if (!isOnline) {
           <SubscriptionTypeDetail
   key="subscriptionTypeDetail"
   selectedPlan={selectedPlan}
-  onBack={() => setCurrentScreen("subscriptionPlans")}
+  onBack={goBack}
   onSelectDuration={() => {
   setCurrentScreen("subscriptionDuration");
 }}
@@ -1022,7 +1087,7 @@ if (!isOnline) {
   <SubscriptionDuration
   key="subscriptionDuration"
   selectedPlan={selectedPlan}
-  onBack={() => setCurrentScreen("subscriptionTypeDetail")}
+  onBack={goBack}
   onViewSubscriptions={() =>
     setCurrentScreen("mySubscriptions")
   }
@@ -1035,15 +1100,15 @@ if (!isOnline) {
 
         {currentScreen === "mySubscriptions" && (
   <MySubscriptions
-    onBack={() => setCurrentScreen("profile")}
-  />
+  onBack={goBack}
+/>
 )}
 
         {currentScreen === "userDetailsForm" && (
           <UserDetailsForm
             key="userDetailsForm"
             onSubmit={handleUserDetailsSubmit}
-            onBack={() => setCurrentScreen("subscriptionDuration")}
+            onBack={goBack}
           />
         )}
 
@@ -1054,35 +1119,40 @@ if (!isOnline) {
             selectedPlan={selectedPlan}
             selectedDuration={selectedDuration}
             onConfirm={handlePlanConfirm}
-            onBack={() => setCurrentScreen("userDetailsForm")}
+           onBack={goBack}
           />
         )}
 
         {currentScreen === "tomorrowSpecials" && (
           <TomorrowSpecials
-         onBack={handleBackToCustomerHome}
-        onNavigateToChefDetails={handleNavigateToChefDetails}
-       onNavigateToSpecialDetail={handleNavigateToSpecialDetail}
-       selectedChefId={selectedChefId}   // 🔥 IMPORTANT
-       />
+  onBack={goBack}
+  onNavigateToChefDetails={
+    handleNavigateToChefDetails
+  }
+  onNavigateToSpecialDetail={
+    handleNavigateToSpecialDetail
+  }
+  selectedChefId={selectedChefId}
+/>
         )}
 
         {currentScreen === "chefDetails" && (
-
-          <ChefDetails
-            key="chefDetails"
-            chefId={selectedChefId}
-          onBack={handleBackToCustomerHome}
-        onNavigateToDish={handleNavigateToDishDetail}
-          />
-        )}
+       <ChefDetails
+    key="chefDetails"
+    chefId={selectedChefId}
+    onBack={goBack}
+    onNavigateToDish={handleNavigateToDishDetail}
+  />
+)}
 
         {currentScreen === "allChefs" && (
   <AllChefs
-    key="allChefs"
-    onBack={handleBackToCustomerHome}
-    onNavigateToChefDetails={handleNavigateToChefDetails}
-  />
+  key="allChefs"
+  onBack={goBack}
+  onNavigateToChefDetails={
+    handleNavigateToChefDetails
+  }
+/>
 )} 
       </AnimatePresence>
       {showBottomNav && (
