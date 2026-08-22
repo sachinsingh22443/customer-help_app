@@ -17,7 +17,6 @@ import { useEffect, useState } from "react";
 
 import axios from "axios";
 
-
 // =========================================================
 // PROPS
 // =========================================================
@@ -30,7 +29,6 @@ interface ChefDetailsProps {
   onNavigateToDish?: (dish: any) => void;
 }
 
-
 // =========================================================
 // MEAL TYPE
 // =========================================================
@@ -39,7 +37,6 @@ type MealType =
   | "breakfast"
   | "lunch"
   | "dinner";
-
 
 // =========================================================
 // MENU ITEM
@@ -72,7 +69,6 @@ interface MenuItem {
 
   prep_time?: number;
 
-
   // =======================================================
   // NORMAL MENU
   // =======================================================
@@ -80,7 +76,6 @@ interface MenuItem {
   menu_date?: string;
 
   meal_type?: MealType;
-
 
   // =======================================================
   // OPTIONAL STOCK
@@ -90,7 +85,6 @@ interface MenuItem {
 
   quantity?: number;
 }
-
 
 // =========================================================
 // DAY MENU
@@ -118,7 +112,6 @@ interface DayMenu {
   }[];
 }
 
-
 // =========================================================
 // CHEF
 // =========================================================
@@ -143,14 +136,12 @@ interface Chef {
   experience?: number;
 }
 
-
 // =========================================================
 // API
 // =========================================================
 
 const API_BASE =
   "https://chef-backend-qh12.onrender.com";
-
 
 // =========================================================
 // MEAL CONFIG
@@ -160,25 +151,19 @@ const MEAL_CONFIG: Record<
   MealType,
   {
     label: string;
-
     emoji: string;
-
     cutoff: string;
   }
 > = {
-
   // =======================================================
   // BREAKFAST
   // =======================================================
 
   breakfast: {
     label: "Breakfast",
-
     emoji: "🌅",
-
-    cutoff: "8:30 AM",
+    cutoff: "9:00 AM",
   },
-
 
   // =======================================================
   // LUNCH
@@ -186,12 +171,9 @@ const MEAL_CONFIG: Record<
 
   lunch: {
     label: "Lunch",
-
     emoji: "☀️",
-
-    cutoff: "11:00 AM",
+    cutoff: "1:00 PM",
   },
-
 
   // =======================================================
   // DINNER
@@ -199,13 +181,10 @@ const MEAL_CONFIG: Record<
 
   dinner: {
     label: "Dinner",
-
     emoji: "🌙",
-
-    cutoff: "6:00 PM",
+    cutoff: "8:00 PM",
   },
 };
-
 
 // =========================================================
 // FORMAT DATE
@@ -227,14 +206,11 @@ function formatDate(
     "en-IN",
     {
       day: "2-digit",
-
       month: "short",
-
       year: "numeric",
     }
   );
 }
-
 
 // =========================================================
 // GET DAY NAME
@@ -260,7 +236,6 @@ function getDayName(
   );
 }
 
-
 // =========================================================
 // GET SHORT DAY NAME
 // =========================================================
@@ -285,13 +260,11 @@ function getShortDayName(
   );
 }
 
-
 // =========================================================
 // TODAY STRING
 // =========================================================
 
 function getTodayString() {
-
   const today =
     new Date();
 
@@ -301,7 +274,6 @@ function getTodayString() {
     today.getDate()
   ).padStart(2, "0")}`;
 }
-
 
 // =========================================================
 // IS TODAY
@@ -320,38 +292,32 @@ function isToday(
   );
 }
 
-
 // =========================================================
 // CUTOFF DATE TIME
 // =========================================================
 
 function getCutoffDateTime(
   dateString: string,
-
   mealType: MealType
 ) {
-
   const cutoffMap: Record<
     MealType,
     string
   > = {
-
     breakfast:
-      "08:30:00",
+      "09:00:00",
 
     lunch:
-      "11:00:00",
+      "13:00:00",
 
     dinner:
-      "18:00:00",
+      "20:00:00",
   };
-
 
   return new Date(
     `${dateString}T${cutoffMap[mealType]}`
   );
 }
-
 
 // =========================================================
 // CHECK CUTOFF
@@ -359,10 +325,8 @@ function getCutoffDateTime(
 
 function hasCutoffPassed(
   dateString: string,
-
   mealType: MealType
 ) {
-
   if (!dateString) {
     return false;
   }
@@ -378,16 +342,13 @@ function hasCutoffPassed(
   );
 }
 
-
 // =========================================================
 // COMPONENT
 // =========================================================
 
 export function ChefDetails({
   chefId,
-
   onBack,
-
   onNavigateToDish,
 }: ChefDetailsProps) {
 
@@ -403,7 +364,6 @@ export function ChefDetails({
       null
     );
 
-
   // =======================================================
   // 7 DAY MENU
   // =======================================================
@@ -416,7 +376,6 @@ export function ChefDetails({
       []
     );
 
-
   // =======================================================
   // SELECTED DAY
   // =======================================================
@@ -426,7 +385,6 @@ export function ChefDetails({
     setSelectedDay,
   ] =
     useState(0);
-
 
   // =======================================================
   // LOADING
@@ -438,13 +396,11 @@ export function ChefDetails({
   ] =
     useState(true);
 
-
   const [
     menuLoading,
     setMenuLoading,
   ] =
     useState(true);
-
 
   // =======================================================
   // ERROR
@@ -456,7 +412,6 @@ export function ChefDetails({
   ] =
     useState("");
 
-
   // =======================================================
   // FAVORITE
   // =======================================================
@@ -466,7 +421,6 @@ export function ChefDetails({
     setIsFavorite,
   ] =
     useState(false);
-
 
   /*
   =========================================================
@@ -485,7 +439,6 @@ export function ChefDetails({
 
           setError("");
 
-
           /*
           ---------------------------------------------------
           REAL CHEF ID
@@ -500,7 +453,6 @@ export function ChefDetails({
             localStorage.getItem(
               "userId"
             );
-
 
           if (!finalChefId) {
 
@@ -519,18 +471,15 @@ export function ChefDetails({
             return;
           }
 
-
           console.log(
             "🔥 Fetching chef:",
             finalChefId
           );
 
-
           const token =
             localStorage.getItem(
               "token"
             );
-
 
           /*
           =====================================================
@@ -541,7 +490,6 @@ export function ChefDetails({
           const chefResponse =
             await axios.get(
               `${API_BASE}/menu/chef/${finalChefId}`,
-
               {
                 headers: token
                   ? {
@@ -552,261 +500,268 @@ export function ChefDetails({
               }
             );
 
-
           console.log(
             "✅ Chef response:",
             chefResponse.data
           );
 
-
           setChef(
             chefResponse.data?.chef ||
-              null
+            null
           );
-
 
           /*
           =====================================================
-          2. GET CUSTOMER 7-DAY MENU CYCLE
+          2. GET CUSTOMER 7-DAY MENU
+          
+          IMPORTANT:
+          Customer ko sirf current 7-day menu milega.
           =====================================================
           */
 
           setMenuLoading(true);
 
-
           const cycleResponse =
             await axios.get(
-              `${API_BASE}/menu-cycle/customer/${finalChefId}`
+              `${API_BASE}/menu/chef/${finalChefId}/7-days`
             );
 
-
           console.log(
-            "🔥 7 Day Menu:",
+            "🔥 CUSTOMER 7 DAY MENU:",
             cycleResponse.data
           );
-
 
           /*
           -----------------------------------------------------
           EXPECTED BACKEND RESPONSE
-          -----------------------------------------------------
 
           {
             success: true,
             chef_id: "...",
+            start_date: "...",
+            end_date: "...",
             days: [...]
           }
-
           -----------------------------------------------------
           */
 
-
           const backendDays =
-            cycleResponse.data?.days ||
-            [];
-
+            Array.isArray(
+              cycleResponse.data?.days
+            )
+              ? cycleResponse.data.days
+              : [];
 
           /*
           =====================================================
-          NORMALIZE DAYS
+          NORMALIZE EXACTLY 7 DAYS
           =====================================================
           */
 
           const normalizedDays:
             DayMenu[] =
-            backendDays.map(
-              (
-                day: any,
-                index: number
-              ) => {
+            backendDays
+              .slice(0, 7)
+              .map(
+                (
+                  day: any,
+                  index: number
+                ) => {
 
-                const targetDate =
-                  day.date ||
-                  day.menu_date ||
-                  day.target_date;
+                  const targetDate =
+                    day?.date ||
+                    day?.menu_date ||
+                    day?.target_date ||
+                    "";
 
+                  const rawMeals =
+                    Array.isArray(
+                      day?.meals
+                    )
+                      ? day.meals
+                      : [];
 
-                const rawMeals =
-                  Array.isArray(
-                    day.meals
-                  )
-                    ? day.meals
-                    : [];
+                  /*
+                  =================================================
+                  ALWAYS CREATE:
 
+                  BREAKFAST
+                  LUNCH
+                  DINNER
+                  =================================================
+                  */
 
-                /*
-                -------------------------------------------------
-                ALWAYS CREATE:
-                BREAKFAST
-                LUNCH
-                DINNER
-                -------------------------------------------------
-                */
-
-                const meals:
-                  DayMenu["meals"] =
-                  (
-                    [
-                      "breakfast",
-
-                      "lunch",
-
-                      "dinner",
-                    ] as MealType[]
-                  ).map(
+                  const meals:
+                    DayMenu["meals"] =
                     (
-                      mealType
-                    ) => {
+                      [
+                        "breakfast",
+                        "lunch",
+                        "dinner",
+                      ] as MealType[]
+                    ).map(
+                      (
+                        mealType
+                      ) => {
 
-                      /*
-                      -------------------------------------------
-                      FIND MEAL FROM BACKEND
-                      -------------------------------------------
-                      */
+                        /*
+                        -------------------------------------------
+                        FIND BACKEND MEAL
+                        -------------------------------------------
+                        */
 
-                      const foundMeal =
-                        rawMeals.find(
-                          (
-                            meal: any
-                          ) =>
-                            String(
-                              meal?.meal_type ||
+                        const foundMeal =
+                          rawMeals.find(
+                            (
+                              meal: any
+                            ) =>
+                              String(
+                                meal?.meal_type ||
                                 ""
-                            ).toLowerCase() ===
-                            mealType
-                        );
-
-
-                      /*
-                      -------------------------------------------
-                      MENU
-                      -------------------------------------------
-                      */
-
-                      const menu =
-                        foundMeal?.menu ||
-                        foundMeal?.item ||
-                        null;
-
-
-                      /*
-                      -------------------------------------------
-                      CUTOFF
-                      -------------------------------------------
-                      */
-
-                      const cutoffPassed =
-                        targetDate
-                          ? hasCutoffPassed(
-                              targetDate,
-
+                              ).toLowerCase() ===
                               mealType
-                            )
-                          : false;
+                          );
 
+                        /*
+                        -------------------------------------------
+                        MENU
+                        -------------------------------------------
+                        */
 
-                      /*
-                      -------------------------------------------
-                      CAN ORDER
-                      -------------------------------------------
-                      */
+                        const menu =
+                          foundMeal?.menu ||
+                          foundMeal?.item ||
+                          null;
 
-                      const backendCanOrder =
-                        foundMeal?.can_order;
+                        /*
+                        -------------------------------------------
+                        CUTOFF TIME
+                        -------------------------------------------
+                        */
 
-
-                      const canOrder =
-                        backendCanOrder !==
-                        undefined
-                          ? Boolean(
-                              backendCanOrder
-                            )
-                          : Boolean(
-                              menu &&
-                              !cutoffPassed
-                            );
-
-
-                      /*
-                      -------------------------------------------
-                      RETURN MEAL
-                      -------------------------------------------
-                      */
-
-                      return {
-
-                        meal_type:
-                          mealType,
-
-                        menu,
-
-                        source:
-                          foundMeal?.source,
-
-                        can_order:
-                          canOrder,
-
-                        cutoff_time:
+                        const cutoffTime =
                           foundMeal?.cutoff_time ||
                           MEAL_CONFIG[
                             mealType
-                          ].cutoff,
+                          ].cutoff;
 
-                        cutoff_passed:
+                        /*
+                        -------------------------------------------
+                        FRONTEND CUTOFF FALLBACK
+                        -------------------------------------------
+                        */
+
+                        const frontendCutoffPassed =
+                          targetDate
+                            ? hasCutoffPassed(
+                                targetDate,
+                                mealType
+                              )
+                            : false;
+
+                        /*
+                        -------------------------------------------
+                        BACKEND CUTOFF PRIORITY
+                        -------------------------------------------
+                        */
+
+                        const cutoffPassed =
                           foundMeal?.cutoff_passed ??
-                          cutoffPassed,
-                      };
-                    }
-                  );
+                          frontendCutoffPassed;
 
+                        /*
+                        -------------------------------------------
+                        CAN ORDER
+                        -------------------------------------------
+                        */
 
-                /*
-                -------------------------------------------------
-                RETURN DAY
-                -------------------------------------------------
-                */
+                        const canOrder =
+                          foundMeal?.can_order !==
+                          undefined
+                            ? Boolean(
+                                foundMeal.can_order
+                              )
+                            : Boolean(
+                                menu &&
+                                !cutoffPassed
+                              );
 
-                return {
+                        /*
+                        -------------------------------------------
+                        RETURN MEAL
+                        -------------------------------------------
+                        */
 
-                  date:
-                    targetDate,
+                        return {
 
-                  day_name:
-                    day.day_name ||
-                    (
-                      targetDate
-                        ? getDayName(
-                            targetDate
-                          )
-                        : `Day ${
-                            index + 1
-                          }`
-                    ),
+                          meal_type:
+                            mealType,
 
-                  day_number:
-                    day.day_number ||
-                    index + 1,
+                          menu,
 
-                  meals,
-                };
-              }
-            );
+                          source:
+                            foundMeal?.source ||
+                            "cycle",
 
+                          can_order:
+                            canOrder,
+
+                          cutoff_time:
+                            cutoffTime,
+
+                          cutoff_passed:
+                            cutoffPassed,
+                        };
+                      }
+                    );
+
+                  /*
+                  =================================================
+                  RETURN DAY
+                  =================================================
+                  */
+
+                  return {
+
+                    date:
+                      targetDate,
+
+                    day_name:
+                      day?.day_name ||
+                      (
+                        targetDate
+                          ? getDayName(
+                              targetDate
+                            )
+                          : `Day ${
+                              index + 1
+                            }`
+                      ),
+
+                    day_number:
+                      day?.day_number ||
+                      index + 1,
+
+                    meals,
+                  };
+                }
+              );
 
           /*
           =====================================================
-          SET MENU DAYS
+          SET EXACTLY 7 DAYS
           =====================================================
           */
 
           setMenuDays(
-            normalizedDays
+            normalizedDays.slice(0, 7)
           );
-
 
           /*
           =====================================================
           AUTO SELECT FIRST DAY
+
+          Backend ka first day = Today
           =====================================================
           */
 
@@ -818,17 +773,15 @@ export function ChefDetails({
 
           console.error(
             "❌ Error fetching chef:",
-
             err?.response?.data ||
-              err?.message ||
-              err
+            err?.message ||
+            err
           );
-
 
           setError(
             err?.response?.data
               ?.detail ||
-              "Unable to load chef details"
+            "Unable to load chef details"
           );
 
         } finally {
@@ -839,11 +792,9 @@ export function ChefDetails({
         }
       };
 
-
     fetchChefData();
 
   }, [chefId]);
-
 
   /*
   =========================================================
@@ -871,7 +822,6 @@ export function ChefDetails({
     );
   }
 
-
   /*
   =========================================================
   ERROR UI
@@ -890,17 +840,14 @@ export function ChefDetails({
             👨‍🍳
           </div>
 
-
           <h2 className="text-xl font-semibold text-gray-800">
             Chef not found
           </h2>
-
 
           <p className="text-gray-500 mt-2">
             {error ||
               "Unable to load chef details"}
           </p>
-
 
           <button
             onClick={onBack}
@@ -915,7 +862,6 @@ export function ChefDetails({
     );
   }
 
-
   /*
   =========================================================
   CURRENT DAY
@@ -924,7 +870,6 @@ export function ChefDetails({
 
   const currentDay =
     menuDays[selectedDay];
-
 
   /*
   =========================================================
@@ -944,7 +889,6 @@ export function ChefDetails({
       return;
     }
 
-
     // =====================================================
     // NO DATE
     // =====================================================
@@ -958,7 +902,6 @@ export function ChefDetails({
       return;
     }
 
-
     // =====================================================
     // TODAY
     // =====================================================
@@ -966,10 +909,8 @@ export function ChefDetails({
     const todayString =
       getTodayString();
 
-
     const menuDate =
       currentDay.date;
-
 
     // =====================================================
     // PAST DATE
@@ -987,7 +928,6 @@ export function ChefDetails({
       return;
     }
 
-
     // =====================================================
     // FUTURE DATE
     // =====================================================
@@ -1003,7 +943,6 @@ export function ChefDetails({
 
       return;
     }
-
 
     // =====================================================
     // TODAY + CUTOFF
@@ -1022,7 +961,6 @@ export function ChefDetails({
       return;
     }
 
-
     // =====================================================
     // BACKEND ORDER STATUS
     // =====================================================
@@ -1038,7 +976,6 @@ export function ChefDetails({
       return;
     }
 
-
     // =====================================================
     // COMPLETE DISH OBJECT
     // =====================================================
@@ -1047,14 +984,12 @@ export function ChefDetails({
 
       ...meal.menu,
 
-
       // ===================================================
       // TYPE
       // ===================================================
 
       type:
         "menu",
-
 
       // ===================================================
       // MENU DATE
@@ -1064,10 +999,8 @@ export function ChefDetails({
       menu_date:
         menuDate,
 
-
       date:
         menuDate,
-
 
       // ===================================================
       // MEAL TYPE
@@ -1076,7 +1009,6 @@ export function ChefDetails({
 
       meal_type:
         meal.meal_type,
-
 
       // ===================================================
       // CHEF ID
@@ -1088,7 +1020,6 @@ export function ChefDetails({
           "selectedChefId"
         ),
 
-
       // ===================================================
       // CHEF
       // ===================================================
@@ -1096,10 +1027,8 @@ export function ChefDetails({
       chef:
         chef,
 
-
       chef_name:
         chef?.name,
-
 
       // ===================================================
       // SOURCE
@@ -1108,7 +1037,6 @@ export function ChefDetails({
       source:
         meal.source ||
         "cycle",
-
 
       // ===================================================
       // CUTOFF
@@ -1120,10 +1048,8 @@ export function ChefDetails({
           meal.meal_type
         ].cutoff,
 
-
       cutoff_passed:
         meal.cutoff_passed,
-
 
       // ===================================================
       // ORDER STATUS
@@ -1133,12 +1059,10 @@ export function ChefDetails({
         meal.can_order,
     };
 
-
     console.log(
       "🍽️ Opening menu dish:",
       dish
     );
-
 
     // =====================================================
     // OPEN DISH DETAIL
@@ -1181,7 +1105,6 @@ export function ChefDetails({
 
         </div>
 
-
         {/* BACK */}
 
         <button
@@ -1190,7 +1113,6 @@ export function ChefDetails({
         >
           <ChevronLeft className="w-6 h-6" />
         </button>
-
 
         {/* FAVORITE */}
 
@@ -1205,7 +1127,6 @@ export function ChefDetails({
           }}
           className="absolute top-12 right-6 w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center z-10"
         >
-
           <Heart
             className={`w-5 h-5 ${
               isFavorite
@@ -1213,11 +1134,9 @@ export function ChefDetails({
                 : "text-white"
             }`}
           />
-
         </motion.button>
 
       </div>
-
 
       {/* =================================================
           CHEF INFO
@@ -1253,7 +1172,6 @@ export function ChefDetails({
 
           </div>
 
-
           <div className="flex-1">
 
             <div className="flex items-center gap-2">
@@ -1267,12 +1185,10 @@ export function ChefDetails({
 
             </div>
 
-
             <p className="text-sm text-gray-500">
               {chef.specialties ||
                 "Home Chef"}
             </p>
-
 
             <div className="flex items-center gap-2 mt-1 text-sm">
 
@@ -1284,7 +1200,6 @@ export function ChefDetails({
               </span>
 
             </div>
-
 
             {/* RATING */}
 
@@ -1298,25 +1213,20 @@ export function ChefDetails({
                   <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
 
                   <span className="text-sm font-medium">
-
                     {Number(
                       chef.rating
                     ).toFixed(1)}
-
                   </span>
 
                 </div>
               )}
 
-
               {chef.total_reviews !==
                 undefined && (
 
                 <span className="text-xs text-gray-400">
-
                   {chef.total_reviews}{" "}
                   reviews
-
                 </span>
               )}
 
@@ -1330,7 +1240,6 @@ export function ChefDetails({
 
     </div>
 
-
     {/* ===================================================
         ABOUT
     =================================================== */}
@@ -1342,14 +1251,11 @@ export function ChefDetails({
       </h3>
 
       <p className="text-sm text-gray-600 mt-2 leading-6">
-
         {chef.bio ||
           "No bio available"}
-
       </p>
 
     </div>
-
 
     {/* ===================================================
         7 DAY MENU
@@ -1362,11 +1268,11 @@ export function ChefDetails({
         <div>
 
           <h3 className="font-semibold text-lg">
-            7 Days Menu
+            This Week's Menu
           </h3>
 
           <p className="text-xs text-gray-500 mt-1">
-            Fresh meals planned for every day
+            Breakfast, lunch & dinner
           </p>
 
         </div>
@@ -1374,7 +1280,6 @@ export function ChefDetails({
         <ShoppingBag className="w-5 h-5 text-[#FF7A30]" />
 
       </div>
-
 
       {/* =================================================
           DAY SELECTOR
@@ -1420,83 +1325,80 @@ export function ChefDetails({
 
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
 
-            {menuDays.map(
-              (day, index) => {
+            {menuDays
+              .slice(0, 7)
+              .map(
+                (day, index) => {
 
-                const today =
-                  isToday(day.date);
+                  const today =
+                    isToday(day.date);
 
-                const todayString =
-                  getTodayString();
+                  const todayString =
+                    getTodayString();
 
-                const isPast =
-                  day.date <
-                  todayString;
+                  const isPast =
+                    day.date <
+                    todayString;
 
-                const isFuture =
-                  day.date >
-                  todayString;
+                  const isFuture =
+                    day.date >
+                    todayString;
 
-                return (
+                  return (
 
-                  <button
-                    key={`${day.date}-${index}`}
-                    onClick={() =>
-                      setSelectedDay(
-                        index
-                      )
-                    }
-                    className={`min-w-[82px] px-3 py-3 rounded-2xl border transition-all ${
-                      selectedDay === index
-                        ? "bg-[#FF7A30] text-white border-[#FF7A30] shadow-md"
-                        : "bg-white text-gray-700 border-gray-100"
-                    }`}
-                  >
+                    <button
+                      key={`${day.date}-${index}`}
+                      onClick={() =>
+                        setSelectedDay(index)
+                      }
+                      className={`min-w-[82px] px-3 py-3 rounded-2xl border transition-all ${
+                        selectedDay === index
+                          ? "bg-[#FF7A30] text-white border-[#FF7A30] shadow-md"
+                          : "bg-white text-gray-700 border-gray-100"
+                      }`}
+                    >
 
-                    <div className="text-xs font-medium">
+                      <div className="text-xs font-medium">
 
-                      {today
-                        ? "Today"
-                        : isPast
-                        ? "Past"
-                        : isFuture
-                        ? "Upcoming"
-                        : getShortDayName(
-                            day.date
-                          )}
+                        {today
+                          ? "Today"
+                          : isPast
+                          ? "Past"
+                          : isFuture
+                          ? "Upcoming"
+                          : getShortDayName(
+                              day.date
+                            )}
 
-                    </div>
+                      </div>
 
+                      <div className="text-lg font-bold mt-1">
 
-                    <div className="text-lg font-bold mt-1">
+                        {new Date(
+                          `${day.date}T00:00:00`
+                        ).getDate()}
 
-                      {new Date(
-                        `${day.date}T00:00:00`
-                      ).getDate()}
+                      </div>
 
-                    </div>
+                      <div className="text-[10px] opacity-80 mt-0.5">
 
+                        {new Date(
+                          `${day.date}T00:00:00`
+                        ).toLocaleDateString(
+                          "en-IN",
+                          {
+                            month: "short",
+                          }
+                        )}
 
-                    <div className="text-[10px] opacity-80 mt-0.5">
+                      </div>
 
-                      {new Date(
-                        `${day.date}T00:00:00`
-                      ).toLocaleDateString(
-                        "en-IN",
-                        {
-                          month: "short",
-                        }
-                      )}
-
-                    </div>
-
-                  </button>
-                );
-              }
-            )}
+                    </button>
+                  );
+                }
+              )}
 
           </div>
-
 
           {/* =================================================
               SELECTED DATE
@@ -1538,7 +1440,6 @@ export function ChefDetails({
 
                     </h4>
 
-
                     <p className="text-xs text-gray-500 mt-1">
 
                       {formatDate(
@@ -1548,7 +1449,6 @@ export function ChefDetails({
                     </p>
 
                   </div>
-
 
                   <div
                     className={`px-3 py-1.5 rounded-full text-xs font-medium ${
@@ -1578,56 +1478,87 @@ export function ChefDetails({
 
               </div>
 
-
               {/* =================================================
                   MEALS
               ================================================= */}
 
               <div className="space-y-4">
 
-                {currentDay.meals.map(
-                  (meal) => {
+                {(
+                  [
+                    "breakfast",
+                    "lunch",
+                    "dinner",
+                  ] as MealType[]
+                ).map(
+                  (mealType) => {
+
+                    /*
+                    -------------------------------------------------
+                    Find meal safely.
+                    Even if backend does not return a meal,
+                    frontend will still show its section.
+                    -------------------------------------------------
+                    */
+
+                    const meal =
+                      currentDay.meals.find(
+                        (item) =>
+                          item.meal_type ===
+                          mealType
+                      ) || {
+                        meal_type:
+                          mealType,
+                        menu: null,
+                        can_order:
+                          false,
+                        cutoff_time:
+                          MEAL_CONFIG[
+                            mealType
+                          ].cutoff,
+                        cutoff_passed:
+                          false,
+                      };
 
                     const config =
                       MEAL_CONFIG[
-                        meal.meal_type
+                        mealType
                       ];
-
 
                     const menu =
                       meal.menu;
-
-
-                    const cutoffPassed =
-                      Boolean(
-                        meal.cutoff_passed
-                      );
-
 
                     const today =
                       isToday(
                         currentDay.date
                       );
 
-
                     const past =
                       currentDay.date <
                       getTodayString();
-
 
                     const future =
                       currentDay.date >
                       getTodayString();
 
+                    const cutoffPassed =
+                      Boolean(
+                        meal.cutoff_passed
+                      );
 
                     /*
                     =================================================
-                    FINAL ORDER LOGIC
+                    ORDER LOGIC
 
-                    PAST   = CLOSED
-                    TODAY  = BEFORE CUTOFF => ADD
-                    TODAY  = AFTER CUTOFF  => CLOSED
-                    FUTURE = UPCOMING
+                    TODAY:
+                      before cutoff = Add
+                      after cutoff  = Closed
+
+                    FUTURE:
+                      Upcoming
+
+                    PAST:
+                      Closed
                     =================================================
                     */
 
@@ -1636,9 +1567,9 @@ export function ChefDetails({
                         menu &&
                         today &&
                         !cutoffPassed &&
-                        meal.can_order !== false
+                        meal.can_order !== false &&
+                        menu.is_available !== false
                       );
-
 
                     const status =
                       past
@@ -1649,12 +1580,11 @@ export function ChefDetails({
                         ? "available"
                         : "closed";
 
-
                     return (
 
                       <motion.div
                         key={
-                          meal.meal_type
+                          `${currentDay.date}-${mealType}`
                         }
                         whileHover={{
                           y: -2,
@@ -1674,29 +1604,22 @@ export function ChefDetails({
                               }
                             </span>
 
-
                             <div>
 
                               <h4 className="font-semibold text-gray-800">
-
                                 {
                                   config.label
                                 }
-
                               </h4>
-
 
                               <div className="flex items-center gap-1 text-[11px] text-gray-500 mt-0.5">
 
                                 <Clock className="w-3 h-3" />
 
                                 <span>
-
                                   Order by{" "}
-
                                   {meal.cutoff_time ||
                                     config.cutoff}
-
                                 </span>
 
                               </div>
@@ -1705,47 +1628,31 @@ export function ChefDetails({
 
                           </div>
 
-
                           {/* STATUS */}
 
                           {status ===
                             "available" ? (
 
                             <span className="text-[10px] px-2 py-1 rounded-full bg-green-50 text-green-600 font-medium">
-
                               Available
-
                             </span>
 
                           ) : status ===
                             "upcoming" ? (
 
                             <span className="text-[10px] px-2 py-1 rounded-full bg-blue-50 text-blue-600 font-medium">
-
                               Upcoming
-
-                            </span>
-
-                          ) : status ===
-                            "past" ? (
-
-                            <span className="text-[10px] px-2 py-1 rounded-full bg-gray-100 text-gray-500 font-medium">
-
-                              Closed
-
                             </span>
 
                           ) : (
 
                             <span className="text-[10px] px-2 py-1 rounded-full bg-red-50 text-red-500 font-medium">
-
                               Closed
-
                             </span>
+
                           )}
 
                         </div>
-
 
                         {/* =================================================
                             NO MENU
@@ -1798,31 +1705,25 @@ export function ChefDetails({
 
                             </div>
 
-
                             {/* DETAILS */}
 
                             <div className="flex-1 min-w-0">
 
                               <h5 className="font-semibold text-gray-800 truncate">
-
                                 {
                                   menu.name
                                 }
-
                               </h5>
-
 
                               {menu.description && (
 
                                 <p className="text-xs text-gray-500 mt-1 line-clamp-2">
-
                                   {
                                     menu.description
                                   }
-
                                 </p>
-                              )}
 
+                              )}
 
                               {/* NUTRITION */}
 
@@ -1841,7 +1742,6 @@ export function ChefDetails({
                                   </span>
                                 )}
 
-
                                 {menu.protein !==
                                   undefined && (
 
@@ -1858,7 +1758,6 @@ export function ChefDetails({
 
                               </div>
 
-
                               {/* PRICE + ADD */}
 
                               <div className="flex items-center justify-between mt-3">
@@ -1871,7 +1770,6 @@ export function ChefDetails({
                                   }
 
                                 </span>
-
 
                                 <button
                                   disabled={
@@ -1893,7 +1791,6 @@ export function ChefDetails({
 
                                     <>
                                       <Plus className="w-3.5 h-3.5" />
-
                                       Add
                                     </>
 
@@ -1905,6 +1802,7 @@ export function ChefDetails({
                                   ) : (
 
                                     "Closed"
+
                                   )}
 
                                 </button>
@@ -1918,6 +1816,7 @@ export function ChefDetails({
                         )}
 
                       </motion.div>
+
                     );
                   }
                 )}
@@ -1933,7 +1832,6 @@ export function ChefDetails({
       )}
 
     </div>
-
 
     {/* ===================================================
         WEEK INFO
@@ -1951,24 +1849,18 @@ export function ChefDetails({
               🍱
             </div>
 
-
             <div>
 
               <h4 className="font-semibold text-sm text-gray-800">
-
                 Fresh meals every day
-
               </h4>
 
-
               <p className="text-xs text-gray-500 mt-1 leading-5">
-
                 Browse this chef's weekly
                 meal plan and order your
                 preferred breakfast, lunch
                 or dinner before the cutoff
                 time.
-
               </p>
 
             </div>
