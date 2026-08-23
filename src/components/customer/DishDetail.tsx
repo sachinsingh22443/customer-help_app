@@ -100,6 +100,27 @@ export function DishDetail({
       ? String(dish.meal_type).toLowerCase()
       : null;
 
+  // =========================================================
+// UPCOMING NORMAL MENU
+// Customer can view details but cannot order
+// =========================================================
+
+  const isUpcoming =
+  !isSpecial &&
+  !!menuDate &&
+  (() => {
+    const target = new Date(
+      `${String(menuDate).split("T")[0]}T00:00:00`
+    );
+
+    const today = new Date();
+
+    today.setHours(0, 0, 0, 0);
+    target.setHours(0, 0, 0, 0);
+
+    return target > today;
+  })();
+
 
   // =========================================================
   // VALID MEAL TYPES
@@ -451,6 +472,16 @@ export function DishDetail({
       try {
 
         // ===================================================
+// UPCOMING NORMAL MENU
+// VIEW ONLY - NO CART
+// ===================================================
+
+      if (isUpcoming) {
+        alert("This meal is upcoming. You can view the details, but ordering is not available yet.");
+        return;
+      }
+
+        // ===================================================
         // TOMORROW SPECIAL CUTOFF
         // ===================================================
 
@@ -472,6 +503,14 @@ export function DishDetail({
         // ===================================================
 
         if (!isSpecial) {
+
+          if (isUpcoming) {
+    alert(
+      "This meal is upcoming. You can view the details, but ordering is not available yet."
+    );
+    return;
+  }
+
 
           if (!menuDate) {
 
@@ -1266,28 +1305,30 @@ export function DishDetail({
 
         <button
           disabled={
-            availableQty === 0 ||
-            loading ||
-            (
-              isSpecial &&
-              isSpecialCutoffPassed()
-            ) ||
-            (
-              !isSpecial &&
-              (
-                !menuDate ||
-                !mealType ||
-                !validMealTypes.includes(
-                  mealType
-                ) ||
-                isNormalMenuCutoffPassed()
-              )
-            )
-          }
+  isUpcoming ||
+  availableQty === 0 ||
+  loading ||
+  (
+    isSpecial &&
+    isSpecialCutoffPassed()
+  ) ||
+  (
+    !isSpecial &&
+    (
+      !menuDate ||
+      !mealType ||
+      !validMealTypes.includes(
+        mealType
+      ) ||
+      isNormalMenuCutoffPassed()
+    )
+  )
+}
           onClick={
             handleAddToCart
           }
           className={`flex-1 py-3 rounded-xl font-medium ${
+             isUpcoming ||
             availableQty === 0 ||
             (
               !isSpecial &&
@@ -1309,7 +1350,11 @@ export function DishDetail({
           }`}
         >
 
-          {loading
+          {isUpcoming
+            ? "📅 Upcoming • Not Available"
+          
+          
+            :loading
             ? "Adding..."
 
             : availableQty === 0
