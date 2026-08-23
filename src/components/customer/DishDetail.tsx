@@ -476,10 +476,10 @@ export function DishDetail({
 // VIEW ONLY - NO CART
 // ===================================================
 
-      if (isUpcoming) {
-        alert("This meal is upcoming. You can view the details, but ordering is not available yet.");
-        return;
-      }
+      // if (isUpcoming) {
+      //   alert("This meal is upcoming. You can view the details, but ordering is not available yet.");
+      //   return;
+      // }
 
         // ===================================================
         // TOMORROW SPECIAL CUTOFF
@@ -1351,7 +1351,7 @@ export function DishDetail({
         >
 
           {isUpcoming
-            ? "📅 Upcoming • Not Available"
+            ? " Upcoming • Not Available"
           
           
             :loading
@@ -1401,44 +1401,49 @@ export function DishDetail({
       ================================================== */}
 
       <button
-        disabled={
-          availableQty === 0 ||
-          loading ||
-          (
-            isSpecial
-              ? isSpecialCutoffPassed()
-              : (
-                  !menuDate ||
-                  !mealType ||
-                  !validMealTypes.includes(
-                    mealType
-                  ) ||
-                  isNormalMenuCutoffPassed()
-                )
+  disabled={
+    isUpcoming ||
+    availableQty === 0 ||
+    loading ||
+    (
+      isSpecial
+        ? isSpecialCutoffPassed()
+        : (
+            !menuDate ||
+            !mealType ||
+            !validMealTypes.includes(
+              mealType
+            ) ||
+            isNormalMenuCutoffPassed()
           )
-        }
+    )
+  }
         onClick={handleOrderNow}
         className={`w-full mt-3 py-3 rounded-xl font-semibold ${
-          availableQty === 0 ||
-          loading ||
-          (
-            isSpecial
-              ? isSpecialCutoffPassed()
-              : (
-                  !menuDate ||
-                  !mealType ||
-                  !validMealTypes.includes(
-                    mealType
-                  ) ||
-                  isNormalMenuCutoffPassed()
-                )
-          )
-            ? "bg-gray-400 text-white"
-            : "bg-[#5F2EEA] text-white"
-        }`}
+  isUpcoming ||
+  availableQty === 0 ||
+  loading ||
+  (
+    isSpecial
+      ? isSpecialCutoffPassed()
+      : (
+          !menuDate ||
+          !mealType ||
+          !validMealTypes.includes(
+            mealType
+          ) ||
+          isNormalMenuCutoffPassed()
+        )
+  )
+    ? "bg-gray-400 text-white"
+    : "bg-[#5F2EEA] text-white"
+}`}
       >
 
-        {loading
+        {
+          isUpcoming
+  ? "Upcoming • Not Available"
+        :loading
           ? "Please wait..."
 
           : availableQty === 0
