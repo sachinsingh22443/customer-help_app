@@ -92,14 +92,23 @@ export function Checkout({
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          address: addr.address,
-          payment_method: selectedPayment,
-          items: cartItems.map(item => ({
-         menu_id: item.type === "menu" ? item.id : null,
-        special_id: item.type === "special" ? item.id : null,
-       quantity: item.quantity,
-       })),
-        }),
+  address: addr.address,
+  payment_method: selectedPayment,
+
+  items: cartItems.map(item => ({
+    menu_id:
+      item.type === "menu"
+        ? (item.menu_id ?? item.item_id ?? item.id)
+        : null,
+
+    special_id:
+      item.type === "special"
+        ? (item.special_id ?? item.item_id ?? item.id)
+        : null,
+
+    quantity: Number(item.quantity),
+  })),
+}),
       });
 
       const data = await res.json();
