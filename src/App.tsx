@@ -512,16 +512,17 @@ const handleNavigateToSpecialDetail = (special: any) => {
 };
 
 
-  const handleOrderNowSpecial = (special: any) => {
+  const handleOrderNow = (item: any) => {
   setDirectCheckoutItem({
-    ...special,
-    type: "special",
-    quantity: special.quantity || 1,
+    ...item,
+    type: item.type === "special" ? "special" : "menu",
+    quantity: item.quantity || 1,
+    menu_date: item.menu_date,
+    meal_type: item.meal_type,
   });
 
   setCurrentScreen("checkout");
 };
-
   const handlePlaceOrder = () => {
     setCurrentScreen("orderConfirmation");
   };
@@ -753,7 +754,7 @@ if (!isOnline) {
     onBack={goBack}
     onAddToCart={handleAddToCart}
     onNavigateToChef={handleNavigateToChefDetails}
-    onOrderNow={handleOrderNowSpecial}
+    onOrderNow={handleOrderNow}
   />
 )}
 
