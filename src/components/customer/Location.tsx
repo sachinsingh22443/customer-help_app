@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { motion } from "motion/react";
 import { Geolocation } from "@capacitor/geolocation";
 import { Loader } from "@googlemaps/js-api-loader";
-import { useEffect } from "react";
 // import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 
 declare const google: any;
