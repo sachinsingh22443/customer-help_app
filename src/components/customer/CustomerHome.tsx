@@ -162,205 +162,659 @@ export function CustomerHome({
     { name: "Diet Plan", key: "diet", icon: TrendingUp },
   ];
 
-  return (
-    <div className="min-h-screen bg-[#FFF8F0] pb-24">
+    return (
+    <div className="min-h-screen bg-[#F8F7F4] pb-24 text-slate-900">
 
-      {/* HEADER */}
-      <div className="bg-gradient-to-br from-[#FF7A30] via-[#5F2EEA] to-[#0FAD6E] px-6 pt-12 pb-8 rounded-b-[2rem]">
+      {/* PREMIUM HEADER */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-[#25134F] via-[#5F2EEA] to-[#FF7A30] px-5 pb-8 pt-10 rounded-b-[2.2rem] shadow-[0_12px_35px_rgba(95,46,234,0.20)]">
+        <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
+        <div className="pointer-events-none absolute -bottom-16 left-10 h-36 w-36 rounded-full bg-orange-300/20 blur-3xl" />
 
-        <div className="flex justify-between mb-6">
-          <div onClick={() => setShowLocation(true)} className="cursor-pointer">
-            <MapPin className="text-white" />
-            <p className="text-white text-sm">{locationName}</p>
-          </div>
+        <div className="relative flex items-center justify-between mb-7">
+          <button
+            onClick={() => setShowLocation(true)}
+            className="flex items-center gap-3 text-left"
+          >
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-md border border-white/20">
+              <MapPin className="h-5 w-5 text-white" />
+            </div>
 
-          <div className="flex gap-3">
-            <button onClick={onNavigateToCart} className="relative">
-              <ShoppingCart className="text-white" />
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.16em] text-white/60">
+                Delivering to
+              </p>
+
+              <p className="max-w-[170px] truncate text-sm font-semibold text-white">
+                {locationName}
+              </p>
+            </div>
+          </button>
+
+          <div className="flex items-center gap-2">
+
+            {/* NOTIFICATION */}
+            <button
+              onClick={onNavigateToNotifications}
+              className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md"
+            >
+              <Bell className="h-5 w-5 text-white" />
+            </button>
+
+            {/* CART */}
+            <button
+              onClick={onNavigateToCart}
+              className="relative flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md"
+            >
+              <ShoppingCart className="h-5 w-5 text-white" />
+
               {getTotalItems() > 0 && (
-                <span className="absolute -top-2 -right-2 bg-orange-500 text-xs px-1 rounded-full">
+                <span className="absolute -right-1 -top-1 min-w-5 h-5 rounded-full bg-[#FF7A30] px-1.5 text-[10px] font-bold text-white flex items-center justify-center border-2 border-[#5F2EEA]">
                   {getTotalItems()}
                 </span>
               )}
             </button>
 
-            <button onClick={onNavigateToNotifications}>
-              <Bell className="text-white" />
-            </button>
           </div>
         </div>
 
-        <div className="bg-white p-3 rounded-xl flex gap-2">
-          <Search />
+        {/* HEADER TITLE */}
+        <div className="relative mb-2">
+          <p className="mb-1 text-xs font-medium text-white/70">
+            Fresh food. Personalised for you.
+          </p>
+
+          <h1 className="text-2xl font-bold tracking-tight text-white">
+            Eat better, live better.
+          </h1>
+        </div>
+
+        {/* SEARCH */}
+        <div className="relative mt-5 flex items-center gap-3 rounded-2xl bg-white p-3 shadow-lg">
+          <Search className="h-5 w-5 shrink-0 text-slate-400" />
+
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search..."
-            className="w-full outline-none"
+            placeholder="Search chefs, meals or plans..."
+            className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
           />
         </div>
       </div>
 
-      {/* CHEFS */}
-      <div className="p-6">
-        <h3 className="mb-4 font-semibold">Verified Chefs</h3>
+
+      {/* ===================================================== */}
+      {/* SUBSCRIPTION - TOP PRIORITY */}
+      {/* ===================================================== */}
+
+      <section className="px-5 pt-5">
 
         <button
-    onClick={onNavigateToAllChefs}
-    className="text-sm text-orange-500 font-semibold flex items-center gap-1"
-  >
-    View All
-    <ChevronRight className="w-4 h-4" />
-  </button>
+          onClick={onNavigateToSubscription}
+          className="group relative w-full overflow-hidden rounded-[1.6rem] bg-gradient-to-r from-[#FF7A30] via-[#FF5C35] to-[#5F2EEA] p-[1px] text-left shadow-[0_14px_30px_rgba(95,46,234,0.18)]"
+        >
 
+          <div className="relative overflow-hidden rounded-[1.55rem] px-5 py-5 text-white">
+
+            <div className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-white/15 blur-xl" />
+
+            <div className="pointer-events-none absolute -bottom-12 right-16 h-24 w-24 rounded-full bg-purple-300/20 blur-2xl" />
+
+            <div className="relative flex items-start justify-between gap-4">
+
+              <div className="flex min-w-0 gap-3">
+
+                {/* CROWN */}
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 border border-white/20 backdrop-blur-sm">
+                  <Crown className="h-6 w-6 text-yellow-200" />
+                </div>
+
+                <div>
+
+                  <div className="mb-1 flex items-center gap-2">
+
+                    <span className="rounded-full bg-white/15 px-2 py-1 text-[9px] font-bold uppercase tracking-wider">
+                      Premium
+                    </span>
+
+                    <Sparkles className="h-3.5 w-3.5 text-yellow-200" />
+
+                  </div>
+
+                  <h2 className="text-lg font-bold">
+                    Your personal meal plan
+                  </h2>
+
+                  <p className="mt-1 text-xs leading-relaxed text-white/80">
+                    Healthy meals, expert chefs & plans made for your goals.
+                  </p>
+
+                </div>
+
+              </div>
+
+              <ChevronRight className="mt-2 h-5 w-5 shrink-0 transition-transform group-hover:translate-x-1" />
+
+            </div>
+
+
+            {/* SUBSCRIPTION BOTTOM */}
+            <div className="relative mt-4 flex items-center justify-between border-t border-white/15 pt-3">
+
+              <div className="flex items-center gap-2 text-[11px] text-white/85">
+
+                <ShieldCheck className="h-4 w-4" />
+
+                <span>
+                  Flexible plans • Fresh daily meals
+                </span>
+
+              </div>
+
+              <span className="rounded-xl bg-white px-3 py-2 text-xs font-bold text-[#5F2EEA]">
+                View Plans
+              </span>
+
+            </div>
+
+          </div>
+
+        </button>
+
+      </section>
+
+
+      {/* ===================================================== */}
+      {/* VERIFIED CHEFS */}
+      {/* ===================================================== */}
+
+      <section className="px-5 pt-7">
+
+        <div className="mb-4 flex items-end justify-between">
+
+          <div>
+
+            <div className="flex items-center gap-2">
+
+              <h2 className="text-lg font-bold">
+                Verified Chefs
+              </h2>
+
+              <ShieldCheck className="h-4 w-4 text-[#0FAD6E]" />
+
+            </div>
+
+            <p className="mt-0.5 text-xs text-slate-500">
+              Trusted chefs serving near you
+            </p>
+
+          </div>
+
+
+          <button
+            onClick={onNavigateToAllChefs}
+            className="flex items-center gap-1 rounded-full bg-white px-3 py-2 text-xs font-semibold text-[#5F2EEA] shadow-sm ring-1 ring-slate-100"
+          >
+
+            View All
+
+            <ChevronRight className="h-3.5 w-3.5" />
+
+          </button>
+
+        </div>
+
+
+        {/* LOADING CHEFS */}
         {loadingChefs ? (
-          <p>Loading...</p>
-        ) : (
-          <div className="flex gap-4 overflow-x-auto">
-           {chefs.slice(0, 2).map((chef) => (
+
+          <div className="flex gap-3 overflow-hidden">
+
+            {[1, 2].map((i) => (
+
               <div
+                key={i}
+                className="h-48 w-44 shrink-0 animate-pulse rounded-2xl bg-white"
+              />
+
+            ))}
+
+          </div>
+
+        ) : chefs.length === 0 ? (
+
+          /* NO CHEFS */
+          <div className="rounded-2xl bg-white p-5 text-center ring-1 ring-slate-100">
+
+            <p className="text-sm font-medium text-slate-700">
+              No chefs found nearby
+            </p>
+
+            <p className="mt-1 text-xs text-slate-400">
+              Try changing your location.
+            </p>
+
+          </div>
+
+        ) : (
+
+          /* CHEF LIST */
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+
+            {chefs.slice(0, 5).map((chef) => (
+
+              <button
                 key={chef.id}
                 onClick={() => onNavigateToChefDetails(chef.id)}
-                className="bg-white p-3 rounded-xl w-40"
+                className="group w-44 shrink-0 overflow-hidden rounded-2xl bg-white text-left shadow-sm ring-1 ring-slate-100 transition-all hover:-translate-y-0.5 hover:shadow-md"
               >
-                <ImageWithFallback
-                  src={chef.profile_image}
-                  alt={chef.name}
-                  className="h-32 w-full object-cover rounded-lg"
-                />
-                <p>{chef.name}</p>
-                <p className="text-sm text-gray-500">{chef.specialties}</p>
-              </div>
+
+                {/* CHEF IMAGE */}
+                <div className="relative">
+
+                  <ImageWithFallback
+                    src={chef.profile_image}
+                    alt={chef.name}
+                    className="h-32 w-full object-cover"
+                  />
+
+                  {/* VERIFIED BADGE */}
+                  <div className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-white/95 px-2 py-1 text-[9px] font-bold text-[#0FAD6E] shadow-sm">
+
+                    <ShieldCheck className="h-3 w-3" />
+
+                    VERIFIED
+
+                  </div>
+
+                </div>
+
+
+                {/* CHEF INFO */}
+                <div className="p-3">
+
+                  <p className="truncate text-sm font-bold text-slate-900">
+                    {chef.name}
+                  </p>
+
+                  <p className="mt-1 truncate text-[11px] text-slate-500">
+                    {chef.specialties || "Healthy home-style meals"}
+                  </p>
+
+                  <div className="mt-2 flex items-center gap-1 text-[10px] font-medium text-slate-400">
+
+                    <MapPin className="h-3 w-3" />
+
+                    Nearby chef
+
+                  </div>
+
+                </div>
+
+              </button>
+
             ))}
+
           </div>
+
         )}
-      </div>
 
-      {/* TOMORROW SPECIAL */}
-      {/* TOMORROW SPECIAL */}
-<div className="px-6">
-  <div className="flex justify-between mb-4 items-center">
-    <h3 className="font-semibold">Tomorrow Specials</h3>
+      </section>
 
-    <button
-      onClick={() => onNavigateToTomorrowSpecials(selectedCategory)}
-      className="text-sm text-orange-500 flex items-center gap-1"
-    >
-      View All <ChevronRight className="w-4 h-4" />
-    </button>
-  </div>
 
-  {/* 🔥 LOADING */}
-  {loadingSpecials ? (
-    <p className="text-sm text-gray-500">Loading...</p>
-  ) : specials.length === 0 ? (
+      {/* ===================================================== */}
+      {/* UNIQUE CATEGORIES */}
+      {/* ===================================================== */}
 
-    /* 🔥 EMPTY STATE FIX */
-    <div className="bg-white p-4 rounded-xl text-center">
-      <p className="text-sm text-gray-500 mb-3">
-        No specials available in your area 😢
-      </p>
+      <section className="pt-7">
 
-      <button
-        onClick={() => onNavigateToTomorrowSpecials(selectedCategory)}
-        className="text-orange-500 text-sm underline"
-      >
-        Try View All
-      </button>
-    </div>
+        <div className="mb-4 flex items-end justify-between px-5">
 
-  ) : (
+          <div>
 
-    /* 🔥 DATA */
-    <div className="grid grid-cols-2 gap-4">
-      {specials.slice(0, 2).map((item: any) => (
-        <div
-          key={item.id}
-          onClick={() => onNavigateToSpecialDetail(item)}
-          className="bg-white p-3 rounded-xl cursor-pointer"
-        >
-          <ImageWithFallback
-            src={item.image_url}
-            alt={item.dish_name}
-            className="w-full h-28 object-cover rounded-lg"
-          />
-          <p className="font-medium">{item.dish_name}</p>
-          <p className="text-sm text-gray-500">₹{item.price}</p>
+            <h2 className="text-lg font-bold">
+              Explore by goal
+            </h2>
+
+            <p className="mt-0.5 text-xs text-slate-500">
+              Choose what your body needs today
+            </p>
+
+          </div>
+
+          <Sparkles className="h-5 w-5 text-[#FF7A30]" />
+
         </div>
-      ))}
-    </div>
-
-  )}
-</div>
 
 
+        {/* HORIZONTAL CATEGORY CARDS */}
+        <div className="flex gap-3 overflow-x-auto px-5 pb-2 scrollbar-hide">
 
-{/* 🔥 SUBSCRIPTION SECTION */}
-<div className="px-6 mb-6">
-  <div className="bg-gradient-to-r from-[#FF7A30] to-[#5F2EEA] p-5 rounded-2xl text-white flex items-center justify-between">
-    
-    <div>
-      <p className="text-sm opacity-90">Get Your Diet Plan</p>
-      <h3 className="text-lg font-semibold">Start Subscription</h3>
-      <p className="text-xs opacity-80">
-        Healthy meals + fitness plans
-      </p>
-    </div>
-
-    <button
-      onClick={onNavigateToSubscription}
-      className="bg-white text-[#FF7A30] px-4 py-2 rounded-lg font-medium"
-    >
-      View Plans
-    </button>
-  </div>
-</div>
-
-
-
-
-      {/* CATEGORY */}
-      <div className="p-6">
-        <h3 className="mb-4">Categories</h3>
-
-        <div className="grid grid-cols-2 gap-4">
           {categories.map((cat, i) => {
+
             const Icon = cat.icon;
+
+            const selected = selectedCategory === cat.key;
+
+
+            const categoryMeta = [
+
+              {
+                subtitle: "Clean & balanced",
+                iconBg: "bg-emerald-50",
+                iconColor: "text-emerald-600",
+                glow: "from-emerald-100/70",
+              },
+
+              {
+                subtitle: "Power your day",
+                iconBg: "bg-orange-50",
+                iconColor: "text-orange-600",
+                glow: "from-orange-100/70",
+              },
+
+              {
+                subtitle: "Homely & fresh",
+                iconBg: "bg-blue-50",
+                iconColor: "text-blue-600",
+                glow: "from-blue-100/70",
+              },
+
+              {
+                subtitle: "Goal-focused",
+                iconBg: "bg-purple-50",
+                iconColor: "text-purple-600",
+                glow: "from-purple-100/70",
+              },
+
+            ][i];
+
+
             return (
+
               <button
-                key={i}
+                key={cat.key}
                 onClick={() => {
+
                   const newCategory =
-                    selectedCategory === cat.key ? "" : cat.key;
+                    selected ? "" : cat.key;
 
                   setSelectedCategory(newCategory);
-                  localStorage.setItem("category", newCategory);
-                }}
-                className="bg-white p-4 rounded-xl"
-              >
-                <Icon />
-                <p>{cat.name}</p>
-              </button>
-            );
-          })}
-        </div>
-      </div>
 
+                  localStorage.setItem(
+                    "category",
+                    newCategory
+                  );
+
+                  onNavigateToCategory(
+                    cat.key as
+                      | "healthy"
+                      | "protein"
+                      | "tiffin"
+                      | "diet"
+                  );
+
+                }}
+                className={`relative w-[150px] shrink-0 overflow-hidden rounded-[1.35rem] border p-4 text-left transition-all ${
+                  selected
+                    ? "border-[#5F2EEA] bg-[#5F2EEA] text-white shadow-[0_10px_25px_rgba(95,46,234,0.25)]"
+                    : "border-slate-100 bg-white text-slate-900 shadow-sm hover:-translate-y-0.5 hover:shadow-md"
+                }`}
+              >
+
+                {/* GLOW */}
+                <div
+                  className={`pointer-events-none absolute -right-8 -top-8 h-20 w-20 rounded-full bg-gradient-to-br ${categoryMeta.glow} to-transparent blur-xl`}
+                />
+
+
+                {/* ICON */}
+                <div
+                  className={`relative mb-5 flex h-11 w-11 items-center justify-center rounded-2xl ${
+                    selected
+                      ? "bg-white/15 text-white"
+                      : `${categoryMeta.iconBg} ${categoryMeta.iconColor}`
+                  }`}
+                >
+
+                  <Icon className="h-5 w-5" />
+
+                </div>
+
+
+                {/* CATEGORY NAME */}
+                <p
+                  className={`relative text-sm font-bold ${
+                    selected
+                      ? "text-white"
+                      : "text-slate-900"
+                  }`}
+                >
+                  {cat.name}
+                </p>
+
+
+                {/* SUBTITLE */}
+                <p
+                  className={`relative mt-1 text-[10px] leading-4 ${
+                    selected
+                      ? "text-white/70"
+                      : "text-slate-400"
+                  }`}
+                >
+                  {categoryMeta.subtitle}
+                </p>
+
+
+                {/* EXPLORE */}
+                <div
+                  className={`relative mt-3 flex items-center gap-1 text-[10px] font-semibold ${
+                    selected
+                      ? "text-white/90"
+                      : categoryMeta.iconColor
+                  }`}
+                >
+
+                  Explore
+
+                  <ChevronRight className="h-3 w-3" />
+
+                </div>
+
+              </button>
+
+            );
+
+          })}
+
+        </div>
+
+      </section>
+
+
+      {/* ===================================================== */}
+      {/* TOMORROW SPECIALS */}
+      {/* ===================================================== */}
+
+      <section className="px-5 pt-7">
+
+        <div className="mb-4 flex items-end justify-between">
+
+          <div>
+
+            <div className="flex items-center gap-2">
+
+              <h2 className="text-lg font-bold">
+                Tomorrow Specials
+              </h2>
+
+              <Flame className="h-4 w-4 text-[#FF7A30]" />
+
+            </div>
+
+            <p className="mt-0.5 text-xs text-slate-500">
+              Limited dishes prepared fresh for tomorrow
+            </p>
+
+          </div>
+
+
+          <button
+            onClick={() =>
+              onNavigateToTomorrowSpecials(
+                selectedCategory
+              )
+            }
+            className="flex items-center gap-1 text-xs font-semibold text-[#FF7A30]"
+          >
+
+            View All
+
+            <ChevronRight className="h-4 w-4" />
+
+          </button>
+
+        </div>
+
+
+        {/* LOADING SPECIALS */}
+        {loadingSpecials ? (
+
+          <div className="grid grid-cols-2 gap-3">
+
+            {[1, 2].map((i) => (
+
+              <div
+                key={i}
+                className="h-48 animate-pulse rounded-2xl bg-white"
+              />
+
+            ))}
+
+          </div>
+
+        ) : specials.length === 0 ? (
+
+          /* EMPTY STATE */
+          <div className="rounded-2xl bg-white p-5 text-center ring-1 ring-slate-100">
+
+            <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-orange-50">
+
+              <Utensils className="h-5 w-5 text-[#FF7A30]" />
+
+            </div>
+
+            <p className="text-sm font-semibold text-slate-700">
+              No specials in your area yet
+            </p>
+
+            <button
+              onClick={() =>
+                onNavigateToTomorrowSpecials(
+                  selectedCategory
+                )
+              }
+              className="mt-2 text-xs font-semibold text-[#FF7A30]"
+            >
+              Explore all specials →
+            </button>
+
+          </div>
+
+        ) : (
+
+          /* SPECIAL CARDS */
+          <div className="grid grid-cols-2 gap-3">
+
+            {specials.slice(0, 4).map((item: any) => (
+
+              <button
+                key={item.id}
+                onClick={() =>
+                  onNavigateToSpecialDetail(item)
+                }
+                className="overflow-hidden rounded-2xl bg-white text-left shadow-sm ring-1 ring-slate-100 transition hover:shadow-md"
+              >
+
+                <ImageWithFallback
+                  src={item.image_url}
+                  alt={item.dish_name}
+                  className="h-32 w-full object-cover"
+                />
+
+                <div className="p-3">
+
+                  <p className="truncate text-sm font-bold text-slate-900">
+                    {item.dish_name}
+                  </p>
+
+                  <div className="mt-1 flex items-center justify-between">
+
+                    <p className="text-xs text-slate-500">
+                      Tomorrow
+                    </p>
+
+                    <p className="text-sm font-bold text-[#5F2EEA]">
+                      ₹{item.price}
+                    </p>
+
+                  </div>
+
+                </div>
+
+              </button>
+
+            ))}
+
+          </div>
+
+        )}
+
+      </section>
+
+
+      {/* ===================================================== */}
       {/* LOCATION MODAL */}
+      {/* ===================================================== */}
+
       {showLocation && (
+
         <Location
+
           onLocationSelect={(lat, lng, city) => {
-            localStorage.setItem("lat", lat);
-            localStorage.setItem("lng", lng);
-            localStorage.setItem("location_name", city);
+
+            localStorage.setItem(
+              "lat",
+              lat
+            );
+
+            localStorage.setItem(
+              "lng",
+              lng
+            );
+
+            localStorage.setItem(
+              "location_name",
+              city
+            );
+
             setLocationName(city);
+
             fetchNearbyChefs();
+
             fetchSpecials();
+
             setShowLocation(false);
+
           }}
-          onClose={() => setShowLocation(false)}
+
+          onClose={() =>
+            setShowLocation(false)
+          }
+
         />
+
       )}
+
     </div>
   );
 }
