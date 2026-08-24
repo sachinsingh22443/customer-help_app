@@ -40,6 +40,18 @@ interface WalletHistoryResponse {
   transactions: WalletTransaction[];
 }
 
+
+interface SubscriptionMenuItem {
+  id: string;
+  day_number: number;
+  meal_type: "breakfast" | "lunch" | "dinner";
+  menu_id: string;
+  menu_name?: string;
+  menu_description?: string;
+  menu_image?: string | null;
+  menu_price?: number;
+}
+
 interface Subscription {
   id: string;
   plan?: string;
@@ -57,6 +69,8 @@ interface Subscription {
   status: string;
 
   meals?: MealSchedule[];
+
+  menu_cycle?: SubscriptionMenuItem[];
 }
 
 interface Props {
@@ -139,10 +153,26 @@ export default function MySubscriptions({ onBack }: Props) {
 
             const meals: MealSchedule[] = await mealRes.json();
 
-            return {
-              ...sub,
-              meals,
-            };
+            const menuCycleRes = await fetch(
+  `https://chef-backend-qh12.onrender.com/subscriptions/${sub.id}/menu-cycle`,
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }
+);
+
+let menuCycle: SubscriptionMenuItem[] = [];
+
+if (menuCycleRes.ok) {
+  menuCycle = await menuCycleRes.json();
+}
+
+return {
+  ...sub,
+  meals,
+  menu_cycle: menuCycle,
+};
           } catch (error) {
             console.error(
               `Failed to load today's meals for ${sub.id}`,
@@ -152,6 +182,7 @@ export default function MySubscriptions({ onBack }: Props) {
             return {
               ...sub,
               meals: [],
+              menu_cycle: [],
             };
           }
         })
@@ -819,6 +850,162 @@ const handleAddBreakfast = async (
     );
   };
 
+  const renderSubscriptionMenu = (
+  subscription: Subscription
+) => {
+  const menuCycle = subscription.menu_cycle || [];
+
+  if (menuCycle.length === 0) {
+    return null;
+  }
+
+  const days = Array.from(
+    new Set(
+      menuCycle.map((item) => item.day_number)
+    )
+  ).sort((a, b) => a - b);
+
+  const getMealEmoji = (
+    mealType: "breakfast" | "lunch" | "dinner"
+  ) => {
+    if (mealType === "breakfast") return "☀️";
+    if (mealType === "lunch") return "🍱";
+    return "🌙";
+  };
+
+  return (
+    <div className="mt-6 pt-5 border-t border-gray-100">
+
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h3 className="text-lg font-extrabold text-gray-900">
+            Subscription Menu
+          </h3>
+
+          <p className="text-xs text-gray-400 mt-1">
+            Your chef's 30-day meal cycle
+          </p>
+        </div>
+
+        <Utensils
+          size={19}
+          className="text-orange-500"
+        />
+      </div>
+
+      <div className="space-y-4">
+
+        {days.map((dayNumber) => {
+
+          const dayMeals = menuCycle.filter(
+            (item) =>
+              item.day_number === dayNumber
+          );
+
+          return (
+            <div
+              key={dayNumber}
+              className="rounded-3xl bg-gray-50 border border-gray-100 overflow-hidden"
+            >
+
+              <div className="px-4 py-3 bg-white border-b border-gray-100">
+                <p className="text-xs text-orange-500 font-extrabold uppercase">
+                  Subscription Day
+                </p>
+
+                <p className="text-lg font-extrabold text-gray-900">
+                  Day {dayNumber}
+                </p>
+              </div>
+
+              <div className="p-3 space-y-3">
+
+                {dayMeals.map((item) => (
+
+                  <div
+                    key={item.id}
+                    className="bg-white rounded-2xl border border-gray-100 p-3"
+                  >
+
+                    <div className="flex gap-3">
+
+                      {item.menu_image ? (
+                        <img
+                          src={item.menu_image}
+                          alt={
+                            item.menu_name ||
+                            item.meal_type
+                          }
+                          className="w-20 h-20 rounded-2xl object-cover shrink-0"
+                        />
+                      ) : (
+                        <div className="w-20 h-20 rounded-2xl bg-orange-50 flex items-center justify-center text-3xl shrink-0">
+                          {getMealEmoji(
+                            item.meal_type
+                          )}
+                        </div>
+                      )}
+
+                      <div className="flex-1 min-w-0">
+
+                        <div className="flex items-center justify-between gap-2">
+
+                          <p className="text-xs font-extrabold text-orange-600 uppercase">
+                            {getMealEmoji(
+                              item.meal_type
+                            )}{" "}
+                            {item.meal_type}
+                          </p>
+
+                          {item.menu_price != null && (
+                            <span className="text-xs font-bold text-gray-500">
+                              ₹{item.menu_price}
+                            </span>
+                          )}
+
+                        </div>
+
+                        <h4 className="font-extrabold text-gray-900 mt-1">
+                          {item.menu_name ||
+                            "Meal"}
+                        </h4>
+
+                        {item.menu_description && (
+                          <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                            {item.menu_description}
+                          </p>
+                        )}
+
+                      </div>
+
+                    </div>
+
+                    {item.meal_type ===
+                      "breakfast" && (
+                      <div className="mt-3 px-3 py-2 rounded-xl bg-orange-50 border border-orange-100">
+                        <p className="text-[10px] text-orange-700 font-semibold">
+                          Breakfast is optional.
+                          You pay separately only
+                          when you choose breakfast.
+                        </p>
+                      </div>
+                    )}
+
+                  </div>
+
+                ))}
+
+              </div>
+
+            </div>
+          );
+        })}
+
+      </div>
+
+    </div>
+  );
+};
   // =========================================================
   // MAIN UI
   // =========================================================
@@ -1118,7 +1305,10 @@ const handleAddBreakfast = async (
                     "breakfast"
                   )}
 
+                  
+
                 </div>
+                {renderSubscriptionMenu(sub)}
 
               </div>
             </div>
