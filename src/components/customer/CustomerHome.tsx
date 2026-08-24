@@ -9,6 +9,11 @@ import {
   Apple,
   Drumstick,
   ChevronRight,
+  Crown,
+  ShieldCheck,
+  Sparkles,
+  Flame,
+  Utensils,
 } from "lucide-react";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { useCart } from "../../contexts/CartContext";
