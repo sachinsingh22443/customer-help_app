@@ -324,98 +324,279 @@ export function Cart({
   // =====================================================
 
   return (
-    <div className="min-h-screen bg-[#FFF8F0] pb-40">
+  <div className="min-h-screen bg-[#F7F6F3] pb-44">
 
-      {/* =================================================
-          HEADER
-      ================================================= */}
+    {/* =====================================================
+        PREMIUM HEADER
+    ===================================================== */}
 
-      <div className="bg-gradient-to-br from-[#FF7A30] via-[#5F2EEA] to-[#0FAD6E] px-6 pt-12 pb-8 rounded-b-[2rem]">
+    <div className="relative overflow-hidden rounded-b-[2.8rem] bg-gradient-to-br from-[#24104D] via-[#5F2EEA] to-[#FF7A30] px-5 pb-9 pt-7">
 
-        <div className="flex items-center gap-4">
+      {/* Background glow */}
+
+      <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+
+      <div className="pointer-events-none absolute -bottom-24 -left-10 h-56 w-56 rounded-full bg-orange-300/15 blur-3xl" />
+
+
+      <div className="relative">
+
+        {/* TOP */}
+
+        <div className="flex items-center justify-between">
 
           <button
             onClick={onBack}
-            className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center"
+            className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/10 text-white backdrop-blur-md transition active:scale-95"
           >
-            <ChevronLeft className="text-white" />
+            <ChevronLeft className="h-5 w-5" />
           </button>
 
-          <div>
-            <h1 className="text-white font-semibold">
-              My Cart 🛒
-            </h1>
 
-            <p className="text-white/80 text-sm">
-              {items.length}{" "}
-              {items.length === 1
-                ? "item"
-                : "items"}
-            </p>
+          <div className="rounded-full border border-white/10 bg-white/10 px-3 py-2 backdrop-blur-md">
+
+            <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-white">
+              Eat Unity
+            </span>
+
+          </div>
+
+        </div>
+
+
+        {/* TITLE */}
+
+        <div className="mt-8">
+
+          <div className="flex items-center gap-2">
+
+            <span className="text-lg">
+              🛒
+            </span>
+
+            <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-white/55">
+              Ready to order
+            </span>
+
+          </div>
+
+
+          <h1 className="mt-2 text-[31px] font-bold tracking-tight text-white">
+            Your Cart
+          </h1>
+
+
+          <p className="mt-2 text-xs leading-5 text-white/65">
+            Fresh meals selected just for you.
+          </p>
+
+
+          {/* CART SUMMARY */}
+
+          <div className="mt-6 flex items-center gap-2">
+
+            <div className="flex flex-1 items-center gap-3 rounded-2xl border border-white/10 bg-white/10 px-3 py-3 backdrop-blur-md">
+
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10">
+                🍱
+              </div>
+
+              <div>
+
+                <p className="text-[8px] font-bold uppercase tracking-wider text-white/45">
+                  Items
+                </p>
+
+                <p className="mt-0.5 text-xs font-bold text-white">
+                  {items.length}{" "}
+                  {items.length === 1
+                    ? "item"
+                    : "items"}
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <div className="flex flex-1 items-center gap-3 rounded-2xl border border-white/10 bg-white/10 px-3 py-3 backdrop-blur-md">
+
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10">
+                ✨
+              </div>
+
+              <div>
+
+                <p className="text-[8px] font-bold uppercase tracking-wider text-white/45">
+                  Total
+                </p>
+
+                <p className="mt-0.5 text-xs font-bold text-white">
+                  ₹{total.toFixed(0)}
+                </p>
+
+              </div>
+
+            </div>
+
           </div>
 
         </div>
 
       </div>
 
+    </div>
 
-      {/* =================================================
-          BODY
-      ================================================= */}
 
-      <div className="px-6 mt-6">
+    {/* =====================================================
+        CONTENT
+    ===================================================== */}
 
-        {loading ? (
+    <div className="px-5 pt-6">
 
-          <div className="text-center py-20">
 
-            <div className="w-9 h-9 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin mx-auto" />
+      {/* ===================================================
+          LOADING
+      =================================================== */}
 
-            <p className="text-gray-500 mt-4">
-              Loading cart...
-            </p>
+      {loading ? (
 
-          </div>
+        <div className="space-y-4">
 
-        ) : items.length === 0 ? (
+          {[1, 2, 3].map((item) => (
 
-          <div className="text-center py-20">
+            <div
+              key={item}
+              className="overflow-hidden rounded-[2rem] bg-white shadow-sm"
+            >
 
-            <div className="text-5xl mb-4">
-              🛒
+              <div className="flex gap-4 p-4">
+
+                <div className="h-24 w-24 animate-pulse rounded-2xl bg-slate-200" />
+
+                <div className="flex-1 space-y-3">
+
+                  <div className="h-4 w-3/4 animate-pulse rounded bg-slate-200" />
+
+                  <div className="h-3 w-1/2 animate-pulse rounded bg-slate-100" />
+
+                  <div className="h-8 w-full animate-pulse rounded-xl bg-slate-100" />
+
+                </div>
+
+              </div>
+
             </div>
 
-            <h3 className="font-semibold text-lg">
-              Your cart is empty
-            </h3>
+          ))}
 
-            <p className="text-gray-500 text-sm mt-2">
-              Add some delicious meals
-              to continue.
-            </p>
+        </div>
+
+
+      ) : items.length === 0 ? (
+
+        /* =================================================
+           EMPTY CART
+        ================================================= */
+
+        <div className="rounded-[2.2rem] bg-white px-6 py-10 text-center shadow-sm">
+
+          <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-[2rem] bg-gradient-to-br from-orange-50 to-purple-50">
+
+            <span className="text-5xl">
+              🛒
+            </span>
 
           </div>
 
-        ) : (
 
-          <div className="space-y-4">
+          <div className="mx-auto mt-5 w-fit rounded-full bg-slate-50 px-3 py-1.5">
 
-            {items.map((item) => (
+            <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-slate-400">
+              Nothing here yet
+            </span>
 
-              <div
-                key={item.id}
-                className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100"
-              >
+          </div>
 
-                {/* =================================================
-                    ITEM
-                ================================================= */}
+
+          <h2 className="mt-4 text-xl font-bold text-slate-900">
+            Your cart is waiting
+          </h2>
+
+
+          <p className="mx-auto mt-2 max-w-xs text-xs leading-6 text-slate-500">
+            Explore delicious meals and add your
+            favourites to your cart.
+          </p>
+
+
+          <button
+            onClick={onBack}
+            className="mt-6 rounded-2xl bg-gradient-to-r from-[#FF7A30] to-[#5F2EEA] px-7 py-3.5 text-xs font-bold text-white shadow-lg transition active:scale-95"
+          >
+            Explore Meals →
+          </button>
+
+        </div>
+
+
+      ) : (
+
+        /* =================================================
+           CART ITEMS
+        ================================================= */
+
+        <div className="space-y-5">
+
+          {/* SECTION HEADER */}
+
+          <div className="flex items-end justify-between">
+
+            <div>
+
+              <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                Your selection
+              </p>
+
+              <h2 className="mt-1 text-lg font-bold text-slate-900">
+                Delicious picks
+              </h2>
+
+            </div>
+
+
+            <div className="rounded-full bg-orange-50 px-3 py-1.5">
+
+              <span className="text-[9px] font-bold text-orange-600">
+                {items.length}{" "}
+                {items.length === 1
+                  ? "ITEM"
+                  : "ITEMS"}
+              </span>
+
+            </div>
+
+          </div>
+
+
+          {items.map((item) => (
+
+            <div
+              key={item.id}
+              className="overflow-hidden rounded-[2rem] border border-white bg-white shadow-[0_12px_35px_rgba(30,20,70,0.07)]"
+            >
+
+              {/* =================================================
+                  ITEM TOP
+              ================================================= */}
+
+              <div className="p-4">
 
                 <div className="flex gap-4">
 
                   {/* IMAGE */}
 
-                  <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100">
+                  <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-[1.4rem] bg-slate-100">
 
                     <ImageWithFallback
                       src={
@@ -426,102 +607,120 @@ export function Cart({
                         item.name ||
                         "Food"
                       }
-                      className="w-full h-full object-cover"
+                      className="h-full w-full object-cover"
                     />
+
+
+                    {/* IMAGE BADGE */}
+
+                    {item.type ===
+                      "special" && (
+
+                      <div className="absolute left-1.5 top-1.5 rounded-lg bg-purple-600 px-1.5 py-1 text-[7px] font-bold text-white shadow">
+                        SPECIAL
+                      </div>
+
+                    )}
 
                   </div>
 
 
                   {/* DETAILS */}
 
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0 flex-1">
 
-                    <div className="flex justify-between gap-2">
+                    <div className="flex items-start justify-between gap-2">
 
-                      <p className="font-semibold text-gray-800 truncate">
-                        {item.name}
-                      </p>
+                      <div className="min-w-0">
+
+                        <p className="truncate text-sm font-bold text-slate-900">
+                          {item.name}
+                        </p>
+
+                        <div className="mt-1 flex items-center gap-1">
+
+                          <span className="text-[9px] text-emerald-500">
+                            ●
+                          </span>
+
+                          <span className="text-[9px] font-medium text-slate-400">
+                            Freshly prepared
+                          </span>
+
+                        </div>
+
+                      </div>
+
+
+                      {/* DELETE */}
 
                       <button
                         onClick={() =>
                           handleRemove(item)
                         }
-                        className="flex-shrink-0"
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-50 transition active:scale-90"
                       >
+
                         <Trash2
-                          size={18}
+                          size={16}
                           className="text-red-500"
                         />
+
                       </button>
 
                     </div>
 
 
                     {/* =================================================
-                        NORMAL MENU DATE + MEAL
+                        NORMAL MENU INFO
                     ================================================= */}
 
                     {item.type ===
                       "menu" &&
                       item.menu_date && (
-                        <div className="mt-2 space-y-1">
 
-                          <div className="flex items-center gap-1.5 text-xs text-gray-600">
+                      <div className="mt-3 rounded-xl bg-orange-50/70 p-2.5">
 
-                            <CalendarDays
+                        <div className="flex items-center gap-2">
+
+                          <CalendarDays
+                            size={13}
+                            className="text-orange-500"
+                          />
+
+                          <span className="text-[9px] font-semibold text-slate-600">
+                            {formatMenuDate(
+                              item.menu_date
+                            )}
+                          </span>
+
+                        </div>
+
+
+                        {item.meal_type && (
+
+                          <div className="mt-1 flex items-center gap-2">
+
+                            <Clock
                               size={13}
-                              className="text-[#FF7A30]"
+                              className="text-[#5F2EEA]"
                             />
 
-                            <span>
-                              {formatMenuDate(
-                                item.menu_date
+                            <span className="text-[9px] font-semibold text-slate-600">
+
+                              {getMealEmoji(
+                                item.meal_type
+                              )}{" "}
+
+                              {getMealLabel(
+                                item.meal_type
                               )}
+
                             </span>
 
                           </div>
 
-
-                          {item.meal_type && (
-
-                            <div className="flex items-center gap-1.5 text-xs text-gray-600">
-
-                              <Clock
-                                size={13}
-                                className="text-[#FF7A30]"
-                              />
-
-                              <span>
-                                {getMealEmoji(
-                                  item.meal_type
-                                )}{" "}
-                                {getMealLabel(
-                                  item.meal_type
-                                )}
-                              </span>
-
-                            </div>
-
-                          )}
-
-                        </div>
-                      )}
-
-
-                    {/* =================================================
-                        SPECIAL
-                    ================================================= */}
-
-                    {item.type ===
-                      "special" && (
-
-                      <div className="mt-2">
-
-                        <span className="inline-flex items-center gap-1 bg-purple-50 text-purple-600 px-2 py-1 rounded-full text-[10px] font-medium">
-
-                          ⭐ Tomorrow Special
-
-                        </span>
+                        )}
 
                       </div>
 
@@ -529,86 +728,133 @@ export function Cart({
 
 
                     {/* =================================================
-                        QUANTITY + PRICE
+                        TOMORROW SPECIAL
                     ================================================= */}
 
-                    <div className="flex justify-between items-center mt-3">
+                    {item.type ===
+                      "special" && (
 
-                      {/* QUANTITY */}
+                      <div className="mt-3 flex items-center gap-2">
 
-                      <div className="flex items-center gap-3">
-
-                        <button
-                          onClick={() => {
-
-                            if (
-                              item.quantity >
-                              1
-                            ) {
-
-                              handleUpdate(
-                                item,
-                                item.quantity -
-                                  1
-                              );
-
-                            } else {
-
-                              handleRemove(
-                                item
-                              );
-
-                            }
-
-                          }}
-                          className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center active:scale-95"
-                        >
-                          <Minus
-                            size={14}
-                          />
-                        </button>
-
-
-                        <span className="font-medium min-w-[20px] text-center">
-                          {item.quantity}
+                        <span className="rounded-full bg-purple-50 px-2.5 py-1 text-[8px] font-bold text-purple-700">
+                          ⭐ Tomorrow Special
                         </span>
 
-
-                        <button
-                          onClick={() =>
-                            handleUpdate(
-                              item,
-                              item.quantity +
-                                1
-                            )
-                          }
-                          className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center active:scale-95"
-                        >
-                          <Plus
-                            size={14}
-                          />
-                        </button>
+                        <span className="text-[8px] text-slate-400">
+                          Limited
+                        </span>
 
                       </div>
 
+                    )}
 
-                      {/* PRICE */}
+                  </div>
 
-                      <p className="text-[#FF7A30] font-semibold">
+                </div>
 
-                        ₹
-                        {(
-                          (Number(
-                            item.price
-                          ) || 0) *
-                          (Number(
-                            item.quantity
-                          ) || 1)
-                        ).toFixed(0)}
 
-                      </p>
+                {/* =================================================
+                    BOTTOM ITEM BAR
+                ================================================= */}
+
+                <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
+
+                  {/* QUANTITY */}
+
+                  <div>
+
+                    <p className="mb-2 text-[8px] font-bold uppercase tracking-[0.14em] text-slate-400">
+                      Quantity
+                    </p>
+
+                    <div className="flex items-center gap-2 rounded-2xl bg-slate-50 p-1">
+
+                      <button
+                        onClick={() => {
+
+                          if (
+                            item.quantity >
+                            1
+                          ) {
+
+                            handleUpdate(
+                              item,
+                              item.quantity -
+                                1
+                            );
+
+                          } else {
+
+                            handleRemove(
+                              item
+                            );
+
+                          }
+
+                        }}
+                        className="flex h-8 w-8 items-center justify-center rounded-xl bg-white shadow-sm transition active:scale-90"
+                      >
+
+                        <Minus
+                          size={14}
+                          className="text-slate-600"
+                        />
+
+                      </button>
+
+
+                      <span className="min-w-[25px] text-center text-xs font-bold text-slate-800">
+                        {item.quantity}
+                      </span>
+
+
+                      <button
+                        onClick={() =>
+                          handleUpdate(
+                            item,
+                            item.quantity +
+                              1
+                          )
+                        }
+                        className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-orange-400 text-white shadow-sm transition active:scale-90"
+                      >
+
+                        <Plus size={14} />
+
+                      </button>
 
                     </div>
+
+                  </div>
+
+
+                  {/* ITEM PRICE */}
+
+                  <div className="text-right">
+
+                    <p className="text-[8px] font-bold uppercase tracking-[0.14em] text-slate-400">
+                      Item total
+                    </p>
+
+                    <p className="mt-1 text-xl font-bold text-slate-900">
+
+                      ₹
+                      {(
+                        (Number(
+                          item.price
+                        ) || 0) *
+                        (Number(
+                          item.quantity
+                        ) || 1)
+                      ).toFixed(0)}
+
+                    </p>
+
+                    <p className="mt-0.5 text-[8px] text-slate-400">
+                      ₹{Number(
+                        item.price
+                      ).toFixed(0)} each
+                    </p>
 
                   </div>
 
@@ -616,77 +862,180 @@ export function Cart({
 
               </div>
 
-            ))}
+            </div>
+
+          ))}
+
+
+          {/* =================================================
+              CART TRUST CARD
+          ================================================= */}
+
+          <div className="rounded-[1.8rem] border border-emerald-100 bg-gradient-to-r from-emerald-50 to-green-50 p-4">
+
+            <div className="flex items-center gap-3">
+
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500">
+
+                <span className="text-lg">
+                  ✓
+                </span>
+
+              </div>
+
+              <div>
+
+                <p className="text-xs font-bold text-emerald-800">
+                  Fresh & carefully prepared
+                </p>
+
+                <p className="mt-1 text-[9px] leading-4 text-emerald-600">
+                  Your meals are prepared by local chefs
+                  with care.
+                </p>
+
+              </div>
+
+            </div>
 
           </div>
 
-        )}
-
-      </div>
-
-
-      {/* =================================================
-          FOOTER
-      ================================================= */}
-
-      {items.length > 0 && (
-
-        <div className="fixed bottom-0 left-0 right-0 bg-white p-4 border-t shadow-lg z-50">
-
-          <div className="max-w-xl mx-auto">
-
-            <div className="flex justify-between mb-2 text-sm">
-
-              <span className="text-gray-600">
-                Subtotal
-              </span>
-
-              <span>
-                ₹{subtotal.toFixed(0)}
-              </span>
-
-            </div>
-
-
-            <div className="flex justify-between mb-2 text-sm">
-
-              <span className="text-gray-600">
-                Delivery
-              </span>
-
-              <span>
-                ₹{deliveryFee}
-              </span>
-
-            </div>
-
-
-            <div className="flex justify-between font-bold mb-3">
-
-              <span>
-                Total
-              </span>
-
-              <span>
-                ₹{total.toFixed(0)}
-              </span>
-
-            </div>
-
-
-            <button
-              onClick={onCheckout}
-              className="w-full bg-[#FF7A30] text-white py-3 rounded-xl font-semibold active:scale-[0.98] transition-transform"
-            >
-              Proceed to Checkout
-            </button>
-
-          </div>
 
         </div>
 
       )}
 
     </div>
-  );
+
+
+    {/* =====================================================
+        PREMIUM CHECKOUT BAR
+    ===================================================== */}
+
+    {items.length > 0 && (
+
+      <div className="fixed bottom-0 left-0 right-0 z-50">
+
+        {/* Blur background */}
+
+        <div className="absolute inset-0 bg-white/85 backdrop-blur-xl" />
+
+
+        <div className="relative mx-auto max-w-xl px-5 pb-5 pt-4">
+
+          {/* PRICE SUMMARY */}
+
+          <div className="mb-3 rounded-[1.5rem] border border-slate-100 bg-white p-4 shadow-[0_8px_30px_rgba(20,20,50,0.06)]">
+
+            <div className="flex items-center justify-between">
+
+              <div>
+
+                <p className="text-[8px] font-bold uppercase tracking-[0.15em] text-slate-400">
+                  Order summary
+                </p>
+
+                <p className="mt-1 text-xs font-semibold text-slate-600">
+                  {items.length}{" "}
+                  {items.length === 1
+                    ? "item"
+                    : "items"}{" "}
+                  · Delivery
+                </p>
+
+              </div>
+
+
+              <div className="text-right">
+
+                <p className="text-[8px] font-bold uppercase tracking-[0.15em] text-slate-400">
+                  Total
+                </p>
+
+                <p className="mt-0.5 text-xl font-bold text-slate-900">
+                  ₹{total.toFixed(0)}
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
+
+              <span className="text-[9px] text-slate-400">
+                Subtotal
+              </span>
+
+              <span className="text-[9px] font-semibold text-slate-600">
+                ₹{subtotal.toFixed(0)}
+              </span>
+
+            </div>
+
+
+            <div className="mt-1 flex items-center justify-between">
+
+              <span className="text-[9px] text-slate-400">
+                Delivery
+              </span>
+
+              <span className="text-[9px] font-semibold text-emerald-600">
+                {deliveryFee === 0
+                  ? "FREE"
+                  : `₹${deliveryFee}`}
+              </span>
+
+            </div>
+
+          </div>
+
+
+          {/* CHECKOUT BUTTON */}
+
+          <button
+            onClick={onCheckout}
+            className="group flex w-full items-center justify-between rounded-[1.4rem] bg-gradient-to-r from-[#FF7A30] via-[#F45B2A] to-[#5F2EEA] px-5 py-4 text-white shadow-[0_12px_30px_rgba(95,46,234,0.22)] transition active:scale-[0.98]"
+          >
+
+            <div className="text-left">
+
+              <p className="text-[8px] font-bold uppercase tracking-[0.15em] text-white/60">
+                Secure checkout
+              </p>
+
+              <p className="mt-0.5 text-sm font-bold">
+                Proceed to Checkout
+              </p>
+
+            </div>
+
+
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 transition group-active:translate-x-1">
+
+              <span className="text-lg">
+                →
+              </span>
+
+            </div>
+
+          </button>
+
+
+          <div className="mt-2 flex items-center justify-center gap-1">
+
+            <span className="text-[8px] text-slate-400">
+              🔒 Secure & protected payment
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    )}
+
+  </div>
+);
 }
