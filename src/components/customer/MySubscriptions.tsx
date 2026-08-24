@@ -97,6 +97,7 @@ export default function MySubscriptions({ onBack }: Props) {
   const [walletToDate, setWalletToDate] = useState("");
 
   const [mealLoading, setMealLoading] = useState<string | null>(null);
+  const [showAllMenu, setShowAllMenu] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     fetchSubscriptions();
@@ -859,31 +860,64 @@ const handleAddBreakfast = async (
     return null;
   }
 
-  const days = Array.from(
+  // =====================================================
+  // GET ALL DAYS
+  // =====================================================
+
+  const allDays = Array.from(
     new Set(
-      menuCycle.map((item) => item.day_number)
+      menuCycle.map(
+        (item) => item.day_number
+      )
     )
   ).sort((a, b) => a - b);
 
+  // =====================================================
+  // SHOW ONLY FIRST 7 DAYS BY DEFAULT
+  // =====================================================
+
+  const isShowingAll =
+  showAllMenu[subscription.id] === true;
+
+const visibleDays = isShowingAll
+  ? allDays
+  : allDays.slice(0, 7);
+
   const getMealEmoji = (
-    mealType: "breakfast" | "lunch" | "dinner"
+    mealType:
+      | "breakfast"
+      | "lunch"
+      | "dinner"
   ) => {
-    if (mealType === "breakfast") return "☀️";
-    if (mealType === "lunch") return "🍱";
+    if (mealType === "breakfast") {
+      return "☀️";
+    }
+
+    if (mealType === "lunch") {
+      return "🍱";
+    }
+
     return "🌙";
   };
 
   return (
     <div className="mt-6 pt-5 border-t border-gray-100">
 
+      {/* =================================================
+          HEADER
+      ================================================= */}
+
       <div className="flex items-center justify-between mb-4">
+
         <div>
           <h3 className="text-lg font-extrabold text-gray-900">
             Subscription Menu
           </h3>
 
           <p className="text-xs text-gray-400 mt-1">
-            Your chef's 30-day meal cycle
+            {isShowingAll
+  ? "Complete 30-day meal cycle"
+  : "Next 7 days meal cycle"}
           </p>
         </div>
 
@@ -891,16 +925,35 @@ const handleAddBreakfast = async (
           size={19}
           className="text-orange-500"
         />
+
       </div>
+
+      {/* =================================================
+          DAYS
+      ================================================= */}
 
       <div className="space-y-4">
 
-        {days.map((dayNumber) => {
+        {visibleDays.map((dayNumber) => {
 
-          const dayMeals = menuCycle.filter(
-            (item) =>
-              item.day_number === dayNumber
-          );
+          const dayMeals = menuCycle
+            .filter(
+              (item) =>
+                item.day_number === dayNumber
+            )
+            .sort((a, b) => {
+
+              const order = {
+                breakfast: 1,
+                lunch: 2,
+                dinner: 3,
+              };
+
+              return (
+                order[a.meal_type] -
+                order[b.meal_type]
+              );
+            });
 
           return (
             <div
@@ -908,7 +961,10 @@ const handleAddBreakfast = async (
               className="rounded-3xl bg-gray-50 border border-gray-100 overflow-hidden"
             >
 
+              {/* DAY HEADER */}
+
               <div className="px-4 py-3 bg-white border-b border-gray-100">
+
                 <p className="text-xs text-orange-500 font-extrabold uppercase">
                   Subscription Day
                 </p>
@@ -916,7 +972,10 @@ const handleAddBreakfast = async (
                 <p className="text-lg font-extrabold text-gray-900">
                   Day {dayNumber}
                 </p>
+
               </div>
+
+              {/* MEALS */}
 
               <div className="p-3 space-y-3">
 
@@ -928,6 +987,8 @@ const handleAddBreakfast = async (
                   >
 
                     <div className="flex gap-3">
+
+                      {/* IMAGE */}
 
                       {item.menu_image ? (
                         <img
@@ -945,6 +1006,8 @@ const handleAddBreakfast = async (
                           )}
                         </div>
                       )}
+
+                      {/* INFO */}
 
                       <div className="flex-1 min-w-0">
 
@@ -980,14 +1043,18 @@ const handleAddBreakfast = async (
 
                     </div>
 
+                    {/* BREAKFAST NOTE */}
+
                     {item.meal_type ===
                       "breakfast" && (
                       <div className="mt-3 px-3 py-2 rounded-xl bg-orange-50 border border-orange-100">
+
                         <p className="text-[10px] text-orange-700 font-semibold">
                           Breakfast is optional.
                           You pay separately only
                           when you choose breakfast.
                         </p>
+
                       </div>
                     )}
 
@@ -1002,6 +1069,28 @@ const handleAddBreakfast = async (
         })}
 
       </div>
+
+      {/* =================================================
+          VIEW ALL / SHOW LESS
+      ================================================= */}
+
+      {allDays.length > 7 && (
+        <button
+          type="button"
+          onClick={() =>
+  setShowAllMenu((previous) => ({
+    ...previous,
+    [subscription.id]:
+      !previous[subscription.id],
+  }))
+}
+          className="w-full mt-5 py-3.5 rounded-2xl bg-orange-50 border border-orange-100 text-orange-600 font-extrabold text-sm active:scale-[0.98] transition"
+        >
+          {isShowingAll
+  ? "Show Less"
+  : `View All ${allDays.length} Days`}
+        </button>
+      )}
 
     </div>
   );
