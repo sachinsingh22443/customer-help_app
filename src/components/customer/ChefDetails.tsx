@@ -375,293 +375,296 @@ export function ChefDetails({
   // FETCH CHEF + 7 DAY MENU
   // =========================================================
 
-  useEffect(() => {
+  // =========================================================
+// FETCH CHEF + 7 DAY MENU
+// =========================================================
 
-    const fetchChefData =
-      async () => {
+useEffect(() => {
+  let cancelled = false;
 
-        try {
+  const fetchChefData = async () => {
+    try {
+      setLoading(true);
+      setMenuLoading(true);
+      setError("");
 
-          setLoading(true);
+      const finalChefId =
+        chefId ||
+        localStorage.getItem("selectedChefId") ||
+        localStorage.getItem("userId");
 
-          setError("");
+      if (!finalChefId) {
+        console.error("❌ No chefId found");
 
-          // =====================================================
-          // REAL CHEF ID
-          // =====================================================
+        setError("Chef information not found");
 
-          const finalChefId =
-            chefId ||
-            localStorage.getItem(
-              "selectedChefId"
-            ) ||
-            localStorage.getItem(
-              "userId"
-            );
+        setLoading(false);
+        setMenuLoading(false);
 
-          if (!finalChefId) {
+        return;
+      }
 
-            console.error(
-              "❌ No chefId found"
-            );
+      console.log(
+        "🔥 Fetching chef:",
+        finalChefId
+      );
 
-            setError(
-              "Chef information not found"
-            );
+      const token =
+        localStorage.getItem("token");
 
-            setLoading(false);
-
-            setMenuLoading(false);
-
-            return;
+      const authConfig = token
+        ? {
+            headers: {
+              Authorization:
+                `Bearer ${token}`,
+            },
           }
+        : undefined;
 
-          console.log(
-            "🔥 Fetching chef:",
-            finalChefId
-          );
+      // =====================================================
+      // IMPORTANT:
+      // CHEF API + 7 DAY MENU API
+      // RUN IN PARALLEL
+      // =====================================================
 
-          const token =
-            localStorage.getItem(
-              "token"
-            );
+      const [
+        chefResponse,
+        cycleResponse,
+      ] = await Promise.all([
+        axios.get(
+          `${API_BASE}/menu/chef/${finalChefId}`,
+          authConfig
+        ),
 
-          // =====================================================
-          // 1. GET CHEF DETAILS
-          // =====================================================
+        axios.get(
+          `${API_BASE}/menu/chef/${finalChefId}/7-days`,
+          authConfig
+        ),
+      ]);
 
-          const chefResponse =
-            await axios.get(
-              `${API_BASE}/menu/chef/${finalChefId}`,
-              {
-                headers: token
-                  ? {
-                      Authorization:
-                        `Bearer ${token}`,
-                    }
-                  : undefined,
-              }
-            );
+      if (cancelled) {
+        return;
+      }
 
-          console.log(
-            "✅ Chef response:",
-            chefResponse.data
-          );
+      // =====================================================
+      // CHEF DATA
+      // =====================================================
 
-          setChef(
-            chefResponse.data?.chef ||
-            null
-          );
+      console.log(
+        "✅ Chef response:",
+        chefResponse.data
+      );
 
-          // =====================================================
-          // 2. GET CUSTOMER 7-DAY MENU
-          // =====================================================
+      setChef(
+        chefResponse.data?.chef ||
+        null
+      );
 
-          setMenuLoading(true);
+      // Chef basic data loaded
+      setLoading(false);
 
-          const cycleResponse =
-            await axios.get(
-              `${API_BASE}/menu/chef/${finalChefId}/7-days`
-            );
+      // =====================================================
+      // 7-DAY MENU
+      // =====================================================
 
-          console.log(
-            "🔥 CUSTOMER 7 DAY MENU:",
-            cycleResponse.data
-          );
+      console.log(
+        "🔥 CUSTOMER 7 DAY MENU:",
+        cycleResponse.data
+      );
 
-          // =====================================================
-          // BACKEND DAYS
-          // =====================================================
+      const backendDays =
+        Array.isArray(
+          cycleResponse.data?.days
+        )
+          ? cycleResponse.data.days
+          : [];
 
-          const backendDays =
-            Array.isArray(
-              cycleResponse.data?.days
-            )
-              ? cycleResponse.data.days
-              : [];
+      // =====================================================
+      // NORMALIZE EXACTLY 7 DAYS
+      // =====================================================
 
-          // =====================================================
-          // NORMALIZE EXACTLY 7 DAYS
-          // =====================================================
+      const normalizedDays: DayMenu[] =
+        backendDays
+          .slice(0, 7)
+          .map(
+            (
+              day: any,
+              index: number
+            ) => {
 
-          const normalizedDays:
-            DayMenu[] =
-            backendDays
-              .slice(0, 7)
-              .map(
+              const targetDate =
+                day?.date ||
+                day?.menu_date ||
+                day?.target_date ||
+                "";
+
+              const rawMeals =
+                Array.isArray(
+                  day?.meals
+                )
+                  ? day.meals
+                  : [];
+
+              // =================================================
+              // BREAKFAST / LUNCH / DINNER
+              // =================================================
+
+              const meals: DayMenu["meals"] =
                 (
-                  day: any,
-                  index: number
-                ) => {
+                  [
+                    "breakfast",
+                    "lunch",
+                    "dinner",
+                  ] as MealType[]
+                ).map(
+                  (
+                    mealType
+                  ) => {
 
-                  const targetDate =
-                    day?.date ||
-                    day?.menu_date ||
-                    day?.target_date ||
-                    "";
+                    const foundMeal =
+                      rawMeals.find(
+                        (
+                          meal: any
+                        ) =>
+                          String(
+                            meal?.meal_type ||
+                            ""
+                          ).toLowerCase() ===
+                          mealType
+                      );
 
-                  const rawMeals =
-                    Array.isArray(
-                      day?.meals
-                    )
-                      ? day.meals
-                      : [];
+                    const menu =
+                      foundMeal?.menu ||
+                      foundMeal?.item ||
+                      null;
 
-                  // =================================================
-                  // ALWAYS CREATE
-                  // BREAKFAST / LUNCH / DINNER
-                  // =================================================
-
-                  const meals:
-                    DayMenu["meals"] =
-                    (
-                      [
-                        "breakfast",
-                        "lunch",
-                        "dinner",
-                      ] as MealType[]
-                    ).map(
-                      (
+                    const cutoffTime =
+                      foundMeal?.cutoff_time ||
+                      MEAL_CONFIG[
                         mealType
-                      ) => {
+                      ].cutoff;
 
-                        const foundMeal =
-                          rawMeals.find(
-                            (
-                              meal: any
-                            ) =>
-                              String(
-                                meal?.meal_type ||
-                                ""
-                              ).toLowerCase() ===
-                              mealType
+                    const frontendCutoffPassed =
+                      targetDate
+                        ? hasCutoffPassed(
+                            targetDate,
+                            mealType
+                          )
+                        : false;
+
+                    const cutoffPassed =
+                      foundMeal?.cutoff_passed ??
+                      frontendCutoffPassed;
+
+                    const canOrder =
+                      foundMeal?.can_order !==
+                      undefined
+                        ? Boolean(
+                            foundMeal.can_order
+                          )
+                        : Boolean(
+                            menu &&
+                            !cutoffPassed
                           );
 
-                        const menu =
-                          foundMeal?.menu ||
-                          foundMeal?.item ||
-                          null;
+                    return {
+                      meal_type:
+                        mealType,
 
-                        const cutoffTime =
-                          foundMeal?.cutoff_time ||
-                          MEAL_CONFIG[
-                            mealType
-                          ].cutoff;
+                      menu,
 
-                        const frontendCutoffPassed =
+                      source:
+                        foundMeal?.source ||
+                        "cycle",
+
+                      can_order:
+                        canOrder,
+
+                      cutoff_time:
+                        cutoffTime,
+
+                      cutoff_passed:
+                        cutoffPassed,
+                    };
+                  }
+                );
+
+              return {
+                date:
+                  targetDate,
+
+                day_name:
+                  day?.day_name ||
+                  (
+                    targetDate
+                      ? getDayName(
                           targetDate
-                            ? hasCutoffPassed(
-                                targetDate,
-                                mealType
-                              )
-                            : false;
+                        )
+                      : `Day ${
+                          index + 1
+                        }`
+                  ),
 
-                        const cutoffPassed =
-                          foundMeal?.cutoff_passed ??
-                          frontendCutoffPassed;
+                day_number:
+                  day?.day_number ||
+                  index + 1,
 
-                        const canOrder =
-                          foundMeal?.can_order !==
-                          undefined
-                            ? Boolean(
-                                foundMeal.can_order
-                              )
-                            : Boolean(
-                                menu &&
-                                !cutoffPassed
-                              );
-
-                        return {
-
-                          meal_type:
-                            mealType,
-
-                          menu,
-
-                          source:
-                            foundMeal?.source ||
-                            "cycle",
-
-                          can_order:
-                            canOrder,
-
-                          cutoff_time:
-                            cutoffTime,
-
-                          cutoff_passed:
-                            cutoffPassed,
-                        };
-                      }
-                    );
-
-                  return {
-
-                    date:
-                      targetDate,
-
-                    day_name:
-                      day?.day_name ||
-                      (
-                        targetDate
-                          ? getDayName(
-                              targetDate
-                            )
-                          : `Day ${
-                              index + 1
-                            }`
-                      ),
-
-                    day_number:
-                      day?.day_number ||
-                      index + 1,
-
-                    meals,
-                  };
-                }
-              );
-
-          // =====================================================
-          // SET EXACTLY 7 DAYS
-          // =====================================================
-
-          setMenuDays(
-            normalizedDays.slice(0, 7)
+                meals,
+              };
+            }
           );
 
-          // =====================================================
-          // AUTO SELECT FIRST DAY
-          // =====================================================
+      // =====================================================
+      // SET 7 DAYS
+      // =====================================================
 
-          setSelectedDay(0);
+      setMenuDays(
+        normalizedDays.slice(0, 7)
+      );
 
-        } catch (
-          err: any
-        ) {
+      // =====================================================
+      // FIRST DAY SELECT
+      // =====================================================
 
-          console.error(
-            "❌ Error fetching chef:",
-            err?.response?.data ||
-            err?.message ||
-            err
-          );
+      setSelectedDay(0);
 
-          setError(
-            err?.response?.data
-              ?.detail ||
-            "Unable to load chef details"
-          );
+    } catch (err: any) {
 
-        } finally {
+      if (cancelled) {
+        return;
+      }
 
-          setLoading(false);
+      console.error(
+        "❌ Error fetching chef:",
+        err?.response?.data ||
+        err?.message ||
+        err
+      );
 
-          setMenuLoading(false);
-        }
-      };
+      setError(
+        err?.response?.data?.detail ||
+        "Unable to load chef details"
+      );
 
-    fetchChefData();
+      setChef(null);
 
-  }, [chefId]);
+    } finally {
+
+      if (!cancelled) {
+        setLoading(false);
+        setMenuLoading(false);
+      }
+
+    }
+  };
+
+  fetchChefData();
+
+  return () => {
+    cancelled = true;
+  };
+
+}, [chefId]);
 
   // =========================================================
   // LOADING UI
