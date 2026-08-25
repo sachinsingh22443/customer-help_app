@@ -96,18 +96,29 @@ export function Checkout({
   payment_method: selectedPayment,
 
   items: cartItems.map(item => ({
-    menu_id:
-      item.type === "menu"
-        ? (item.menu_id ?? item.item_id ?? item.id)
-        : null,
+  menu_id:
+    item.type === "menu"
+      ? (item.menu_id ?? item.item_id ?? item.id)
+      : null,
 
-    special_id:
-      item.type === "special"
-        ? (item.special_id ?? item.item_id ?? item.id)
-        : null,
+  special_id:
+    item.type === "special"
+      ? (item.special_id ?? item.item_id ?? item.id)
+      : null,
 
-    quantity: Number(item.quantity),
-  })),
+  quantity: Number(item.quantity),
+
+  // ✅ IMPORTANT: normal menu cycle information
+  meal_type:
+    item.type === "menu"
+      ? (item.meal_type ?? null)
+      : null,
+
+  menu_date:
+    item.type === "menu"
+      ? (item.menu_date ?? null)
+      : null,
+})),
 }),
       });
 
