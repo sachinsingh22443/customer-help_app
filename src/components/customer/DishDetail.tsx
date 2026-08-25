@@ -278,29 +278,26 @@ export function DishDetail({
   // NORMAL MENU CUTOFF
   // =========================================================
 
-  const getMealCutoffTime =
-    () => {
+  // =========================================================
+// NORMAL MENU CUTOFF
+// =========================================================
 
-      if (
-        mealType === "breakfast"
-      ) {
-        return "08:30";
-      }
+const getMealCutoffTime = () => {
 
-      if (
-        mealType === "lunch"
-      ) {
-        return "11:00";
-      }
+  if (mealType === "breakfast") {
+    return "09:00";
+  }
 
-      if (
-        mealType === "dinner"
-      ) {
-        return "18:00";
-      }
+  if (mealType === "lunch") {
+    return "13:00";
+  }
 
-      return null;
-    };
+  if (mealType === "dinner") {
+    return "20:00";
+  }
+
+  return null;
+};
 
 
   // =========================================================
@@ -559,11 +556,11 @@ export function DishDetail({
 
 
             const displayTime =
-              cutoff === "08:30"
-                ? "8:30 AM"
-                : cutoff === "11:00"
-                ? "11:00 AM"
-                : "6:00 PM";
+  cutoff === "09:00"
+    ? "9:00 AM"
+    : cutoff === "13:00"
+    ? "1:00 PM"
+    : "8:00 PM";
 
 
             alert(
@@ -767,11 +764,18 @@ export function DishDetail({
   // =========================================================
 
   const handleOrderNow = () => {
+
+  if (isUpcoming) {
+    alert(
+      "This meal is upcoming. You can view the details, but ordering is not available yet."
+    );
+    return;
+  }
+
   if (availableQty <= 0) {
     alert("Out of stock");
     return;
   }
-
   if (quantity > availableQty) {
     alert(`Only ${availableQty} plates available`);
     return;
@@ -800,11 +804,11 @@ export function DishDetail({
       const cutoff = getMealCutoffTime();
 
       const displayTime =
-        cutoff === "08:30"
-          ? "8:30 AM"
-          : cutoff === "11:00"
-          ? "11:00 AM"
-          : "6:00 PM";
+  cutoff === "09:00"
+    ? "9:00 AM"
+    : cutoff === "13:00"
+    ? "1:00 PM"
+    : "8:00 PM";
 
       alert(
         `${mealType.charAt(0).toUpperCase() + mealType.slice(1)} ordering is closed. Order by ${displayTime}.`
@@ -858,7 +862,7 @@ export function DishDetail({
   // RENDER
   // =========================================================
 
-    return (
+   return (
   <div className="min-h-screen bg-[#FFF8F0] pb-40">
 
     {/* =====================================================
@@ -995,10 +999,10 @@ export function DishDetail({
               {isNormalMenuCutoffPassed()
                 ? "🔒 Ordering closed"
                 : mealType === "breakfast"
-                ? "⏰ Order before 8:30 AM"
+                ? "⏰ Order before 9:00 AM"
                 : mealType === "lunch"
-                ? "⏰ Order before 11:00 AM"
-                : "⏰ Order before 6:00 PM"}
+                ? "⏰ Order before 1:00 PM"
+                : "⏰ Order before 8:00 PM"}
             </p>
           )}
 
@@ -1277,19 +1281,13 @@ export function DishDetail({
 
           <button
             onClick={() => {
-              if (
-                quantity <
-                availableQty
-              ) {
-                setQuantity(
-                  quantity + 1
-                );
+              if (quantity < availableQty) {
+                setQuantity(quantity + 1);
               }
             }}
             disabled={
               availableQty <= 0 ||
-              quantity >=
-                availableQty
+              quantity >= availableQty
             }
             className="bg-white p-1 rounded shadow disabled:opacity-40"
           >
@@ -1305,39 +1303,33 @@ export function DishDetail({
 
         <button
           disabled={
-  isUpcoming ||
-  availableQty === 0 ||
-  loading ||
-  (
-    isSpecial &&
-    isSpecialCutoffPassed()
-  ) ||
-  (
-    !isSpecial &&
-    (
-      !menuDate ||
-      !mealType ||
-      !validMealTypes.includes(
-        mealType
-      ) ||
-      isNormalMenuCutoffPassed()
-    )
-  )
-}
-          onClick={
-            handleAddToCart
+            isUpcoming ||
+            availableQty === 0 ||
+            loading ||
+            (
+              isSpecial &&
+              isSpecialCutoffPassed()
+            ) ||
+            (
+              !isSpecial &&
+              (
+                !menuDate ||
+                !mealType ||
+                !validMealTypes.includes(mealType) ||
+                isNormalMenuCutoffPassed()
+              )
+            )
           }
+          onClick={handleAddToCart}
           className={`flex-1 py-3 rounded-xl font-medium ${
-             isUpcoming ||
+            isUpcoming ||
             availableQty === 0 ||
             (
               !isSpecial &&
               (
                 !menuDate ||
                 !mealType ||
-                !validMealTypes.includes(
-                  mealType
-                ) ||
+                !validMealTypes.includes(mealType) ||
                 isNormalMenuCutoffPassed()
               )
             ) ||
@@ -1351,10 +1343,9 @@ export function DishDetail({
         >
 
           {isUpcoming
-            ? " Upcoming • Not Available"
-          
-          
-            :loading
+            ? "Upcoming • Not Available"
+
+            : loading
             ? "Adding..."
 
             : availableQty === 0
@@ -1401,66 +1392,67 @@ export function DishDetail({
       ================================================== */}
 
       <button
-  disabled={
-    isUpcoming ||
-    availableQty === 0 ||
-    loading ||
-    (
-      isSpecial
-        ? isSpecialCutoffPassed()
-        : (
-            !menuDate ||
-            !mealType ||
-            !validMealTypes.includes(
-              mealType
-            ) ||
-            isNormalMenuCutoffPassed()
+        disabled={
+          isUpcoming ||
+          availableQty === 0 ||
+          loading ||
+          (
+            isSpecial
+              ? isSpecialCutoffPassed()
+              : (
+                  !menuDate ||
+                  !mealType ||
+                  !validMealTypes.includes(
+                    mealType
+                  ) ||
+                  isNormalMenuCutoffPassed()
+                )
           )
-    )
-  }
+        }
         onClick={handleOrderNow}
         className={`w-full mt-3 py-3 rounded-xl font-semibold ${
-  isUpcoming ||
-  availableQty === 0 ||
-  loading ||
-  (
-    isSpecial
-      ? isSpecialCutoffPassed()
-      : (
-          !menuDate ||
-          !mealType ||
-          !validMealTypes.includes(
-            mealType
-          ) ||
-          isNormalMenuCutoffPassed()
-        )
-  )
-    ? "bg-gray-400 text-white"
-    : "bg-[#5F2EEA] text-white"
-}`}
+          isUpcoming ||
+          availableQty === 0 ||
+          loading ||
+          (
+            isSpecial
+              ? isSpecialCutoffPassed()
+              : (
+                  !menuDate ||
+                  !mealType ||
+                  !validMealTypes.includes(
+                    mealType
+                  ) ||
+                  isNormalMenuCutoffPassed()
+                )
+          )
+            ? "bg-gray-400 text-white"
+            : "bg-[#5F2EEA] text-white"
+        }`}
       >
 
         {
           isUpcoming
-  ? "Upcoming • Not Available"
-        :loading
-          ? "Please wait..."
+            ? "Upcoming • Not Available"
 
-          : availableQty === 0
-          ? "Sold Out"
+            : loading
+            ? "Please wait..."
 
-          : isSpecial &&
-            isSpecialCutoffPassed()
-          ? "⏰ Ordering Closed"
+            : availableQty === 0
+            ? "Sold Out"
 
-          : !isSpecial &&
-            isNormalMenuCutoffPassed()
-          ? "⏰ Ordering Closed"
+            : isSpecial &&
+              isSpecialCutoffPassed()
+            ? "⏰ Ordering Closed"
 
-          : `⚡ Order Now • ₹${
-              currentPrice *
-              quantity
-            }`
+            : !isSpecial &&
+              isNormalMenuCutoffPassed()
+            ? "⏰ Ordering Closed"
+
+            : `⚡ Order Now • ₹${
+                currentPrice *
+                quantity
+              }`
         }
 
       </button>
@@ -1469,5 +1461,4 @@ export function DishDetail({
 
   </div>
 );
-
 }
