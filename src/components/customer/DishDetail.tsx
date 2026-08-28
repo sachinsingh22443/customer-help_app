@@ -952,8 +952,8 @@ const getMealCutoffTime = () => {
         <div className="mt-4 bg-orange-50 border border-orange-200 rounded-xl p-4">
 
           <p className="text-xs text-gray-500">
-            Today's Meal
-          </p>
+  {isUpcoming ? "Upcoming Meal" : "Today's Meal"}
+</p>
 
           <p className="font-semibold mt-1 text-orange-600 capitalize">
 

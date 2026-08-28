@@ -1099,10 +1099,11 @@ if (!isOnline) {
         )}
 
 
-        {currentScreen === "mySubscriptions" && (
+  {currentScreen === "mySubscriptions" && (
   <MySubscriptions
-  onBack={goBack}
-/>
+    onBack={handleBackToCustomerHome}
+    onViewDish={handleNavigateToDishDetail}
+  />
 )}
 
         {currentScreen === "userDetailsForm" && (

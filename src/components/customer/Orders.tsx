@@ -36,8 +36,8 @@ export function Orders({ onNavigateToTracking }: OrdersProps) {
 
     fetchOrders();
     const interval = setInterval(() => {
-    fetchOrders();
-  }, 15000);
+  fetchOrders();
+}, 30000);
 
   return () => clearInterval(interval);
   }, []);

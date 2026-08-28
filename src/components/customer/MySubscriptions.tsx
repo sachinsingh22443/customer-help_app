@@ -22,6 +22,23 @@ interface MealSchedule {
   meal_price: number;
   status: "on" | "off";
   cutoff_at: string;
+
+  // Today's actual menu
+  menu_id?: string | null;
+  menu_name?: string | null;
+  menu_description?: string | null;
+  menu_price?: number | null;
+  menu_category?: string | null;
+  food_type?: string | null;
+
+  // Nutrition
+  calories?: number | null;
+  protein?: number | null;
+  carbs?: number | null;
+  fats?: number | null;
+
+  // Image
+  menu_image?: string | null;
 }
 
 interface WalletTransaction {
@@ -50,6 +67,12 @@ interface SubscriptionMenuItem {
   menu_description?: string;
   menu_image?: string | null;
   menu_price?: number;
+
+  // Optional date returned by backend
+  date?: string;
+
+  chef_id?: string;
+  chef_name?: string;
 }
 
 interface Subscription {
@@ -75,11 +98,13 @@ interface Subscription {
 
 interface Props {
   onBack: () => void;
+
+  onViewDish?: (dish: any) => void;
 }
 
 type MealType = "breakfast" | "lunch" | "dinner";
 
-export default function MySubscriptions({ onBack }: Props) {
+export default function MySubscriptions({ onBack, onViewDish, }: Props) {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
 
   const [walletBalance, setWalletBalance] = useState<number>(0);
@@ -145,6 +170,8 @@ export default function MySubscriptions({ onBack }: Props) {
               }
             );
 
+            
+
             if (!mealRes.ok) {
               return {
                 ...sub,
@@ -154,38 +181,77 @@ export default function MySubscriptions({ onBack }: Props) {
 
             const meals: MealSchedule[] = await mealRes.json();
 
-            const menuCycleRes = await fetch(
-  `https://chef-backend-qh12.onrender.com/subscriptions/${sub.id}/menu-cycle`,
-  {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }
-);
-
 let menuCycle: SubscriptionMenuItem[] = [];
 
-if (menuCycleRes.ok) {
-  menuCycle = await menuCycleRes.json();
+try {
+  const menuCycleRes = await fetch(
+    `https://chef-backend-qh12.onrender.com/subscriptions/${sub.id}/menu-cycle`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  if (menuCycleRes.ok) {
+  const menuCycleData = await menuCycleRes.json();
+
+  if (Array.isArray(menuCycleData)) {
+    menuCycle = menuCycleData;
+  } else if (
+    Array.isArray(menuCycleData?.items)
+  ) {
+    menuCycle = menuCycleData.items;
+  } else if (
+    Array.isArray(menuCycleData?.menu_cycle)
+  ) {
+    menuCycle = menuCycleData.menu_cycle;
+  } else {
+    console.warn(
+      "Unexpected MENU CYCLE response:",
+      menuCycleData
+    );
+
+    menuCycle = [];
+  }
+
+  console.log(
+    "SUBSCRIPTION MENU CYCLE:",
+    sub.id,
+    menuCycle
+  );
+} else {
+    console.warn(
+      "MENU CYCLE API FAILED:",
+      sub.id,
+      menuCycleRes.status
+    );
+  }
+} catch (menuCycleError) {
+  console.error(
+    "MENU CYCLE FETCH ERROR:",
+    sub.id,
+    menuCycleError
+  );
 }
 
 return {
   ...sub,
-  meals,
+  meals,                 // ⭐ IMPORTANT
   menu_cycle: menuCycle,
 };
           } catch (error) {
-            console.error(
-              `Failed to load today's meals for ${sub.id}`,
-              error
-            );
+  console.error(
+    `Failed to load today's meals for ${sub.id}`,
+    error
+  );
 
-            return {
-              ...sub,
-              meals: [],
-              menu_cycle: [],
-            };
-          }
+  return {
+    ...sub,
+    meals: [],
+    menu_cycle: [],
+  };
+}
         })
       );
 
@@ -511,61 +577,84 @@ const handleAddBreakfast = async (
   // =========================================================
 
   const handleMealToggle = async (
-    subscriptionId: string,
-    mealType: MealType,
-    currentStatus: "on" | "off"
-  ) => {
-    try {
-      const token = localStorage.getItem("token");
+  subscriptionId: string,
+  mealType: MealType,
+  currentStatus: "on" | "off"
+) => {
+  try {
+    const token = localStorage.getItem("token");
 
-      if (!token) {
-        alert("Please login first");
-        return;
-      }
-
-      const action =
-        currentStatus === "on" ? "off" : "on";
-
-      const loadingKey =
-        `${subscriptionId}-${mealType}`;
-
-      setMealLoading(loadingKey);
-
-      const res = await fetch(
-        `https://chef-backend-qh12.onrender.com/subscriptions/${subscriptionId}/meals/${mealType}/${action}`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(
-          data.detail ||
-            `Unable to turn ${mealType} ${action}`
-        );
-      }
-
-      await fetchSubscriptions();
-    } catch (error: any) {
-      console.error(
-        `MEAL ${mealType.toUpperCase()} ERROR:`,
-        error
-      );
-
-      alert(
-        error?.message ||
-          `Unable to update ${mealType}`
-      );
-    } finally {
-      setMealLoading(null);
+    if (!token) {
+      alert("Please login first");
+      return;
     }
-  };
 
+    const action =
+      currentStatus === "on" ? "off" : "on";
+
+    const loadingKey =
+      `${subscriptionId}-${mealType}`;
+
+    setMealLoading(loadingKey);
+
+    const res = await fetch(
+  `https://chef-backend-qh12.onrender.com/subscriptions/${subscriptionId}/meals/${mealType}/${action}`,
+  {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+  }
+);
+
+    // -----------------------------------------
+    // SAFE RESPONSE PARSING
+    // -----------------------------------------
+
+    const responseText = await res.text();
+
+    let data: any = {};
+
+try {
+  data = responseText
+    ? JSON.parse(responseText)
+    : {};
+} catch {
+  data = {
+    message: responseText,
+  };
+}
+
+if (!res.ok) {
+  throw new Error(
+    data?.detail ||
+      data?.message ||
+      `Unable to turn ${mealType} ${action}`
+  );
+}
+
+console.log(
+  `MEAL ${mealType.toUpperCase()} ${action.toUpperCase()} SUCCESS:`,
+  data
+);
+    await fetchSubscriptions();
+
+  } catch (error: any) {
+    console.error(
+      `MEAL ${mealType.toUpperCase()} ERROR:`,
+      error
+    );
+
+    alert(
+      error?.message ||
+        `Unable to update ${mealType}`
+    );
+  } finally {
+    setMealLoading(null);
+  }
+};
   // =========================================================
   // GET MEAL
   // =========================================================
@@ -610,10 +699,10 @@ const handleAddBreakfast = async (
     }
 
     if (mealType === "lunch") {
-      return "Cutoff: 10:00 AM";
+      return "Cutoff: 11:00 AM";
     }
 
-    return "Cutoff: 5:00 PM";
+    return "Cutoff: 6:00 PM";
   };
 
   // =========================================================
@@ -634,84 +723,97 @@ const handleAddBreakfast = async (
     return "🌙";
   };
 
+    
   // =========================================================
   // MEAL CARD
   // =========================================================
 
-  const renderMealCard = (
+    const renderMealCard = (
     subscription: Subscription,
     mealType: MealType
   ) => {
-    const meal = getMeal(
-      subscription,
-      mealType
-    );
-
-    // -------------------------------------------------------
-    // NOT SCHEDULED
-    // -------------------------------------------------------
+    const meal = getMeal(subscription, mealType);
 
     if (!meal) {
-      if (
-        mealType === "breakfast" &&
-        !subscription.breakfast_enabled
-      ) {
-        return (
-          <div className="relative overflow-hidden rounded-2xl border border-orange-100 bg-gradient-to-r from-orange-50 to-amber-50 p-4 mb-3">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="h-11 w-11 rounded-2xl bg-white flex items-center justify-center shadow-sm text-xl">
-                  ☀️
-                </div>
+  // -------------------------------------------------
+  // BREAKFAST NOT SUBSCRIBED
+  // -------------------------------------------------
 
-                <div>
-                  <p className="font-bold text-gray-900">
-                    Breakfast
-                  </p>
+  if (
+    mealType === "breakfast" &&
+    subscription.breakfast_enabled !== true
+  ) {
+    return (
+      <div className="mb-3 rounded-2xl bg-orange-50 border border-orange-100 p-4">
+        <div className="flex items-center justify-between gap-3">
 
-                  <p className="text-xs text-gray-500 mt-1">
-                    Not included in your plan
-                  </p>
-                </div>
-              </div>
+          <div className="flex items-center gap-3 min-w-0">
 
-              <button
-                onClick={() =>
-                  handleAddBreakfast(subscription)
-                }
-                className="px-4 py-3 rounded-2xl bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold shadow-lg shadow-orange-200 active:scale-95 transition flex items-center gap-1.5"
-              >
-                <Plus size={16} />
-                Add
-              </button>
-            </div>
-          </div>
-        );
-      }
-
-      return (
-        <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4 mb-3">
-          <div className="flex items-center gap-3">
-            <div className="h-11 w-11 rounded-2xl bg-white flex items-center justify-center shadow-sm text-xl">
-              {getMealEmoji(mealType)}
+            <div className="h-11 w-11 shrink-0 rounded-2xl bg-white flex items-center justify-center text-xl shadow-sm">
+              ☀️
             </div>
 
-            <div>
-              <p className="font-bold text-gray-900 capitalize">
-                {mealType}
+            <div className="min-w-0">
+              <p className="font-extrabold text-gray-900">
+                Breakfast
               </p>
 
               <p className="text-xs text-gray-500 mt-1">
-                Not scheduled today
+                Breakfast is not included
               </p>
-            </div>
-          </div>
-        </div>
-      );
-    }
 
-    const cutoffPassed =
-      isCutoffPassed(meal.cutoff_at);
+              {subscription.breakfast_price > 0 && (
+                <p className="text-xs font-bold text-orange-600 mt-1">
+                  ₹{subscription.breakfast_price}/day
+                </p>
+              )}
+            </div>
+
+          </div>
+
+          <button
+            type="button"
+            onClick={() =>
+              handleAddBreakfast(subscription)
+            }
+            className="shrink-0 px-4 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-extrabold shadow-md shadow-orange-200 active:scale-95 transition"
+          >
+            + Add
+          </button>
+
+        </div>
+      </div>
+    );
+  }
+
+  // -------------------------------------------------
+  // OTHER MEAL NOT SCHEDULED
+  // -------------------------------------------------
+
+  return (
+    <div className="mb-3 rounded-2xl bg-gray-50 border border-gray-100 p-4">
+      <div className="flex items-center gap-3">
+
+        <span className="text-2xl">
+          {getMealEmoji(mealType)}
+        </span>
+
+        <div>
+          <p className="font-extrabold text-gray-900 capitalize">
+            {mealType}
+          </p>
+
+          <p className="text-xs text-gray-400 mt-1">
+            No meal scheduled
+          </p>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+    const cutoffPassed = isCutoffPassed(meal.cutoff_at);
 
     const loadingKey =
       `${subscription.id}-${mealType}`;
@@ -719,382 +821,1039 @@ const handleAddBreakfast = async (
     const isLoading =
       mealLoading === loadingKey;
 
-    const isOn =
-      meal.status === "on";
-
     return (
       <div
-        className={`relative overflow-hidden rounded-2xl border p-4 mb-3 transition-all duration-300 ${
-          isOn
-            ? "bg-gradient-to-r from-emerald-50 via-green-50 to-white border-emerald-100 shadow-sm"
-            : "bg-gray-50 border-gray-100"
+        className={`mb-3 rounded-2xl border p-4 transition ${
+          meal.status === "on"
+            ? "bg-white border-emerald-100"
+            : "bg-gray-50 border-gray-200"
         }`}
       >
-        {/* LEFT ACCENT */}
-        <div
-          className={`absolute left-0 top-0 bottom-0 w-1 ${
-            isOn
-              ? "bg-emerald-500"
-              : "bg-gray-300"
-          }`}
-        />
+        <div className="flex items-center justify-between gap-3">
 
-        <div className="flex items-center justify-between gap-3 pl-1">
-
-          {/* MEAL INFO */}
+          {/* LEFT */}
           <div className="flex items-center gap-3 min-w-0">
 
-            <div
-              className={`h-12 w-12 shrink-0 rounded-2xl flex items-center justify-center text-xl shadow-sm ${
-                isOn
-                  ? "bg-white"
-                  : "bg-gray-100"
-              }`}
-            >
+            <div className="h-11 w-11 shrink-0 rounded-2xl bg-orange-50 flex items-center justify-center text-xl">
               {getMealEmoji(mealType)}
             </div>
 
             <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="font-extrabold text-gray-900 capitalize">
-                  {mealType}
-                </p>
 
-                {isOn && !cutoffPassed && (
-                  <span className="text-[9px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-bold uppercase">
-                    Active
-                  </span>
-                )}
-              </div>
-
-              <p className="text-xs text-gray-500 mt-1">
-                ₹{meal.meal_price}/day
+              <p className="font-extrabold text-gray-900 capitalize">
+                {mealType}
               </p>
+
+              {meal.menu_name && (
+                <p className="text-sm font-semibold text-gray-700 mt-0.5 truncate">
+                  {meal.menu_name}
+                </p>
+              )}
 
               <p
-                className={`text-[11px] mt-1 font-medium ${
+                className={`text-[11px] mt-1 ${
                   cutoffPassed
                     ? "text-red-500"
-                    : "text-gray-500"
+                    : "text-gray-400"
                 }`}
               >
-                {cutoffPassed
-                  ? "● Cutoff time passed"
-                  : `● ${getCutoffText(
-                      mealType,
-                      false
-                    )}`}
+                {getCutoffText(
+                  mealType,
+                  cutoffPassed
+                )}
               </p>
+
             </div>
           </div>
 
-          {/* TOGGLE */}
+          {/* RIGHT */}
           <button
-            disabled={
-              cutoffPassed ||
-              isLoading
-            }
-            onClick={() =>
-              handleMealToggle(
-                subscription.id,
-                mealType,
-                meal.status
-              )
-            }
-            aria-label={`Toggle ${mealType}`}
-            className={`relative w-[58px] h-[32px] shrink-0 rounded-full transition-all duration-300 shadow-inner ${
-              isOn
-                ? "bg-emerald-500"
-                : "bg-gray-300"
-            } ${
-              cutoffPassed || isLoading
-                ? "opacity-50 cursor-not-allowed"
-                : "active:scale-95"
-            }`}
-          >
-            <span
-              className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow-md transition-all duration-300 ${
-                isOn
-                  ? "left-[28px]"
-                  : "left-1"
-              }`}
-            />
+  type="button"
+  disabled={cutoffPassed || isLoading}
+  onClick={() =>
+    handleMealToggle(
+      subscription.id,
+      mealType,
+      meal.status
+    )
+  }
+  aria-label={`${mealType} ${meal.status === "on" ? "on" : "off"}`}
+  aria-pressed={meal.status === "on"}
+  className={`group relative flex h-9 w-[76px] shrink-0 items-center rounded-full p-1 transition-all duration-300 ease-out
+    ${
+      meal.status === "on"
+        ? "bg-gradient-to-r from-emerald-500 to-green-500 shadow-[0_5px_14px_rgba(16,185,129,0.25)]"
+        : "bg-gray-200 shadow-inner"
+    }
+    ${
+      cutoffPassed || isLoading
+        ? "cursor-not-allowed opacity-55"
+        : "cursor-pointer hover:scale-[1.03] active:scale-[0.96]"
+    }
+  `}
+>
+  {/* ON / OFF LABEL */}
+  <span
+    className={`absolute text-[9px] font-black tracking-wide transition-all duration-200
+      ${
+        meal.status === "on"
+          ? "left-2.5 text-white"
+          : "right-2.5 text-gray-500"
+      }
+    `}
+  >
+    {meal.status === "on" ? "ON" : "OFF"}
+  </span>
 
-            {isLoading && (
-              <span className="absolute inset-0 flex items-center justify-center">
-                <RefreshCw
-                  size={13}
-                  className="text-white animate-spin"
-                />
-              </span>
-            )}
-          </button>
+  {/* KNOB */}
+  <span
+    className={`relative z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white
+      shadow-[0_2px_7px_rgba(0,0,0,0.20)]
+      transition-transform duration-300 ease-[cubic-bezier(.4,1.4,.6,1)]
+      ${
+        meal.status === "on"
+          ? "translate-x-[40px]"
+          : "translate-x-0"
+      }
+    `}
+  >
+    {isLoading ? (
+      <RefreshCw
+        size={13}
+        className="animate-spin text-gray-500"
+      />
+    ) : meal.status === "on" ? (
+      <span className="text-[13px] font-black text-emerald-500">
+        ✓
+      </span>
+    ) : (
+      <span className="text-[13px] font-black text-gray-400">
+        −
+      </span>
+    )}
+  </span>
+</button>
+
         </div>
 
-        {/* STATUS FOOTER */}
-        <div className="mt-3 pt-3 border-t border-black/5 flex items-center justify-between">
-          <span className="text-[11px] text-gray-400">
-            Meal preference
-          </span>
+        {/* STATUS */}
+        <div className="mt-3 flex items-center justify-between">
 
           <span
-            className={`text-[11px] font-bold ${
-              isOn
+            className={`text-[10px] font-extrabold uppercase ${
+              meal.status === "on"
                 ? "text-emerald-600"
                 : "text-gray-500"
             }`}
           >
-            {isOn ? "ON • Included" : "OFF • Skipped"}
+            {isLoading
+              ? "Updating..."
+              : meal.status === "on"
+                ? "Meal ON"
+                : "Meal OFF"}
           </span>
+
+          {meal.menu_price != null && (
+            <span className="text-xs font-bold text-gray-400">
+              ₹{meal.menu_price}
+            </span>
+          )}
+
         </div>
       </div>
     );
   };
 
-  const renderSubscriptionMenu = (
-  subscription: Subscription
-) => {
-  const menuCycle = subscription.menu_cycle || [];
+    const renderSubscriptionMenu = (
+    subscription: Subscription
+  ) => {
+    const menuCycle =
+  subscription.menu_cycle || [];
 
-  if (menuCycle.length === 0) {
+    // =====================================================
+    // DATE HELPERS
+    // =====================================================
+
+    const parseDateOnly = (value: string) => {
+  const raw = String(value || "").trim();
+
+  if (!raw) {
     return null;
   }
 
-  // =====================================================
-  // GET ALL DAYS
-  // =====================================================
+  // -----------------------------------------
+  // FORMAT 1:
+  // YYYY-MM-DD / ISO date
+  // -----------------------------------------
+  const isoDate = raw.split("T")[0];
 
-  const allDays = Array.from(
-    new Set(
-      menuCycle.map(
-        (item) => item.day_number
-      )
+  if (/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) {
+    const [year, month, day] =
+      isoDate.split("-").map(Number);
+
+    const date = new Date(
+      year,
+      month - 1,
+      day
+    );
+
+    date.setHours(0, 0, 0, 0);
+
+    return date;
+  }
+
+  // -----------------------------------------
+  // FORMAT 2:
+  // "Aug 28, 2026"
+  // -----------------------------------------
+  const parsed = new Date(raw);
+
+  if (Number.isNaN(parsed.getTime())) {
+    console.warn(
+      "Invalid subscription date:",
+      value
+    );
+
+    return null;
+  }
+
+  parsed.setHours(0, 0, 0, 0);
+
+  return parsed;
+};
+
+    const formatDate = (date: Date) => {
+      return date.toLocaleDateString(
+        "en-IN",
+        {
+          day: "numeric",
+          month: "short",
+        }
+      );
+    };
+
+    const formatFullDate = (date: Date) => {
+      return date.toLocaleDateString(
+        "en-IN",
+        {
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        }
+      );
+    };
+
+    const startDate =
+      parseDateOnly(
+        subscription.startDate
+      );
+
+    const endDate =
+      parseDateOnly(
+        subscription.endDate
+      );
+
+    if (!startDate || !endDate) {
+      return null;
+    }
+
+    // =====================================================
+    // TODAY
+    // =====================================================
+
+    const today = new Date();
+
+    today.setHours(
+      0,
+      0,
+      0,
+      0
+    );
+
+    // =====================================================
+    // CURRENT SUBSCRIPTION DAY
+    //
+    // Start Date = Day 1
+    // Next Date  = Day 2
+    // =====================================================
+
+    const diffMs =
+      today.getTime() -
+      startDate.getTime();
+
+    const currentDayNumber =
+      Math.floor(
+        diffMs /
+          (1000 * 60 * 60 * 24)
+      ) + 1;
+
+    const totalSubscriptionDays =
+  Math.max(
+    1,
+    Math.ceil(
+      (endDate.getTime() - startDate.getTime()) /
+        (1000 * 60 * 60 * 24)
+    ) + 1
+  );
+
+const safeCurrentDay =
+  Math.max(
+    1,
+    Math.min(
+      currentDayNumber,
+      totalSubscriptionDays
     )
-  ).sort((a, b) => a - b);
+  );
 
-  // =====================================================
-  // SHOW ONLY FIRST 7 DAYS BY DEFAULT
-  // =====================================================
+    // =====================================================
+    // ALL 30 DAYS
+    // =====================================================
 
-  const isShowingAll =
-  showAllMenu[subscription.id] === true;
+    // =====================================================
+// ALL 30 SUBSCRIPTION DAYS
+// =====================================================
 
-const visibleDays = isShowingAll
-  ? allDays
-  : allDays.slice(0, 7);
+// =====================================================
+// ACTUAL SUBSCRIPTION DAYS
+// =====================================================
 
-  const getMealEmoji = (
-    mealType:
-      | "breakfast"
-      | "lunch"
-      | "dinner"
-  ) => {
-    if (mealType === "breakfast") {
-      return "☀️";
-    }
+const allDays = Array.from(
+  {
+    length: totalSubscriptionDays,
+  },
+  (_, index) => index + 1
+);
 
-    if (mealType === "lunch") {
-      return "🍱";
-    }
+    // =====================================================
+    // VIEW ALL STATE
+    // =====================================================
 
-    return "🌙";
+    const isShowingAll =
+      showAllMenu[
+        subscription.id
+      ] === true;
+
+    // =====================================================
+    // DEFAULT = TODAY + NEXT 6 DAYS
+    // VIEW ALL = COMPLETE 30 DAYS
+    // =====================================================
+
+    const visibleDays =
+      isShowingAll
+        ? allDays
+        : allDays.filter(
+            (dayNumber) =>
+              dayNumber >=
+                safeCurrentDay &&
+              dayNumber <
+                safeCurrentDay + 7
+          );
+
+    // =====================================================
+    // TODAY MEALS
+    // =====================================================
+
+    const todayItems =
+      menuCycle.filter(
+        (item) =>
+          Number(
+            item.day_number
+          ) === safeCurrentDay
+      );
+
+    // =====================================================
+    // COMING DAYS
+    // =====================================================
+
+    const comingDays =
+      visibleDays.filter(
+        (dayNumber) =>
+          dayNumber !==
+          safeCurrentDay
+      );
+
+    // =====================================================
+    // MEAL ORDER
+    // =====================================================
+
+    const mealOrder = {
+      breakfast: 1,
+      lunch: 2,
+      dinner: 3,
+    };
+
+    // =====================================================
+    // DATE FOR SUBSCRIPTION DAY
+    // =====================================================
+
+    const getDateForDay = (
+      dayNumber: number
+    ) => {
+      const date =
+        new Date(
+          startDate
+        );
+
+      date.setDate(
+        startDate.getDate() +
+          dayNumber -
+          1
+      );
+
+      return date;
+    };
+
+    // =====================================================
+    // VIEW DISH
+    // =====================================================
+
+    const handleViewDish = (
+  item: SubscriptionMenuItem
+) => {
+  console.log("🔥 VIEW SUBSCRIPTION DISH:", item);
+
+  if (!onViewDish) {
+    console.warn(
+      "❌ onViewDish callback missing"
+    );
+    return;
+  }
+
+  const menuDate = getDateForDay(
+    Number(item.day_number)
+  );
+
+  const dish = {
+    // -----------------------------------------
+    // MAIN MENU DATA
+    // -----------------------------------------
+    id: item.menu_id,
+    menu_id: item.menu_id,
+
+    name:
+      item.menu_name ||
+      "Meal",
+
+    description:
+      item.menu_description ||
+      "",
+
+    price: Number(
+      item.menu_price ?? 0
+    ),
+
+    image_url:
+      item.menu_image ||
+      null,
+
+    // -----------------------------------------
+    // SUBSCRIPTION MENU CONTEXT
+    // -----------------------------------------
+    meal_type:
+      item.meal_type,
+
+    menu_date:
+      menuDate
+        .toISOString()
+        .split("T")[0],
+
+    subscription_day:
+      Number(item.day_number),
+
+    // -----------------------------------------
+    // IMPORTANT
+    // -----------------------------------------
+    type: "menu",
+
+    // DishDetail expects these safely
+    // even if backend doesn't provide them
+    food_type: "veg",
+    ingredients: [],
+    remaining: 999,
+
+    // Chef information
+    chef_id:
+      item.chef_id ||
+      item.chefId ||
+      undefined,
+
+    chef_name:
+      item.chef_name ||
+      item.chefName ||
+      "Chef",
   };
 
-  return (
-    <div className="mt-6 pt-5 border-t border-gray-100">
+  console.log(
+    "🔥 OPEN SUBSCRIPTION DISH:",
+    dish
+  );
 
-      {/* =================================================
-          HEADER
-      ================================================= */}
+  onViewDish(dish);
+};
 
-      <div className="flex items-center justify-between mb-4">
+    // =====================================================
+    // MEAL EMOJI
+    // =====================================================
 
-        <div>
-          <h3 className="text-lg font-extrabold text-gray-900">
-            Subscription Menu
-          </h3>
+    const getMenuMealEmoji = (
+      mealType: MealType
+    ) => {
 
-          <p className="text-xs text-gray-400 mt-1">
-            {isShowingAll
-  ? "Complete 30-day meal cycle"
-  : "Next 7 days meal cycle"}
-          </p>
-        </div>
+      if (
+        mealType ===
+        "breakfast"
+      ) {
+        return "☀️";
+      }
 
-        <Utensils
-          size={19}
-          className="text-orange-500"
-        />
+      if (
+        mealType ===
+        "lunch"
+      ) {
+        return "🍱";
+      }
 
-      </div>
+      return "🌙";
+    };
 
-      {/* =================================================
-          DAYS
-      ================================================= */}
+    // =====================================================
+    // MENU ITEM
+    // =====================================================
 
-      <div className="space-y-4">
+    const renderMenuItem = (
+      item: SubscriptionMenuItem,
+      isToday = false
+    ) => {
 
-        {visibleDays.map((dayNumber) => {
+      return (
+        <div
+          key={item.id}
+          className={`bg-white rounded-2xl border p-3 ${
+            isToday
+              ? "border-orange-300 shadow-md"
+              : "border-gray-100"
+          }`}
+        >
 
-          const dayMeals = menuCycle
-            .filter(
-              (item) =>
-                item.day_number === dayNumber
-            )
-            .sort((a, b) => {
+          {/* IMAGE + INFO */}
 
-              const order = {
-                breakfast: 1,
-                lunch: 2,
-                dinner: 3,
-              };
+          <div className="flex gap-3">
 
-              return (
-                order[a.meal_type] -
-                order[b.meal_type]
-              );
-            });
+            {item.menu_image ? (
 
-          return (
-            <div
-              key={dayNumber}
-              className="rounded-3xl bg-gray-50 border border-gray-100 overflow-hidden"
-            >
+              <img
+                src={item.menu_image}
+                alt={
+                  item.menu_name ||
+                  item.meal_type
+                }
+                className="w-20 h-20 rounded-2xl object-cover shrink-0"
+              />
 
-              {/* DAY HEADER */}
+            ) : (
 
-              <div className="px-4 py-3 bg-white border-b border-gray-100">
+              <div className="w-20 h-20 rounded-2xl bg-orange-50 flex items-center justify-center text-3xl shrink-0">
 
-                <p className="text-xs text-orange-500 font-extrabold uppercase">
-                  Subscription Day
+                {getMenuMealEmoji(
+                  item.meal_type
+                )}
+
+              </div>
+
+            )}
+
+            <div className="flex-1 min-w-0">
+
+              <div className="flex items-center gap-2">
+
+                <p className="text-[10px] font-extrabold text-orange-600 uppercase">
+
+                  {getMenuMealEmoji(
+                    item.meal_type
+                  )}{" "}
+
+                  {item.meal_type}
+
                 </p>
 
-                <p className="text-lg font-extrabold text-gray-900">
-                  Day {dayNumber}
+                {isToday && (
+
+                  <span className="px-2 py-0.5 rounded-full bg-orange-100 text-orange-600 text-[9px] font-extrabold">
+
+                    TODAY
+
+                  </span>
+
+                )}
+
+              </div>
+
+              <h4 className="font-extrabold text-gray-900 mt-1">
+
+                {item.menu_name ||
+                  "Meal"}
+
+              </h4>
+
+              {item.menu_description && (
+
+                <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+
+                  {item.menu_description}
+
+                </p>
+
+              )}
+
+              {item.menu_price != null && (
+
+                <p className="text-xs font-bold text-gray-500 mt-1">
+
+                  ₹{item.menu_price}
+
+                </p>
+
+              )}
+
+            </div>
+
+          </div>
+
+          {/* VIEW DETAILS */}
+
+          <button
+            type="button"
+            onClick={() =>
+              handleViewDish(item)
+            }
+            className="w-full mt-3 py-2.5 rounded-xl bg-orange-50 border border-orange-100 text-orange-600 text-xs font-extrabold active:scale-[0.98] transition"
+          >
+
+            View Details →
+
+          </button>
+
+        </div>
+      );
+    };
+
+    // =====================================================
+    // RENDER SUBSCRIPTION MENU
+    // =====================================================
+
+    return (
+      <div className="mt-6 pt-5 border-t border-gray-100">
+
+        {/* HEADER */}
+
+        <div className="flex items-center justify-between mb-5">
+
+          <div>
+
+            <h3 className="text-lg font-extrabold text-gray-900">
+
+              Subscription Menu
+
+            </h3>
+
+            <p className="text-xs text-gray-400 mt-1">
+  {isShowingAll
+    ? `Complete ${totalSubscriptionDays}-day subscription menu`
+    : "Today + next 6 days"}
+</p>
+
+          </div>
+
+          <Utensils
+            size={19}
+            className="text-orange-500"
+          />
+
+        </div>
+
+        {/* =================================================
+            TODAY
+        ================================================= */}
+
+        {!isShowingAll && (
+
+          <section className="mb-6">
+
+            <div className="flex items-center gap-2 mb-3">
+
+              <span className="text-lg">
+                ⭐
+              </span>
+
+              <h4 className="font-extrabold text-gray-900">
+
+                Today
+
+              </h4>
+
+              <span className="text-xs text-gray-400">
+
+                {formatDate(
+                  getDateForDay(
+                    safeCurrentDay
+                  )
+                )}
+
+              </span>
+
+            </div>
+
+            {todayItems.length > 0 ? (
+
+              <div className="space-y-3">
+
+                {todayItems
+                  .slice()
+                  .sort(
+                    (a, b) =>
+                      mealOrder[
+                        a.meal_type
+                      ] -
+                      mealOrder[
+                        b.meal_type
+                      ]
+                  )
+                  .map(
+                    (item) =>
+                      renderMenuItem(
+                        item,
+                        true
+                      )
+                  )}
+
+              </div>
+
+            ) : (
+
+              <div className="rounded-2xl bg-gray-50 border border-gray-100 p-4 text-sm text-gray-500">
+  Today's menu is not available yet.
+</div>
+
+            )}
+
+          </section>
+
+        )}
+
+        {/* =================================================
+            COMING
+        ================================================= */}
+
+        {!isShowingAll && (
+
+          <section>
+
+            <div className="flex items-center gap-2 mb-3">
+
+              <span className="text-lg">
+                📅
+              </span>
+
+              <h4 className="font-extrabold text-gray-900">
+
+                Coming
+
+              </h4>
+
+              <span className="text-xs text-gray-400">
+  {comingDays.length} upcoming days
+</span>
+
+            </div>
+
+            {comingDays.length > 0 ? (
+
+              <div className="space-y-4">
+
+                {comingDays.map(
+                  (dayNumber) => {
+
+                    const date =
+                      getDateForDay(
+                        dayNumber
+                      );
+
+                    const dayMeals =
+                      menuCycle
+                        .filter(
+                          (item) =>
+                            Number(
+                              item.day_number
+                            ) ===
+                            dayNumber
+                        )
+                        .sort(
+                          (a, b) =>
+                            mealOrder[
+                              a.meal_type
+                            ] -
+                            mealOrder[
+                              b.meal_type
+                            ]
+                        );
+
+                    return (
+
+                      <div
+                        key={dayNumber}
+                        className="rounded-3xl bg-gray-50 border border-gray-100 overflow-hidden"
+                      >
+
+                        {/* DAY HEADER */}
+
+                        <div className="px-4 py-3 bg-white border-b border-gray-100">
+
+                          <p className="text-xs text-orange-500 font-extrabold uppercase">
+
+                            Subscription Day
+
+                          </p>
+
+                          <p className="text-lg font-extrabold text-gray-900">
+
+                            Day{" "}
+                            {dayNumber}
+
+                          </p>
+
+                          <p className="text-xs text-gray-400 mt-1">
+
+                            {formatFullDate(
+                              date
+                            )}
+
+                          </p>
+
+                        </div>
+
+                        {/* MEALS */}
+
+<div className="p-3 space-y-3">
+  {dayMeals.length > 0 ? (
+    dayMeals.map((item) =>
+      renderMenuItem(item)
+    )
+  ) : (
+    <div className="rounded-2xl bg-white border border-gray-100 p-4 text-sm text-gray-400">
+      Menu not available yet.
+    </div>
+  )}
+</div>
+
+                      </div>
+
+                    );
+                  }
+                )}
+
+              </div>
+
+            ) : (
+
+              <div className="rounded-2xl bg-gray-50 border border-gray-100 p-4 text-sm text-gray-500">
+
+                No upcoming meals.
+
+              </div>
+
+            )}
+
+          </section>
+
+        )}
+
+        {/* =================================================
+            FULL 30 DAYS
+        ================================================= */}
+
+        {isShowingAll && (
+
+          <section>
+
+            <div className="flex items-center justify-between mb-4">
+
+              <div>
+
+                <h4 className="font-extrabold text-gray-900">
+  Full Subscription Menu
+</h4>
+
+                <p className="text-xs text-gray-400 mt-1">
+
+                  Day{" "}
+                  {safeCurrentDay}{" "}
+                  is today
+
                 </p>
 
               </div>
 
-              {/* MEALS */}
+              <span className="text-xs font-bold text-orange-500">
+  {totalSubscriptionDays} Days
+</span>
 
-              <div className="p-3 space-y-3">
+            </div>
 
-                {dayMeals.map((item) => (
+            <div className="space-y-4">
 
-                  <div
-                    key={item.id}
-                    className="bg-white rounded-2xl border border-gray-100 p-3"
-                  >
+              {allDays.map(
+                (dayNumber) => {
 
-                    <div className="flex gap-3">
+                  const date =
+                    getDateForDay(
+                      dayNumber
+                    );
 
-                      {/* IMAGE */}
+                  const isToday =
+                    dayNumber ===
+                    safeCurrentDay;
 
-                      {item.menu_image ? (
-                        <img
-                          src={item.menu_image}
-                          alt={
-                            item.menu_name ||
-                            item.meal_type
-                          }
-                          className="w-20 h-20 rounded-2xl object-cover shrink-0"
-                        />
-                      ) : (
-                        <div className="w-20 h-20 rounded-2xl bg-orange-50 flex items-center justify-center text-3xl shrink-0">
-                          {getMealEmoji(
-                            item.meal_type
-                          )}
-                        </div>
-                      )}
+                  const dayMeals =
+                    menuCycle
+                      .filter(
+                        (item) =>
+                          Number(
+                            item.day_number
+                          ) ===
+                          dayNumber
+                      )
+                      .sort(
+                        (a, b) =>
+                          mealOrder[
+                            a.meal_type
+                          ] -
+                          mealOrder[
+                            b.meal_type
+                          ]
+                      );
 
-                      {/* INFO */}
+                  return (
 
-                      <div className="flex-1 min-w-0">
+                    <div
+                      key={dayNumber}
+                      className={`rounded-3xl overflow-hidden border ${
+                        isToday
+                          ? "border-orange-300 shadow-md"
+                          : "border-gray-100"
+                      } bg-gray-50`}
+                    >
 
-                        <div className="flex items-center justify-between gap-2">
+                      {/* DAY HEADER */}
 
-                          <p className="text-xs font-extrabold text-orange-600 uppercase">
-                            {getMealEmoji(
-                              item.meal_type
-                            )}{" "}
-                            {item.meal_type}
+                      <div
+                        className={`px-4 py-3 border-b ${
+                          isToday
+                            ? "bg-orange-50 border-orange-100"
+                            : "bg-white border-gray-100"
+                        }`}
+                      >
+
+                        <div className="flex items-center gap-2">
+
+                          <p className="text-xs text-orange-500 font-extrabold uppercase">
+
+                            Subscription Day
+
                           </p>
 
-                          {item.menu_price != null && (
-                            <span className="text-xs font-bold text-gray-500">
-                              ₹{item.menu_price}
+                          {isToday && (
+
+                            <span className="text-[9px] px-2 py-0.5 rounded-full bg-orange-500 text-white font-extrabold">
+
+                              TODAY
+
                             </span>
+
                           )}
 
                         </div>
 
-                        <h4 className="font-extrabold text-gray-900 mt-1">
-                          {item.menu_name ||
-                            "Meal"}
-                        </h4>
+                        <p className="text-lg font-extrabold text-gray-900 mt-1">
 
-                        {item.menu_description && (
-                          <p className="text-xs text-gray-500 mt-1 line-clamp-2">
-                            {item.menu_description}
-                          </p>
-                        )}
+                          Day{" "}
+                          {dayNumber}
 
-                      </div>
+                        </p>
 
-                    </div>
+                        <p className="text-xs text-gray-400 mt-1">
 
-                    {/* BREAKFAST NOTE */}
+                          {formatFullDate(
+                            date
+                          )}
 
-                    {item.meal_type ===
-                      "breakfast" && (
-                      <div className="mt-3 px-3 py-2 rounded-xl bg-orange-50 border border-orange-100">
-
-                        <p className="text-[10px] text-orange-700 font-semibold">
-                          Breakfast is optional.
-                          You pay separately only
-                          when you choose breakfast.
                         </p>
 
                       </div>
-                    )}
 
-                  </div>
+                      {/* MEALS */}
 
-                ))}
+                      <div className="p-3 space-y-3">
+  {dayMeals.length > 0 ? (
+    dayMeals.map((item) =>
+      renderMenuItem(
+        item,
+        isToday
+      )
+    )
+  ) : (
+    <div className="rounded-2xl bg-white border border-gray-100 p-4 text-sm text-gray-400">
+      Menu not available yet.
+    </div>
+  )}
+</div>
 
-              </div>
+                    </div>
+
+                  );
+                }
+              )}
 
             </div>
-          );
-        })}
+
+          </section>
+
+        )}
+
+        {/* =================================================
+            VIEW ALL / SHOW LESS
+        ================================================= */}
+
+        {allDays.length > 7 && (
+
+          <button
+            type="button"
+            onClick={() =>
+              setShowAllMenu(
+                (previous) => ({
+                  ...previous,
+                  [subscription.id]:
+                    !previous[
+                      subscription.id
+                    ],
+                })
+              )
+            }
+            className="w-full mt-5 py-3.5 rounded-2xl bg-orange-50 border border-orange-100 text-orange-600 font-extrabold text-sm active:scale-[0.98] transition"
+          >
+
+            {isShowingAll
+  ? "← Show 7-Day View"
+  : `View All ${totalSubscriptionDays} Days →`}
+
+          </button>
+
+        )}
 
       </div>
+    );
+  };
 
-      {/* =================================================
-          VIEW ALL / SHOW LESS
-      ================================================= */}
-
-      {allDays.length > 7 && (
-        <button
-          type="button"
-          onClick={() =>
-  setShowAllMenu((previous) => ({
-    ...previous,
-    [subscription.id]:
-      !previous[subscription.id],
-  }))
-}
-          className="w-full mt-5 py-3.5 rounded-2xl bg-orange-50 border border-orange-100 text-orange-600 font-extrabold text-sm active:scale-[0.98] transition"
-        >
-          {isShowingAll
-  ? "Show Less"
-  : `View All ${allDays.length} Days`}
-        </button>
-      )}
-
-    </div>
-  );
-};
   // =========================================================
   // MAIN UI
   // =========================================================
@@ -1372,7 +2131,10 @@ const visibleDays = isShowingAll
                     </div>
 
                   </div>
-
+                  {renderMealCard(
+                    sub,
+                    "breakfast"
+                  )}
                   {/* LUNCH */}
 
                   {renderMealCard(
@@ -1389,10 +2151,7 @@ const visibleDays = isShowingAll
 
                   {/* BREAKFAST */}
 
-                  {renderMealCard(
-                    sub,
-                    "breakfast"
-                  )}
+                  
 
                   
 
