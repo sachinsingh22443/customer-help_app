@@ -136,189 +136,328 @@ export default function MySubscriptions({ onBack, onViewDish, }: Props) {
   // =========================================================
 
   const fetchSubscriptions = async () => {
-    try {
-      const token = localStorage.getItem("token");
+  try {
+    const token = localStorage.getItem("token");
 
-      if (!token) {
-        alert("Please login first");
-        return;
+    if (!token) {
+      alert("Please login first");
+      return;
+    }
+
+    const API =
+      "https://chef-backend-qh12.onrender.com";
+
+    const headers = {
+      Authorization: `Bearer ${token}`,
+    };
+
+    // =========================================================
+    // 1. GET SUBSCRIPTIONS
+    // =========================================================
+
+    const res = await fetch(
+      `${API}/subscriptions/my`,
+      {
+        headers,
       }
+    );
 
-      const res = await fetch(
-        "https://chef-backend-qh12.onrender.com/subscriptions/my",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+    if (!res.ok) {
+      throw new Error(
+        "Failed to load subscriptions"
       );
+    }
 
-      if (!res.ok) {
-        throw new Error("Failed to load subscriptions");
-      }
+    const data: Subscription[] =
+      await res.json();
 
-      const data: Subscription[] = await res.json();
+    console.log(
+      "MY SUBSCRIPTION DATA:",
+      data
+    );
 
-      console.log("MY SUBSCRIPTION DATA:", data);
+    // =========================================================
+    // 2. SHOW SUBSCRIPTION IMMEDIATELY
+    //
+    // IMPORTANT:
+    // DO NOT WAIT FOR meals/today
+    // DO NOT WAIT FOR menu-cycle
+    // =========================================================
 
-      const subscriptionsWithMeals = await Promise.all(
-        data.map(async (sub) => {
-          try {
-            const mealRes = await fetch(
-              `https://chef-backend-qh12.onrender.com/subscriptions/${sub.id}/meals/today`,
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              }
+    const initialSubscriptions =
+      data.map((sub) => ({
+        ...sub,
+        meals: [],
+        menu_cycle: [],
+      }));
+
+    setSubscriptions(
+      initialSubscriptions
+    );
+
+    // =========================================================
+    // 3. LOAD TODAY'S MEALS + MENU CYCLE
+    //    IN BACKGROUND
+    //
+    // These requests NEVER block the initial screen.
+    // =========================================================
+
+    data.forEach((sub) => {
+
+      // =======================================================
+      // TODAY'S MEALS
+      // =======================================================
+
+      fetch(
+        `${API}/subscriptions/${sub.id}/meals/today`,
+        {
+          headers,
+        }
+      )
+        .then(async (mealRes) => {
+
+          if (!mealRes.ok) {
+            console.warn(
+              "TODAY MEALS API FAILED:",
+              sub.id,
+              mealRes.status
             );
 
-            
+            return [];
+          }
 
-            if (!mealRes.ok) {
-              return {
-                ...sub,
-                meals: [],
-              };
-            }
+          const meals: MealSchedule[] =
+            await mealRes.json();
 
-            const meals: MealSchedule[] = await mealRes.json();
+          return meals;
 
-let menuCycle: SubscriptionMenuItem[] = [];
-
-try {
-  const menuCycleRes = await fetch(
-    `https://chef-backend-qh12.onrender.com/subscriptions/${sub.id}/menu-cycle`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-
-  if (menuCycleRes.ok) {
-  const menuCycleData = await menuCycleRes.json();
-
-  if (Array.isArray(menuCycleData?.days)) {
-  menuCycle = menuCycleData.days.flatMap(
-    (day: any) =>
-      (day.meals || []).map(
-        (meal: any) => ({
-          id:
-            meal.schedule_id ||
-            meal.id ||
-            `${day.day_number}-${meal.meal_type}`,
-
-          day_number: Number(
-            day.day_number
-          ),
-
-          date: day.date,
-
-          meal_type:
-            meal.meal_type,
-
-          menu_id:
-            meal.menu?.id ||
-            meal.menu_id ||
-            null,
-
-          menu_name:
-            meal.menu?.name ||
-            meal.menu_name ||
-            "Meal",
-
-          menu_description:
-            meal.menu?.description ||
-            meal.menu_description ||
-            "",
-
-          menu_image:
-            meal.menu?.menu_image ||
-            meal.menu?.image_urls?.[0] ||
-            meal.menu_image ||
-            null,
-
-          // IMPORTANT:
-          // Backend subscription price ko priority do.
-          // Normal menu price ko frontend mein modify
-          // nahi karna.
-          menu_price: Number(
-  meal.menu?.subscription_price ??
-  meal.subscription_price ??
-  meal.menu?.price ??
-  meal.meal_price ??
-  0
-),
-          chef_id:
-            meal.chef_id ||
-            sub.chef_id ||
-            null,
         })
+        .then((meals) => {
+
+          setSubscriptions(
+            (previous) =>
+              previous.map(
+                (currentSub) =>
+                  currentSub.id === sub.id
+                    ? {
+                        ...currentSub,
+                        meals,
+                      }
+                    : currentSub
+              )
+          );
+
+        })
+        .catch((error) => {
+
+          console.error(
+            `Failed to load today's meals for ${sub.id}`,
+            error
+          );
+
+        });
+
+      // =======================================================
+      // MENU CYCLE
+      //
+      // IMPORTANT:
+      // This is completely independent.
+      // Even if this takes 13 seconds,
+      // page is already visible.
+      // =======================================================
+
+      fetch(
+        `${API}/subscriptions/${sub.id}/menu-cycle`,
+        {
+          headers,
+        }
       )
-  );
-} else if (Array.isArray(menuCycleData)) {
-  menuCycle = menuCycleData;
-} else if (Array.isArray(menuCycleData?.items)) {
-  menuCycle = menuCycleData.items;
-} else if (
-  Array.isArray(menuCycleData?.menu_cycle)
-) {
-  menuCycle = menuCycleData.menu_cycle;
-}else {
-    console.warn(
-      "Unexpected MENU CYCLE response:",
-      menuCycleData
-    );
+        .then(async (menuCycleRes) => {
 
-    menuCycle = [];
-  }
+          if (!menuCycleRes.ok) {
 
-  console.log(
-    "SUBSCRIPTION MENU CYCLE:",
-    sub.id,
-    menuCycle
-  );
-} else {
-    console.warn(
-      "MENU CYCLE API FAILED:",
-      sub.id,
-      menuCycleRes.status
-    );
-  }
-} catch (menuCycleError) {
-  console.error(
-    "MENU CYCLE FETCH ERROR:",
-    sub.id,
-    menuCycleError
-  );
-}
+            console.warn(
+              "MENU CYCLE API FAILED:",
+              sub.id,
+              menuCycleRes.status
+            );
 
-return {
-  ...sub,
-  meals,                 // ⭐ IMPORTANT
-  menu_cycle: menuCycle,
-};
-          } catch (error) {
-  console.error(
-    `Failed to load today's meals for ${sub.id}`,
-    error
-  );
+            return [];
+          }
 
-  return {
-    ...sub,
-    meals: [],
-    menu_cycle: [],
-  };
-}
+          const menuCycleData =
+            await menuCycleRes.json();
+
+          let menuCycle: SubscriptionMenuItem[] =
+            [];
+
+          // =====================================================
+          // RESPONSE FORMAT: { days: [...] }
+          // =====================================================
+
+          if (
+            Array.isArray(
+              menuCycleData?.days
+            )
+          ) {
+
+            menuCycle =
+              menuCycleData.days.flatMap(
+                (day: any) =>
+                  (day.meals || []).map(
+                    (meal: any) => ({
+                      id:
+                        meal.schedule_id ||
+                        meal.id ||
+                        `${day.day_number}-${meal.meal_type}`,
+
+                      day_number:
+                        Number(
+                          day.day_number
+                        ),
+
+                      date:
+                        day.date,
+
+                      meal_type:
+                        meal.meal_type,
+
+                      menu_id:
+                        meal.menu?.id ||
+                        meal.menu_id ||
+                        null,
+
+                      menu_name:
+                        meal.menu?.name ||
+                        meal.menu_name ||
+                        "Meal",
+
+                      menu_description:
+                        meal.menu?.description ||
+                        meal.menu_description ||
+                        "",
+
+                      menu_image:
+                        meal.menu?.menu_image ||
+                        meal.menu?.image_urls?.[0] ||
+                        meal.menu_image ||
+                        null,
+
+                      // Subscription price
+                      menu_price: Number(
+                        meal.menu?.subscription_price ??
+                        meal.subscription_price ??
+                        meal.menu?.price ??
+                        meal.meal_price ??
+                        0
+                      ),
+
+                      chef_id:
+                        meal.chef_id ||
+                        sub.chef_id ||
+                        null,
+
+                      chef_name:
+                        meal.chef_name ||
+                        sub.chefName ||
+                        null,
+                    })
+                  )
+              );
+
+          // =====================================================
+          // RESPONSE FORMAT: ARRAY
+          // =====================================================
+
+          } else if (
+            Array.isArray(menuCycleData)
+          ) {
+
+            menuCycle =
+              menuCycleData;
+
+          // =====================================================
+          // RESPONSE FORMAT: { items: [...] }
+          // =====================================================
+
+          } else if (
+            Array.isArray(
+              menuCycleData?.items
+            )
+          ) {
+
+            menuCycle =
+              menuCycleData.items;
+
+          // =====================================================
+          // RESPONSE FORMAT: { menu_cycle: [...] }
+          // =====================================================
+
+          } else if (
+            Array.isArray(
+              menuCycleData?.menu_cycle
+            )
+          ) {
+
+            menuCycle =
+              menuCycleData.menu_cycle;
+
+          } else {
+
+            console.warn(
+              "Unexpected MENU CYCLE response:",
+              menuCycleData
+            );
+
+            menuCycle = [];
+          }
+
+          console.log(
+            "SUBSCRIPTION MENU CYCLE:",
+            sub.id,
+            menuCycle
+          );
+
+          return menuCycle;
         })
-      );
+        .then((menuCycle) => {
 
-      setSubscriptions(subscriptionsWithMeals);
-    } catch (error) {
-      console.error("Failed to load subscriptions", error);
-    }
-  };
+          setSubscriptions(
+            (previous) =>
+              previous.map(
+                (currentSub) =>
+                  currentSub.id === sub.id
+                    ? {
+                        ...currentSub,
+                        menu_cycle:
+                          menuCycle,
+                      }
+                    : currentSub
+              )
+          );
+
+        })
+        .catch((error) => {
+
+          console.error(
+            "MENU CYCLE FETCH ERROR:",
+            sub.id,
+            error
+          );
+
+        });
+
+    });
+
+  } catch (error) {
+
+    console.error(
+      "Failed to load subscriptions",
+      error
+    );
+
+  }
+};
 
   // =========================================================
   // WALLET HISTORY
