@@ -67,6 +67,9 @@ interface SubscriptionMenuItem {
   menu_description?: string;
   menu_image?: string | null;
   menu_price?: number;
+  normal_menu_price?: number;
+  subscription_price?: number;
+
 
   // Optional date returned by backend
   date?: string;
@@ -196,17 +199,73 @@ try {
   if (menuCycleRes.ok) {
   const menuCycleData = await menuCycleRes.json();
 
-  if (Array.isArray(menuCycleData)) {
-    menuCycle = menuCycleData;
-  } else if (
-    Array.isArray(menuCycleData?.items)
-  ) {
-    menuCycle = menuCycleData.items;
-  } else if (
-    Array.isArray(menuCycleData?.menu_cycle)
-  ) {
-    menuCycle = menuCycleData.menu_cycle;
-  } else {
+  if (Array.isArray(menuCycleData?.days)) {
+  menuCycle = menuCycleData.days.flatMap(
+    (day: any) =>
+      (day.meals || []).map(
+        (meal: any) => ({
+          id:
+            meal.schedule_id ||
+            meal.id ||
+            `${day.day_number}-${meal.meal_type}`,
+
+          day_number: Number(
+            day.day_number
+          ),
+
+          date: day.date,
+
+          meal_type:
+            meal.meal_type,
+
+          menu_id:
+            meal.menu?.id ||
+            meal.menu_id ||
+            null,
+
+          menu_name:
+            meal.menu?.name ||
+            meal.menu_name ||
+            "Meal",
+
+          menu_description:
+            meal.menu?.description ||
+            meal.menu_description ||
+            "",
+
+          menu_image:
+            meal.menu?.menu_image ||
+            meal.menu?.image_urls?.[0] ||
+            meal.menu_image ||
+            null,
+
+          // IMPORTANT:
+          // Backend subscription price ko priority do.
+          // Normal menu price ko frontend mein modify
+          // nahi karna.
+          menu_price: Number(
+  meal.menu?.subscription_price ??
+  meal.subscription_price ??
+  meal.menu?.price ??
+  meal.meal_price ??
+  0
+),
+          chef_id:
+            meal.chef_id ||
+            sub.chef_id ||
+            null,
+        })
+      )
+  );
+} else if (Array.isArray(menuCycleData)) {
+  menuCycle = menuCycleData;
+} else if (Array.isArray(menuCycleData?.items)) {
+  menuCycle = menuCycleData.items;
+} else if (
+  Array.isArray(menuCycleData?.menu_cycle)
+) {
+  menuCycle = menuCycleData.menu_cycle;
+}else {
     console.warn(
       "Unexpected MENU CYCLE response:",
       menuCycleData
@@ -687,24 +746,28 @@ console.log(
   // =========================================================
 
   const getCutoffText = (
-    mealType: MealType,
-    cutoffPassed: boolean
-  ) => {
-    if (cutoffPassed) {
-      return "Cutoff time passed";
-    }
+  mealType: MealType,
+  cutoffPassed: boolean
+) => {
+  // Subscription ke FIXED cutoff times
+  // Normal Menu se cutoff time fetch nahi karna hai.
 
-    if (mealType === "breakfast") {
-      return "Cutoff: 8:00 AM";
-    }
+  if (mealType === "breakfast") {
+    return cutoffPassed
+      ? "Cutoff: 8:00 AM • Passed"
+      : "Cutoff: 8:00 AM";
+  }
 
-    if (mealType === "lunch") {
-      return "Cutoff: 11:00 AM";
-    }
+  if (mealType === "lunch") {
+    return cutoffPassed
+      ? "Cutoff: 11:00 AM • Passed"
+      : "Cutoff: 11:00 AM";
+  }
 
-    return "Cutoff: 6:00 PM";
-  };
-
+  return cutoffPassed
+    ? "Cutoff: 6:00 PM • Passed"
+    : "Cutoff: 6:00 PM";
+};
   // =========================================================
   // MEAL ICON
   // =========================================================
@@ -1321,122 +1384,143 @@ const allDays = Array.from(
     // MENU ITEM
     // =====================================================
 
-    const renderMenuItem = (
-      item: SubscriptionMenuItem,
-      isToday = false
-    ) => {
+    // =====================================================
+// MENU ITEM
+// =====================================================
 
-      return (
-        <div
-          key={item.id}
-          className={`bg-white rounded-2xl border p-3 ${
-            isToday
-              ? "border-orange-300 shadow-md"
-              : "border-gray-100"
-          }`}
-        >
+const renderMenuItem = (
+  item: SubscriptionMenuItem,
+  isToday = false
+) => {
+  // -----------------------------------------------------
+  // SUBSCRIPTION FIXED CUTOFF TIMES
+  // IMPORTANT:
+  // Normal Menu ka cutoff yahan se fetch/use nahi hoga.
+  // Subscription ke apne fixed cutoff hain:
+  // Breakfast = 8:00 AM
+  // Lunch     = 11:00 AM
+  // Dinner    = 6:00 PM
+  // -----------------------------------------------------
 
-          {/* IMAGE + INFO */}
+  const getSubscriptionCutoff = (
+    mealType: MealType
+  ) => {
+    if (mealType === "breakfast") {
+      return "8:00 AM";
+    }
 
-          <div className="flex gap-3">
+    if (mealType === "lunch") {
+      return "11:00 AM";
+    }
 
-            {item.menu_image ? (
+    return "6:00 PM";
+  };
 
-              <img
-                src={item.menu_image}
-                alt={
-                  item.menu_name ||
-                  item.meal_type
-                }
-                className="w-20 h-20 rounded-2xl object-cover shrink-0"
-              />
+  const cutoffText =
+    getSubscriptionCutoff(item.meal_type);
 
-            ) : (
+  return (
+    <div
+      key={item.id}
+      className={`bg-white rounded-2xl border p-3 ${
+        isToday
+          ? "border-orange-300 shadow-md"
+          : "border-gray-100"
+      }`}
+    >
 
-              <div className="w-20 h-20 rounded-2xl bg-orange-50 flex items-center justify-center text-3xl shrink-0">
+      {/* =================================================
+          IMAGE + INFO
+      ================================================= */}
 
-                {getMenuMealEmoji(
-                  item.meal_type
-                )}
+      <div className="flex gap-3">
 
-              </div>
-
+        {/* IMAGE */}
+        {item.menu_image ? (
+          <img
+            src={item.menu_image}
+            alt={
+              item.menu_name ||
+              item.meal_type
+            }
+            className="w-20 h-20 rounded-2xl object-cover shrink-0"
+          />
+        ) : (
+          <div className="w-20 h-20 rounded-2xl bg-orange-50 flex items-center justify-center text-3xl shrink-0">
+            {getMenuMealEmoji(
+              item.meal_type
             )}
+          </div>
+        )}
 
-            <div className="flex-1 min-w-0">
+        {/* INFO */}
+        <div className="flex-1 min-w-0">
 
-              <div className="flex items-center gap-2">
+          {/* MEAL TYPE */}
+          <div className="flex items-center gap-2">
 
-                <p className="text-[10px] font-extrabold text-orange-600 uppercase">
+            <p className="text-[10px] font-extrabold text-orange-600 uppercase">
+              {getMenuMealEmoji(
+                item.meal_type
+              )}{" "}
+              {item.meal_type}
+            </p>
 
-                  {getMenuMealEmoji(
-                    item.meal_type
-                  )}{" "}
-
-                  {item.meal_type}
-
-                </p>
-
-                {isToday && (
-
-                  <span className="px-2 py-0.5 rounded-full bg-orange-100 text-orange-600 text-[9px] font-extrabold">
-
-                    TODAY
-
-                  </span>
-
-                )}
-
-              </div>
-
-              <h4 className="font-extrabold text-gray-900 mt-1">
-
-                {item.menu_name ||
-                  "Meal"}
-
-              </h4>
-
-              {item.menu_description && (
-
-                <p className="text-xs text-gray-500 mt-1 line-clamp-2">
-
-                  {item.menu_description}
-
-                </p>
-
-              )}
-
-              {item.menu_price != null && (
-
-                <p className="text-xs font-bold text-gray-500 mt-1">
-
-                  ₹{item.menu_price}
-
-                </p>
-
-              )}
-
-            </div>
+            {isToday && (
+              <span className="px-2 py-0.5 rounded-full bg-orange-100 text-orange-600 text-[9px] font-extrabold">
+                TODAY
+              </span>
+            )}
 
           </div>
 
-          {/* VIEW DETAILS */}
+          {/* MENU NAME */}
+          <h4 className="font-extrabold text-gray-900 mt-1">
+            {item.menu_name || "Meal"}
+          </h4>
 
-          <button
-            type="button"
-            onClick={() =>
-              handleViewDish(item)
-            }
-            className="w-full mt-3 py-2.5 rounded-xl bg-orange-50 border border-orange-100 text-orange-600 text-xs font-extrabold active:scale-[0.98] transition"
-          >
+          {/* DESCRIPTION */}
+          {item.menu_description && (
+            <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+              {item.menu_description}
+            </p>
+          )}
 
-            View Details →
+          {/* SUBSCRIPTION PRICE */}
+          {item.menu_price != null && (
+            <p className="text-xs font-bold text-gray-500 mt-1">
+              ₹{item.menu_price}
+            </p>
+          )}
 
-          </button>
+          {/* =================================================
+              SUBSCRIPTION CUTOFF
+          ================================================= */}
+
+          <p className="text-[11px] text-gray-400 mt-1">
+            Cutoff: {cutoffText}
+          </p>
 
         </div>
-      );
-    };
+      </div>
+
+      {/* =================================================
+          VIEW DETAILS
+      ================================================= */}
+
+      <button
+        type="button"
+        onClick={() =>
+          handleViewDish(item)
+        }
+        className="w-full mt-3 py-2.5 rounded-xl bg-orange-50 border border-orange-100 text-orange-600 text-xs font-extrabold active:scale-[0.98] transition"
+      >
+        View Details →
+      </button>
+
+    </div>
+  );
+};
 
     // =====================================================
     // RENDER SUBSCRIPTION MENU
