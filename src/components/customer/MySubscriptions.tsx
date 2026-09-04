@@ -128,8 +128,9 @@ export default function MySubscriptions({ onBack, onViewDish, }: Props) {
   const [showAllMenu, setShowAllMenu] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    fetchSubscriptions();
-  }, []);
+  fetchSubscriptions();
+  fetchWalletHistory();
+}, []);
 
   // =========================================================
   // FETCH SUBSCRIPTIONS
@@ -774,85 +775,147 @@ const handleAddBreakfast = async (
   // MEAL TOGGLE
   // =========================================================
 
+    // =========================================================
+  // MEAL TOGGLE
+  // =========================================================
+
   const handleMealToggle = async (
-  subscriptionId: string,
-  mealType: MealType,
-  currentStatus: "on" | "off"
-) => {
-  try {
-    const token = localStorage.getItem("token");
+    subscriptionId: string,
+    mealType: MealType,
+    currentStatus: "on" | "off"
+  ) => {
+    try {
+      const token = localStorage.getItem("token");
 
-    if (!token) {
-      alert("Please login first");
-      return;
+      if (!token) {
+        alert("Please login first");
+        return;
+      }
+
+      const action =
+        currentStatus === "on" ? "off" : "on";
+
+      const loadingKey =
+        `${subscriptionId}-${mealType}`;
+
+      setMealLoading(loadingKey);
+
+      const res = await fetch(
+        `https://chef-backend-qh12.onrender.com/subscriptions/${subscriptionId}/meals/${mealType}/${action}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+
+      // -----------------------------------------
+      // SAFE RESPONSE PARSING
+      // -----------------------------------------
+
+      const responseText = await res.text();
+
+      let data: any = {};
+
+      try {
+        data = responseText
+          ? JSON.parse(responseText)
+          : {};
+      } catch {
+        data = {
+          message: responseText,
+        };
+      }
+
+      // -----------------------------------------
+      // ERROR
+      // -----------------------------------------
+
+      if (!res.ok) {
+        throw new Error(
+          data?.detail ||
+            data?.message ||
+            `Unable to turn ${mealType} ${action}`
+        );
+      }
+
+      console.log(
+        `MEAL ${mealType.toUpperCase()} ${action.toUpperCase()} SUCCESS:`,
+        data
+      );
+
+      // -----------------------------------------
+      // ⚡ INSTANT WALLET UPDATE
+      // -----------------------------------------
+      // Backend response me wallet_balance aayega.
+      // Extra /wallet/history request ka wait nahi.
+      
+      if (data?.wallet_balance !== undefined) {
+        setWalletBalance(
+          Number(data.wallet_balance)
+        );
+      }
+
+      // -----------------------------------------
+      // UPDATE MEAL STATUS IMMEDIATELY
+      // -----------------------------------------
+      // UI ko backend response ke according turant
+      // ON/OFF dikhayenge.
+
+      setSubscriptions((previous) =>
+        previous.map((subscription) => {
+          if (subscription.id !== subscriptionId) {
+            return subscription;
+          }
+
+          return {
+            ...subscription,
+            meals: (subscription.meals || []).map(
+              (meal) =>
+                meal.meal_type === mealType
+                  ? {
+                      ...meal,
+                      status:
+                        action === "on"
+                          ? "on"
+                          : "off",
+                    }
+                  : meal
+            ),
+          };
+        })
+      );
+
+      // -----------------------------------------
+      // BACKGROUND REFRESH
+      // -----------------------------------------
+      // Subscription/menu data refresh hoga,
+      // lekin wallet balance ke liye UI wait nahi karegi.
+
+      fetchSubscriptions().catch((error) => {
+        console.error(
+          "BACKGROUND SUBSCRIPTION REFRESH ERROR:",
+          error
+        );
+      });
+
+    } catch (error: any) {
+      console.error(
+        `MEAL ${mealType.toUpperCase()} ERROR:`,
+        error
+      );
+
+      alert(
+        error?.message ||
+          `Unable to update ${mealType}`
+      );
+    } finally {
+      setMealLoading(null);
     }
-
-    const action =
-      currentStatus === "on" ? "off" : "on";
-
-    const loadingKey =
-      `${subscriptionId}-${mealType}`;
-
-    setMealLoading(loadingKey);
-
-    const res = await fetch(
-  `https://chef-backend-qh12.onrender.com/subscriptions/${subscriptionId}/meals/${mealType}/${action}`,
-  {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-  }
-);
-
-    // -----------------------------------------
-    // SAFE RESPONSE PARSING
-    // -----------------------------------------
-
-    const responseText = await res.text();
-
-    let data: any = {};
-
-try {
-  data = responseText
-    ? JSON.parse(responseText)
-    : {};
-} catch {
-  data = {
-    message: responseText,
   };
-}
-
-if (!res.ok) {
-  throw new Error(
-    data?.detail ||
-      data?.message ||
-      `Unable to turn ${mealType} ${action}`
-  );
-}
-
-console.log(
-  `MEAL ${mealType.toUpperCase()} ${action.toUpperCase()} SUCCESS:`,
-  data
-);
-    await fetchSubscriptions();
-
-  } catch (error: any) {
-    console.error(
-      `MEAL ${mealType.toUpperCase()} ERROR:`,
-      error
-    );
-
-    alert(
-      error?.message ||
-        `Unable to update ${mealType}`
-    );
-  } finally {
-    setMealLoading(null);
-  }
-};
   // =========================================================
   // GET MEAL
   // =========================================================

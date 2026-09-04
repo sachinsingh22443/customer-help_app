@@ -2,6 +2,7 @@
 import { useState,useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import { CartProvider, useCart } from "./contexts/CartContext";
+import { SettingsProvider } from "./contexts/SettingsContext";
 import { Toast } from "./components/customer/Toast";
 import { SplashScreen } from "./components/onboarding/SplashScreen";
 import { OnboardingScreens } from "./components/onboarding/OnboardingScreens";
@@ -119,9 +120,11 @@ type Screen =
 
 export default function App() {
   return (
-    <CartProvider>
-      <AppContent />
-    </CartProvider>
+    <SettingsProvider>
+      <CartProvider>
+        <AppContent />
+      </CartProvider>
+    </SettingsProvider>
   );
 }
 
