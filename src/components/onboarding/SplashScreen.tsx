@@ -13,7 +13,7 @@ export function SplashScreen({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       onAnimationComplete={() => {
-        setTimeout(onComplete, 2500);
+        setTimeout(onComplete, 1000);
       }}
     >
       {/* =====================================================

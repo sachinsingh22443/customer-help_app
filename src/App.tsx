@@ -233,25 +233,40 @@ useEffect(() => {
 
 useEffect(() => {
   const checkAuth = async () => {
-
     let token = localStorage.getItem("token");
     const refreshToken = localStorage.getItem("refresh_token");
 
+    // =========================================================
+    // NO TOKEN
+    // =========================================================
     if (!token) {
-  const onboardingCompleted =
-    localStorage.getItem("onboarding_completed");
+      const onboardingCompleted =
+        localStorage.getItem("onboarding_completed");
 
-  if (onboardingCompleted === "true") {
-    setCurrentScreen("login");
-  } else {
-    setCurrentScreen("onboarding");
-  }
+      if (onboardingCompleted === "true") {
+        setCurrentScreen("login");
+      } else {
+        setCurrentScreen("onboarding");
+      }
 
-  setLoading(false);
-  setAuthReady(true);
-  return;
-}
+      setAuthReady(true);
+      setLoading(false);
+      return;
+    }
 
+    // =========================================================
+    // IMPORTANT:
+    // TOKEN MIL GAYA = USER KO TURANT APP DIKHAO
+    // BACKEND VERIFY BACKGROUND MEIN HOGA
+    // =========================================================
+    setCurrentScreen("customerHome");
+    setAuthReady(true);
+    setLoading(false);
+
+    // =========================================================
+    // BACKGROUND AUTH VERIFICATION
+    // Is request ko app opening ka blocker nahi banayenge
+    // =========================================================
     const verify = async (accessToken: string) => {
       return fetch(
         "https://chef-backend-qh12.onrender.com/auth/verify-token",
@@ -264,99 +279,109 @@ useEffect(() => {
     };
 
     try {
-
       let res = await verify(token);
 
-if (res.ok) {
-  // Access token valid
-  setCurrentScreen("customerHome");
-  setAuthReady(true);
-
-} else if (res.status === 401 && refreshToken) {
-
-  // =====================================================
-  // ACCESS TOKEN EXPIRED
-  // USE REFRESH TOKEN
-  // =====================================================
-
-  const refreshRes = await fetch(
-    "https://chef-backend-qh12.onrender.com/auth/refresh",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        refresh_token: refreshToken,
-      }),
-    }
-  );
-
-  // Refresh token invalid / expired
-  if (!refreshRes.ok) {
-    throw new Error("Refresh Failed");
-  }
-
-  const refreshData = await refreshRes.json();
-
-  // Save new access token
-  localStorage.setItem(
-    "token",
-    refreshData.access_token
-  );
-
-  // Save rotated refresh token if backend sends one
-  if (refreshData.refresh_token) {
-    localStorage.setItem(
-      "refresh_token",
-      refreshData.refresh_token
-    );
-  }
-
-  // Update current token
-  token = refreshData.access_token;
-
-  // Verify new access token
-  res = await verify(token);
-
-  if (res.ok) {
-    setCurrentScreen("customerHome");
-    setAuthReady(true);
-  } else {
-    throw new Error("Verify Failed");
-  }
-
-} else {
-
-  // Token invalid and no refresh token
-  throw new Error("Unauthorized");
-
-}
-
-    } catch (err) {
-
-      localStorage.removeItem("token");
-      localStorage.removeItem("refresh_token");
-      localStorage.removeItem("user_id");
-
-      const status = await Network.getStatus();
-
-      if (!status.connected) {
-        setCurrentScreen("noInternet");
-      } else {
-        setCurrentScreen("login");
+      // =======================================================
+      // ACCESS TOKEN VALID
+      // =======================================================
+      if (res.ok) {
+        return;
       }
 
+      // =======================================================
+      // ACCESS TOKEN EXPIRED
+      // REFRESH TOKEN AVAILABLE
+      // =======================================================
+      if (res.status === 401 && refreshToken) {
+        try {
+          const refreshRes = await fetch(
+            "https://chef-backend-qh12.onrender.com/auth/refresh",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                refresh_token: refreshToken,
+              }),
+            }
+          );
+
+          if (!refreshRes.ok) {
+            throw new Error("Refresh Failed");
+          }
+
+          const refreshData = await refreshRes.json();
+
+          // New access token save
+          if (refreshData.access_token) {
+            localStorage.setItem(
+              "token",
+              refreshData.access_token
+            );
+
+            token = refreshData.access_token;
+          }
+
+          // Rotated refresh token save
+          if (refreshData.refresh_token) {
+            localStorage.setItem(
+              "refresh_token",
+              refreshData.refresh_token
+            );
+          }
+
+          // New token verify
+          if (token) {
+            res = await verify(token);
+          }
+
+          if (res.ok) {
+            return;
+          }
+
+          throw new Error("Verify Failed");
+        } catch {
+          // Refresh failed.
+          // User ko home se turant remove nahi karenge.
+          // Sirf next protected API request par auth handle hoga.
+          return;
+        }
+      }
+
+      // =======================================================
+      // INVALID TOKEN
+      // =======================================================
+      if (res.status === 401) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("user_id");
+
+        setCurrentScreen("login");
+      }
+    } catch (err) {
+      // =======================================================
+      // BACKEND / NETWORK / RENDER COLD START
+      // IMPORTANT:
+      // Yahan user ko Loading screen par nahi rokenge.
+      // Home already open ho chuka hai.
+      // =======================================================
+
+      try {
+        const status = await Network.getStatus();
+
+        if (!status.connected) {
+          setCurrentScreen("noInternet");
+        }
+      } catch {
+        // Network status check fail ho to
+        // current screen ko change mat karo.
+      }
     }
-
-    setLoading(false);
-
   };
 
   checkAuth();
-
 }, []);
-
 
 
 useEffect(() => {
