@@ -934,14 +934,43 @@ const handleAddBreakfast = async (
   // =========================================================
 
   const isCutoffPassed = (
-    cutoffAt?: string
-  ) => {
-    if (!cutoffAt) {
-      return false;
-    }
+  cutoffAt?: string,
+  mealType?: MealType
+) => {
+  if (!mealType) {
+    return false;
+  }
 
-    return new Date() >= new Date(cutoffAt);
+  const now = new Date();
+
+  // India time (IST)
+  const indiaTime = new Intl.DateTimeFormat("en-IN", {
+    timeZone: "Asia/Kolkata",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(now);
+
+  const hour = Number(
+    indiaTime.find((part) => part.type === "hour")?.value || 0
+  );
+
+  const minute = Number(
+    indiaTime.find((part) => part.type === "minute")?.value || 0
+  );
+
+  const currentMinutes =
+    hour * 60 + minute;
+
+  // Fixed subscription cutoff times
+  const cutoffMinutes = {
+    breakfast: 8 * 60,   // 08:00 AM
+    lunch: 11 * 60,      // 11:00 AM
+    dinner: 18 * 60,     // 06:00 PM
   };
+
+  return currentMinutes >= cutoffMinutes[mealType];
+};
 
   // =========================================================
   // FORMAT CUTOFF
@@ -1078,7 +1107,10 @@ const handleAddBreakfast = async (
   );
 }
 
-    const cutoffPassed = isCutoffPassed(meal.cutoff_at);
+    const cutoffPassed = isCutoffPassed(
+  meal.cutoff_at,
+  mealType
+);
 
     const loadingKey =
       `${subscription.id}-${mealType}`;
