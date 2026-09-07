@@ -130,11 +130,221 @@ export default function App() {
 
 function AppContent() {
   const { toastMessage } = useCart();
+
   const [screenHistory, setScreenHistory] =
   useState<Screen[]>(["splash"]);
 
   const currentScreen =
-  screenHistory[screenHistory.length - 1];
+    screenHistory[screenHistory.length - 1];
+
+  const setCurrentScreen = (screen: Screen) => {
+    setScreenHistory((prev) => [
+      ...prev,
+      screen,
+    ]);
+  };
+
+
+    // =========================================================
+  // GLOBAL CUSTOMER API AUTH HANDLER
+  //
+  // Access token expire hone par:
+  // 1. Silently refresh token
+  // 2. Original request retry
+  // 3. "Token expired" kabhi UI ko nahi dena
+  // =========================================================
+
+  useEffect(() => {
+    const originalFetch = window.fetch;
+
+    let refreshPromise: Promise<string | null> | null = null;
+
+    const refreshCustomerToken =
+      async (): Promise<string | null> => {
+        const refreshToken =
+          localStorage.getItem("refresh_token");
+
+        if (!refreshToken) {
+          return null;
+        }
+
+        try {
+          const refreshResponse =
+          await originalFetch(
+    "https://chef-backend-qh12.onrender.com/auth/customer-refresh",
+    {
+                method: "POST",
+                headers: {
+                  "Content-Type":
+                    "application/json",
+                },
+                body: JSON.stringify({
+                  refresh_token:
+                    refreshToken,
+                }),
+              }
+            );
+
+          if (!refreshResponse.ok) {
+            return null;
+          }
+
+          const refreshData =
+            await refreshResponse.json();
+
+          if (!refreshData?.access_token) {
+            return null;
+          }
+
+          // New access token
+          localStorage.setItem(
+            "token",
+            refreshData.access_token
+          );
+
+          // Rotated refresh token
+          if (refreshData.refresh_token) {
+            localStorage.setItem(
+              "refresh_token",
+              refreshData.refresh_token
+            );
+          }
+
+          return refreshData.access_token;
+        } catch {
+          return null;
+        }
+      };
+
+    window.fetch = async (
+      input: RequestInfo | URL,
+      init?: RequestInit
+    ): Promise<Response> => {
+      const requestUrl =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+          ? input.toString()
+          : input.url;
+
+      const isRefreshRequest =
+        requestUrl.includes("/auth/customer-refresh");
+
+      const isLoginRequest =
+        requestUrl.includes("/auth/login");
+
+      const isVerifyRequest =
+        requestUrl.includes(
+          "/auth/verify-token"
+        );
+
+      let response =
+        await originalFetch(input, init);
+
+      // =====================================================
+      // ONLY HANDLE NORMAL PROTECTED API 401
+      // =====================================================
+
+      if (
+        response.status !== 401 ||
+        isRefreshRequest ||
+        isLoginRequest ||
+        isVerifyRequest
+      ) {
+        return response;
+      }
+
+      // =====================================================
+      // GET / CREATE ONE REFRESH REQUEST
+      // Multiple APIs expire together to bhi
+      // sirf ONE refresh request jayegi.
+      // =====================================================
+
+      if (!refreshPromise) {
+        refreshPromise =
+          refreshCustomerToken();
+      }
+
+      const newToken =
+        await refreshPromise;
+
+      refreshPromise = null;
+
+      // =====================================================
+      // REFRESH SUCCESSFUL
+      // RETRY ORIGINAL REQUEST
+      // =====================================================
+
+      if (newToken) {
+        const retryHeaders =
+          new Headers(
+            init?.headers || {}
+          );
+
+        retryHeaders.set(
+          "Authorization",
+          `Bearer ${newToken}`
+        );
+
+        if (
+          !retryHeaders.has(
+            "Content-Type"
+          )
+        ) {
+          retryHeaders.set(
+            "Content-Type",
+            "application/json"
+          );
+        }
+
+        return originalFetch(
+          input,
+          {
+            ...init,
+            headers: retryHeaders,
+          }
+        );
+      }
+
+      // =====================================================
+      // REFRESH FAILED
+      // SESSION REALLY EXPIRED
+      // =====================================================
+
+      localStorage.removeItem("token");
+      localStorage.removeItem(
+        "refresh_token"
+      );
+      localStorage.removeItem("user_id");
+
+      // User ko login screen par bhejo
+      setCurrentScreen("login");
+
+      // IMPORTANT:
+      // Backend ka "Token expired" message
+      // customer UI ko nahi dena.
+      //
+      // Return a clean 401 response instead.
+      return new Response(
+        JSON.stringify({
+          detail:
+            "Please login again.",
+        }),
+        {
+          status: 401,
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+        }
+      );
+    };
+
+    return () => {
+      window.fetch = originalFetch;
+    };
+  }, []);
+  
 
   // =========================================================
 // GLOBAL NAVIGATION HISTORY
@@ -185,16 +395,7 @@ const goHome = () => {
   ]);
 };
 
-// =========================================================
-// NORMAL NAVIGATION
-// =========================================================
 
-const setCurrentScreen = (screen: Screen) => {
-  setScreenHistory((prev) => [
-    ...prev,
-    screen,
-  ]);
-};
 
 
   const [activeTab, setActiveTab] = useState<"home" | "orders" | "profile" | "specials">("home");
@@ -295,7 +496,7 @@ useEffect(() => {
       if (res.status === 401 && refreshToken) {
         try {
           const refreshRes = await fetch(
-            "https://chef-backend-qh12.onrender.com/auth/refresh",
+             "https://chef-backend-qh12.onrender.com/auth/customer-refresh",
             {
               method: "POST",
               headers: {
