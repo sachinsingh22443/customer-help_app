@@ -548,6 +548,8 @@ export function SubscriptionDuration({
             },
 
             body: JSON.stringify({
+              order_id:
+             orderData.id,
 
               chef_id:
                 selectedPlan.chef_id,

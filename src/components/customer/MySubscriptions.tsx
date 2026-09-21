@@ -5,8 +5,6 @@ import {
   Crown,
   Calendar,
   Clock,
-  Wallet,
-  History,
   Plus,
   Utensils,
   Sparkles,
@@ -41,21 +39,9 @@ interface MealSchedule {
   menu_image?: string | null;
 }
 
-interface WalletTransaction {
-  id: string;
-  amount: number;
-  transaction_type: string;
-  meal_type?: string | null;
-  subscription_id?: string | null;
-  schedule_id?: string | null;
-  description?: string | null;
-  created_at: string;
-}
 
-interface WalletHistoryResponse {
-  balance: number;
-  transactions: WalletTransaction[];
-}
+
+
 
 
 interface SubscriptionMenuItem {
@@ -109,29 +95,21 @@ type MealType = "breakfast" | "lunch" | "dinner";
 
 export default function MySubscriptions({ onBack, onViewDish, }: Props) {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-
-  const [walletBalance, setWalletBalance] = useState<number>(0);
-
-  const [walletTransactions, setWalletTransactions] = useState<
-    WalletTransaction[]
-  >([]);
-
-  const [walletLoading, setWalletLoading] = useState(false);
-
-  const [walletHistoryOpen, setWalletHistoryOpen] = useState(false);
-
-  const [walletFromDate, setWalletFromDate] = useState("");
-
-  const [walletToDate, setWalletToDate] = useState("");
-
-  const [mealLoading, setMealLoading] = useState<string | null>(null);
   const [showAllMenu, setShowAllMenu] = useState<Record<string, boolean>>({});
 
-  useEffect(() => {
-  fetchSubscriptions();
-  fetchWalletHistory();
-}, []);
 
+
+  
+
+
+
+
+
+
+  
+useEffect(() => {
+  fetchSubscriptions();
+}, []);
   // =========================================================
   // FETCH SUBSCRIPTIONS
   // =========================================================
@@ -464,94 +442,9 @@ export default function MySubscriptions({ onBack, onViewDish, }: Props) {
   // WALLET HISTORY
   // =========================================================
 
-  const fetchWalletHistory = async (
-    fromDate?: string,
-    toDate?: string
-  ) => {
-    try {
-      const token = localStorage.getItem("token");
+  
 
-      if (!token) {
-        alert("Please login first");
-        return;
-      }
-
-      setWalletLoading(true);
-
-      let url =
-        "https://chef-backend-qh12.onrender.com/wallet/history";
-
-      const params = new URLSearchParams();
-
-      if (fromDate) {
-        params.append("from_date", fromDate);
-      }
-
-      if (toDate) {
-        params.append("to_date", toDate);
-      }
-
-      if (params.toString()) {
-        url += `?${params.toString()}`;
-      }
-
-      const res = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data: WalletHistoryResponse = await res.json();
-
-      if (!res.ok) {
-        throw new Error(
-          (data as any)?.detail ||
-            "Failed to load wallet history"
-        );
-      }
-
-      setWalletBalance(data.balance || 0);
-      setWalletTransactions(data.transactions || []);
-    } catch (error: any) {
-      console.error("WALLET HISTORY ERROR:", error);
-
-      alert(
-        error?.message ||
-          "Failed to load wallet history"
-      );
-    } finally {
-      setWalletLoading(false);
-    }
-  };
-
-  // =========================================================
-  // TRANSACTION TITLE
-  // =========================================================
-
-  const getTransactionTitle = (
-    transaction: WalletTransaction
-  ) => {
-    if (transaction.description) {
-      return transaction.description;
-    }
-
-    if (transaction.meal_type) {
-      return (
-        transaction.meal_type.charAt(0).toUpperCase() +
-        transaction.meal_type.slice(1)
-      );
-    }
-
-    return transaction.transaction_type;
-  };
-
-  // =========================================================
-  // BREAKFAST PAYMENT
-  // =========================================================
-
-  // =========================================================
-// BREAKFAST PAYMENT
-// =========================================================
+  
 
 const handleAddBreakfast = async (
   subscription: Subscription
@@ -853,11 +746,7 @@ const handleAddBreakfast = async (
       // Backend response me wallet_balance aayega.
       // Extra /wallet/history request ka wait nahi.
       
-      if (data?.wallet_balance !== undefined) {
-        setWalletBalance(
-          Number(data.wallet_balance)
-        );
-      }
+      
 
       // -----------------------------------------
       // UPDATE MEAL STATUS IMMEDIATELY
@@ -889,11 +778,7 @@ const handleAddBreakfast = async (
         })
       );
 
-      // -----------------------------------------
-      // BACKGROUND REFRESH
-      // -----------------------------------------
-      // Subscription/menu data refresh hoga,
-      // lekin wallet balance ke liye UI wait nahi karegi.
+      
 
       fetchSubscriptions().catch((error) => {
         console.error(
@@ -2483,357 +2368,15 @@ const renderMenuItem = (
         </div>
       )}
 
-      {/* =====================================================
-          WALLET
-      ===================================================== */}
+      
 
-      <div className="mt-7 bg-white rounded-[30px] shadow-[0_15px_45px_rgba(23,23,23,0.09)] border border-orange-100 overflow-hidden">
-
-        {/* WALLET HEADER */}
-
-        <div className="relative overflow-hidden bg-gradient-to-br from-[#FF7A30] via-[#FF4D4D] to-[#E91E63] p-6 text-white">
-
-          <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/10" />
-
-          <div className="relative flex items-center justify-between">
-
-            <div className="flex items-center gap-4">
-
-              <div className="h-14 w-14 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center border border-white/20">
-                <Wallet size={27} />
-              </div>
-
-              <div>
-                <p className="text-xs uppercase tracking-wider text-white/70 font-bold">
-                  Wallet Balance
-                </p>
-
-                <h2 className="text-3xl font-extrabold mt-1">
-                  ₹{walletBalance.toFixed(2)}
-                </h2>
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
+      
 
         {/* WALLET BODY */}
 
-        <div className="p-5">
+        
 
-          <button
-            onClick={async () => {
-
-              const nextOpen =
-                !walletHistoryOpen;
-
-              setWalletHistoryOpen(
-                nextOpen
-              );
-
-              if (nextOpen) {
-                await fetchWalletHistory(
-                  walletFromDate || undefined,
-                  walletToDate || undefined
-                );
-              }
-
-            }}
-            className="w-full flex items-center justify-between p-4 bg-orange-50 hover:bg-orange-100 rounded-2xl transition active:scale-[0.99]"
-          >
-
-            <div className="flex items-center gap-3">
-
-              <div className="h-11 w-11 bg-white rounded-xl flex items-center justify-center shadow-sm">
-
-                <History
-                  size={20}
-                  className="text-orange-600"
-                />
-
-              </div>
-
-              <div className="text-left">
-
-                <p className="font-bold text-gray-900">
-                  Wallet History
-                </p>
-
-                <p className="text-xs text-gray-500 mt-1">
-                  View wallet transactions
-                </p>
-
-              </div>
-
-            </div>
-
-            <div className="flex items-center gap-1 text-orange-600 font-bold text-sm">
-
-              {walletHistoryOpen
-                ? "Hide"
-                : "View"}
-
-              <ChevronDown
-                size={17}
-                className={`transition-transform ${
-                  walletHistoryOpen
-                    ? "rotate-180"
-                    : ""
-                }`}
-              />
-
-            </div>
-
-          </button>
-
-          {/* =================================================
-              WALLET HISTORY
-          ================================================= */}
-
-          {walletHistoryOpen && (
-
-            <div className="mt-5">
-
-              {/* DATE FILTER */}
-
-              <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
-
-                <h3 className="font-bold text-gray-900 mb-4">
-                  Filter History
-                </h3>
-
-                {/* FROM DATE */}
-
-                <div className="mb-3">
-
-                  <label className="text-xs font-semibold text-gray-500 block mb-1.5">
-                    From Date
-                  </label>
-
-                  <input
-                    type="date"
-                    value={walletFromDate}
-                    onChange={(e) =>
-                      setWalletFromDate(
-                        e.target.value
-                      )
-                    }
-                    className="w-full bg-white border border-gray-200 rounded-xl px-3 py-3 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
-                  />
-
-                </div>
-
-                {/* TO DATE */}
-
-                <div className="mb-4">
-
-                  <label className="text-xs font-semibold text-gray-500 block mb-1.5">
-                    To Date
-                  </label>
-
-                  <input
-                    type="date"
-                    value={walletToDate}
-                    onChange={(e) =>
-                      setWalletToDate(
-                        e.target.value
-                      )
-                    }
-                    className="w-full bg-white border border-gray-200 rounded-xl px-3 py-3 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
-                  />
-
-                </div>
-
-                {/* VIEW */}
-
-                <button
-                  onClick={() =>
-                    fetchWalletHistory(
-                      walletFromDate || undefined,
-                      walletToDate || undefined
-                    )
-                  }
-                  disabled={walletLoading}
-                  className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-orange-100 disabled:opacity-50 active:scale-[0.98] transition"
-                >
-                  {walletLoading
-                    ? "Loading..."
-                    : "View History"}
-                </button>
-
-                {/* CLEAR */}
-
-                {(walletFromDate ||
-                  walletToDate) && (
-
-                  <button
-                    onClick={() => {
-
-                      setWalletFromDate("");
-                      setWalletToDate("");
-
-                      fetchWalletHistory();
-
-                    }}
-                    className="w-full text-sm text-gray-500 py-3"
-                  >
-                    Clear Date Filter
-                  </button>
-
-                )}
-
-              </div>
-
-              {/* =================================================
-                  TRANSACTIONS
-              ================================================= */}
-
-              <div className="mt-5">
-
-                <div className="flex items-center justify-between mb-3">
-
-                  <h3 className="font-bold text-gray-900">
-                    Transactions
-                  </h3>
-
-                  <span className="text-xs text-gray-400">
-                    {walletTransactions.length} transactions
-                  </span>
-
-                </div>
-
-                {walletLoading ? (
-
-                  <div className="text-center py-8 text-gray-500">
-                    Loading wallet history...
-                  </div>
-
-                ) : walletTransactions.length === 0 ? (
-
-                  <div className="bg-gray-50 rounded-2xl p-7 text-center border border-gray-100">
-
-                    <div className="h-14 w-14 mx-auto rounded-2xl bg-white flex items-center justify-center mb-3 shadow-sm">
-
-                      <Wallet
-                        size={27}
-                        className="text-gray-400"
-                      />
-
-                    </div>
-
-                    <p className="text-sm text-gray-500">
-                      No wallet transactions found.
-                    </p>
-
-                  </div>
-
-                ) : (
-
-                  <div className="space-y-3">
-
-                    {walletTransactions.map(
-                      (transaction) => {
-
-                        const isCredit =
-                          transaction.amount > 0;
-
-                        return (
-
-                          <div
-                            key={transaction.id}
-                            className="bg-gray-50 rounded-2xl p-4 border border-gray-100"
-                          >
-
-                            <div className="flex justify-between items-start gap-3">
-
-                              <div className="min-w-0">
-
-                                <p className="font-bold text-gray-900">
-                                  {getTransactionTitle(
-                                    transaction
-                                  )}
-                                </p>
-
-                                <p className="text-xs text-gray-500 mt-1">
-
-                                  {new Date(
-                                    transaction.created_at
-                                  ).toLocaleDateString(
-                                    "en-IN",
-                                    {
-                                      day: "2-digit",
-                                      month: "short",
-                                      year: "numeric",
-                                    }
-                                  )}
-
-                                  {" • "}
-
-                                  {new Date(
-                                    transaction.created_at
-                                  ).toLocaleTimeString(
-                                    "en-IN",
-                                    {
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    }
-                                  )}
-
-                                </p>
-
-                                {transaction.meal_type && (
-
-                                  <p className="text-xs text-gray-500 mt-1">
-                                    Meal:{" "}
-                                    {transaction.meal_type}
-                                  </p>
-
-                                )}
-
-                              </div>
-
-                              <p
-                                className={`font-extrabold shrink-0 ${
-                                  isCredit
-                                    ? "text-emerald-600"
-                                    : "text-red-600"
-                                }`}
-                              >
-
-                                {isCredit
-                                  ? "+"
-                                  : "-"}
-                                ₹
-                                {Math.abs(
-                                  transaction.amount
-                                ).toFixed(2)}
-
-                              </p>
-
-                            </div>
-
-                          </div>
-
-                        );
-
-                      }
-                    )}
-
-                  </div>
-
-                )}
-
-              </div>
-
-            </div>
-
-          )}
-
-        </div>
-
-      </div>
+      
 
     </div>
   );
