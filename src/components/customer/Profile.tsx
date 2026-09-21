@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Share } from "@capacitor/share";
 import { motion, AnimatePresence } from "motion/react";
 import {
   User,
@@ -368,6 +369,42 @@ export function Profile({
   };
 
   const handleShareReferral = async () => {
+  try {
+    const referralCode = profile?.referral_code;
+
+    if (!referralCode) {
+      alert("Referral code not available");
+      return;
+    }
+
+    const referralLink =
+      `https://play.google.com/store/apps/details?id=com.eatunity.app&ref=${encodeURIComponent(
+        referralCode
+      )}`;
+
+    const shareText =
+      `🍱 Order delicious, home-style meals with Eat Unity!\n\n` +
+      `Use my referral code: ${referralCode}\n\n` +
+      `Download Eat Unity using this link:\n` +
+      `${referralLink}`;
+
+    await Share.share({
+      title: "Join Eat Unity",
+      text: shareText,
+      url: referralLink,
+      dialogTitle: "Share Eat Unity",
+    });
+
+  } catch (error: any) {
+    if (
+      error?.message?.toLowerCase?.().includes("cancel") ||
+      error?.name === "AbortError"
+    ) {
+      return;
+    }
+
+    console.error("SHARE REFERRAL ERROR:", error);
+
     try {
       const referralCode = profile?.referral_code;
 
@@ -376,47 +413,27 @@ export function Profile({
         return;
       }
 
-      const referralLink = getReferralLink();
+      const referralLink =
+        `https://play.google.com/store/apps/details?id=com.eatunity.app&ref=${encodeURIComponent(
+          referralCode
+        )}`;
 
       const shareText =
-        `🍱 Eat Unity par ghar jaisa khana order karo!\n\n` +
-        `Mera referral code: ${referralCode}\n\n` +
-        `Is link se Eat Unity download karo:\n` +
+        `🍱 Order delicious, home-style meals with Eat Unity!\n\n` +
+        `Use my referral code: ${referralCode}\n\n` +
+        `Download Eat Unity using this link:\n` +
         `${referralLink}`;
 
-      if (
-        navigator.share &&
-        typeof navigator.share === "function"
-      ) {
-        await navigator.share({
-          title: "Join Eat Unity",
-          text: shareText,
-        });
+      await navigator.clipboard.writeText(shareText);
 
-        return;
-      }
+      alert("Referral message copied 🎉");
 
-      await navigator.clipboard.writeText(
-        shareText
-      );
-
-      alert(
-        "Referral message copied. Ab WhatsApp par share kar do 🎉"
-      );
-    } catch (error: any) {
-      if (error?.name === "AbortError") {
-        return;
-      }
-
-      console.error(
-        "SHARE REFERRAL ERROR:",
-        error
-      );
-
+    } catch (copyError) {
+      console.error("COPY REFERRAL ERROR:", copyError);
       alert("Unable to share referral");
     }
-  };
-
+  }
+};
   // =========================================================
   // TRANSACTION TITLE
   // =========================================================
