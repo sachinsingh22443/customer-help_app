@@ -1,22 +1,50 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Eye, EyeOff } from "lucide-react";
 
 interface LoginScreenProps {
   onLogin: () => void;
   onForgotPassword?: () => void;
+  referralCode?: string;
 }
 
-export function LoginScreen({ onLogin, onForgotPassword }: LoginScreenProps) {
+
+export function LoginScreen({ onLogin, onForgotPassword, referralCode: incomingReferralCode, }: LoginScreenProps) {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
 
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
+  const [referralCode, setReferralCode] = useState("");
   const [showOtpInput, setShowOtpInput] = useState(false);
 
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+  if (!incomingReferralCode) {
+    return;
+  }
+
+  const cleanCode = incomingReferralCode
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 10);
+
+  if (!/^EU[A-Z0-9]{8}$/.test(cleanCode)) {
+    return;
+  }
+
+  setReferralCode(cleanCode);
+
+  // Referral signup ke liye signup tab automatically open
+  setIsLogin(false);
+
+  // OTP dobara send karne ki zarurat nahi
+  setShowOtpInput(false);
+
+}, [incomingReferralCode]);
 
   const BASE_URL = "https://chef-backend-qh12.onrender.com";
 
@@ -93,6 +121,7 @@ export function LoginScreen({ onLogin, onForgotPassword }: LoginScreenProps) {
         phone,
         password,
         otp,
+        referral_code: referralCode.trim().toUpperCase() || null,
       }),
     });
 
@@ -106,6 +135,7 @@ localStorage.setItem("user_id", data.user_id);
   setPhone("");
 setPassword("");
 setOtp("");
+setReferralCode("");
 setShowOtpInput(false);
 
   alert("Account created successfully");
@@ -204,11 +234,29 @@ setShowOtpInput(false);
             </button>
 
             <button
-              onClick={() => {
-  setIsLogin(false);
-  setShowOtpInput(false);
-  setOtp("");
-}}
+  onClick={() => {
+    setIsLogin(false);
+    setShowOtpInput(false);
+    setOtp("");
+
+    // Agar referral link se code aaya hai,
+    // to usko preserve karo.
+    if (incomingReferralCode) {
+      const cleanCode = incomingReferralCode
+        .trim()
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, "")
+        .slice(0, 10);
+
+      if (/^EU[A-Z0-9]{8}$/.test(cleanCode)) {
+        setReferralCode(cleanCode);
+        return;
+      }
+    }
+
+    // Normal signup ke case me blank rakho.
+    setReferralCode("");
+  }}
               className={`flex-1 py-3 rounded-xl ${
                 !isLogin ? "bg-white text-[#FF7A30]" : "text-[#171717]/50"
               }`}
@@ -255,6 +303,25 @@ setShowOtpInput(false);
               {showPassword ? <EyeOff /> : <Eye />}
             </button>
           </div>
+
+
+
+  {!isLogin && (
+  <input
+    type="text"
+    placeholder="Referral Code (Optional)"
+    value={referralCode}
+    onChange={(e) =>
+      setReferralCode(
+        e.target.value
+          .toUpperCase()
+          .replace(/[^A-Z0-9]/g, "")
+          .slice(0, 10)
+      )
+    }
+    className="w-full mb-4 px-4 py-3 border rounded-xl"
+  />
+)}
 
           {/* OTP */}
           {!isLogin && showOtpInput && (

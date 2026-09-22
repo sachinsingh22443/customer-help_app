@@ -341,9 +341,9 @@ export function Profile({
       return "";
     }
 
-    return `https://play.google.com/store/apps/details?id=com.eatunity.app&ref=${encodeURIComponent(
-      referralCode
-    )}`;
+    return `https://play.google.com/store/apps/details?id=com.eatunity.app&referrer=${encodeURIComponent(
+  `referral_code=${referralCode}`
+)}`;
   };
 
   const handleCopyReferralCode = async () => {
@@ -378,9 +378,9 @@ export function Profile({
     }
 
     const referralLink =
-      `https://play.google.com/store/apps/details?id=com.eatunity.app&ref=${encodeURIComponent(
-        referralCode
-      )}`;
+  `https://play.google.com/store/apps/details?id=com.eatunity.app&referrer=${encodeURIComponent(
+    `referral_code=${referralCode}`
+  )}`;
 
     const shareText =
       `🍱 Order delicious, home-style meals with Eat Unity!\n\n` +
@@ -414,9 +414,9 @@ export function Profile({
       }
 
       const referralLink =
-        `https://play.google.com/store/apps/details?id=com.eatunity.app&ref=${encodeURIComponent(
-          referralCode
-        )}`;
+  `https://play.google.com/store/apps/details?id=com.eatunity.app&referrer=${encodeURIComponent(
+    `referral_code=${referralCode}`
+  )}`;
 
       const shareText =
         `🍱 Order delicious, home-style meals with Eat Unity!\n\n` +

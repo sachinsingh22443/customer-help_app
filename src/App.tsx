@@ -59,6 +59,7 @@ import { AllChefs } from "./components/customer/AllChefs";
 import { LoadingScreen } from "./components/customer/LoadingScreen";
 import { SkeletonLoader } from "./components/customer/SkeletonLoader";
 import { Network } from "@capacitor/network";
+import { App as CapacitorApp } from "@capacitor/app";
 import MySubscriptions from "./components/customer/MySubscriptions";
 import MySpecialHistory from "./components/customer/MySpecialHistory";
 
@@ -130,6 +131,170 @@ export default function App() {
 
 function AppContent() {
   const { toastMessage } = useCart();
+
+    // =========================================================
+  // REFERRAL DEEP LINK / PLAY INSTALL REFERRER
+  // =========================================================
+
+  useEffect(() => {
+    let referralListener: any;
+
+    const saveReferralCode = (rawReferrer: string | null) => {
+      if (!rawReferrer) {
+        return;
+      }
+
+      try {
+        console.log(
+          "EAT UNITY INSTALL REFERRER:",
+          rawReferrer
+        );
+
+        let referralCode = "";
+
+        const params =
+          new URLSearchParams(rawReferrer);
+
+        referralCode =
+          params.get("referral_code") ||
+          params.get("code") ||
+          "";
+
+        if (
+          !referralCode &&
+          rawReferrer.startsWith("EU")
+        ) {
+          referralCode = rawReferrer;
+        }
+
+        referralCode = referralCode
+          .trim()
+          .toUpperCase();
+
+        if (!referralCode) {
+          console.log(
+            "No valid referral code found"
+          );
+          return;
+        }
+
+        if (!/^EU[A-Z0-9]{8}$/.test(referralCode)) {
+          console.log(
+            "Invalid referral code:",
+            referralCode
+          );
+          return;
+        }
+
+        const existingReferralCode =
+          localStorage.getItem(
+            "pending_referral_code"
+          );
+
+        if (!existingReferralCode) {
+  localStorage.setItem(
+    "pending_referral_code",
+    referralCode
+  );
+
+  setPendingReferralCode(referralCode);
+
+  console.log(
+    "REFERRAL CODE SAVED:",
+    referralCode
+  );
+}
+
+      } catch (error) {
+        console.error(
+          "REFERRAL PARSING ERROR:",
+          error
+        );
+      }
+    };
+
+    const webReferralHandler = (event: Event) => {
+      const customEvent =
+        event as CustomEvent;
+
+      const referrer =
+        customEvent?.detail?.referrer;
+
+      saveReferralCode(
+        referrer || null
+      );
+    };
+
+    const setupReferralListener = async () => {
+
+      try {
+
+        // Android MainActivity event
+        window.addEventListener(
+          "eatunityReferral",
+          webReferralHandler
+        );
+
+        // Direct deep link
+        referralListener =
+          await CapacitorApp.addListener(
+            "appUrlOpen",
+            (event) => {
+
+              console.log(
+                "EAT UNITY DEEP LINK:",
+                event.url
+              );
+
+              try {
+
+                const url =
+                  new URL(event.url);
+
+                const code =
+                  url.searchParams.get("code") ||
+                  url.searchParams.get(
+                    "referral_code"
+                  );
+
+                saveReferralCode(
+                  code || null
+                );
+
+              } catch (error) {
+
+                console.error(
+                  "DEEP LINK PARSE ERROR:",
+                  error
+                );
+              }
+            }
+          );
+
+      } catch (error) {
+
+        console.error(
+          "REFERRAL LISTENER ERROR:",
+          error
+        );
+      }
+    };
+
+    setupReferralListener();
+
+    return () => {
+
+      window.removeEventListener(
+        "eatunityReferral",
+        webReferralHandler
+      );
+
+      if (referralListener) {
+        referralListener.remove();
+      }
+    };
+
+  }, []);
 
   const [screenHistory, setScreenHistory] =
   useState<Screen[]>(["splash"]);
@@ -419,6 +584,10 @@ const goHome = () => {
   const [splashDone, setSplashDone] = useState(false);
   const [authReady, setAuthReady] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
+  const [pendingReferralCode, setPendingReferralCode] =
+  useState<string>(
+    localStorage.getItem("pending_referral_code") || ""
+  );
   useEffect(() => {
   const cart = JSON.parse(localStorage.getItem("cart") || "[]");
   setCartData(cart);
@@ -627,8 +796,10 @@ useEffect(() => {
 };
 
   const handleLogin = () => {
-    setCurrentScreen("customerHome");
-  };
+  localStorage.removeItem("pending_referral_code");
+  setPendingReferralCode("");
+  setCurrentScreen("customerHome");
+};
 
   const handleForgotPassword = () => {
     setCurrentScreen("forgotPassword");
@@ -882,8 +1053,13 @@ if (!isOnline) {
         )}
 
         {currentScreen === "login" && (
-          <LoginScreen key="login" onLogin={handleLogin} onForgotPassword={handleForgotPassword} />
-        )}
+  <LoginScreen
+    key="login"
+    onLogin={handleLogin}
+    onForgotPassword={handleForgotPassword}
+    referralCode={pendingReferralCode}
+  />
+)}
 
         {currentScreen === "forgotPassword" && (
   <ForgotPassword
