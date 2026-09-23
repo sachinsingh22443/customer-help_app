@@ -340,6 +340,10 @@ export function Checkout({
 // COD
 // ============================================
 
+// ============================================
+// COD
+// ============================================
+
 if (selectedPayment === "cod") {
   setLoading(false);
 
@@ -351,11 +355,33 @@ if (selectedPayment === "cod") {
   return;
 }
 
+// ============================================
+// WALLET
+// ============================================
+
+if (selectedPayment === "wallet") {
+  setLoading(false);
+
+  localStorage.removeItem("cart");
+
+  onSuccess({
+    ...order,
+    payment_status: "paid",
+    payment_method: "wallet",
+  });
+
+  return;
+}
+
+// ============================================
+// ONLINE PAYMENT
+// ============================================
+
+
+
     // ============================================
     // ONLINE PAYMENT
-    // ============================================
-
-    await openRazorpay(order);
+  await openRazorpay(order);
 
   } catch (err) {
     console.error(
@@ -676,25 +702,31 @@ if (selectedPayment === "cod") {
         <div className="mt-5 space-y-3">
 
           {[
-            {
-              id: "card",
-              title: "Cards",
-              subtitle: "Credit / Debit Card",
-              icon: "💳",
-            },
-            {
-              id: "upi",
-              title: "UPI",
-              subtitle: "Google Pay / PhonePe / UPI",
-              icon: "📲",
-            },
-            {
-              id: "cod",
-              title: "Cash on Delivery",
-              subtitle: "Pay when your order arrives",
-              icon: "💵",
-            },
-          ].map((payment) => {
+  {
+    id: "card",
+    title: "Cards",
+    subtitle: "Credit / Debit Card",
+    icon: "💳",
+  },
+  {
+    id: "upi",
+    title: "UPI",
+    subtitle: "Google Pay / PhonePe / UPI",
+    icon: "📲",
+  },
+  {
+    id: "wallet",
+    title: "Eat Unity Wallet",
+    subtitle: "Pay directly from your wallet",
+    icon: "👛",
+  },
+  {
+    id: "cod",
+    title: "Cash on Delivery",
+    subtitle: "Pay when your order arrives",
+    icon: "💵",
+  },
+].map((payment) => {
 
             const selected =
               selectedPayment === payment.id;
@@ -937,10 +969,12 @@ if (selectedPayment === "cod") {
 
               <p className="mt-1 text-[9px] font-bold uppercase text-[#5F2EEA]">
                 {selectedPayment === "cod"
-                  ? "COD"
-                  : selectedPayment === "upi"
-                  ? "UPI"
-                  : "CARD"}
+  ? "COD"
+  : selectedPayment === "upi"
+  ? "UPI"
+  : selectedPayment === "wallet"
+  ? "WALLET"
+  : "CARD"}
               </p>
 
             </div>
@@ -1053,10 +1087,12 @@ if (selectedPayment === "cod") {
 
             <p className="text-[8px] font-bold uppercase tracking-[0.15em] text-white/60">
               {loading
-                ? "Please wait"
-                : selectedPayment === "cod"
-                ? "Cash on delivery"
-                : "Secure payment"}
+  ? "Please wait"
+  : selectedPayment === "cod"
+  ? "Cash on delivery"
+  : selectedPayment === "wallet"
+  ? "Pay from wallet"
+  : "Secure payment"}
             </p>
 
             <p className="mt-0.5 text-sm font-bold">
