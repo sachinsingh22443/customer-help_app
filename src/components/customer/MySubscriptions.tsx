@@ -10,6 +10,7 @@ import {
   Sparkles,
   ChevronDown,
   RefreshCw,
+  History,
 } from "lucide-react";
 
 interface MealSchedule {
@@ -61,6 +62,7 @@ interface SubscriptionMenuItem {
   date?: string;
 
   chef_id?: string;
+  chefId?: string;
   chef_name?: string;
 }
 
@@ -79,6 +81,8 @@ interface Subscription {
   time: string;
 
   status: string;
+  chef_id?: string;
+  chefId?: string;
 
   meals?: MealSchedule[];
 
@@ -89,13 +93,16 @@ interface Props {
   onBack: () => void;
 
   onViewDish?: (dish: any) => void;
+   onNavigateToSubscriptionHistory: () => void;
 }
 
 type MealType = "breakfast" | "lunch" | "dinner";
 
-export default function MySubscriptions({ onBack, onViewDish, }: Props) {
+export default function MySubscriptions({ onBack, onViewDish,onNavigateToSubscriptionHistory, }: Props) {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [subscriptionHistory, setSubscriptionHistory] = useState<Subscription[]>([]);
   const [showAllMenu, setShowAllMenu] = useState<Record<string, boolean>>({});
+  const [mealLoading, setMealLoading] = useState<string | null>(null);
 
 
 
@@ -113,6 +120,81 @@ useEffect(() => {
   // =========================================================
   // FETCH SUBSCRIPTIONS
   // =========================================================
+
+
+  // =========================================================
+// SUBSCRIPTION ACTIVE CHECK
+// =========================================================
+
+const isSubscriptionCurrentlyActive = (
+  subscription: Subscription
+) => {
+  if (subscription.status !== "active") {
+    return false;
+  }
+
+  if (!subscription.startDate || !subscription.endDate) {
+    return false;
+  }
+
+  const parseSubscriptionDate = (value: string) => {
+    const raw = String(value || "").trim();
+
+    if (!raw) {
+      return null;
+    }
+
+    const isoDate = raw.split("T")[0];
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) {
+      const [year, month, day] =
+        isoDate.split("-").map(Number);
+
+      const date = new Date(
+        year,
+        month - 1,
+        day
+      );
+
+      date.setHours(0, 0, 0, 0);
+
+      return date;
+    }
+
+    const parsed = new Date(raw);
+
+    if (Number.isNaN(parsed.getTime())) {
+      return null;
+    }
+
+    parsed.setHours(0, 0, 0, 0);
+
+    return parsed;
+  };
+
+  const startDate = parseSubscriptionDate(
+    subscription.startDate
+  );
+
+  const endDate = parseSubscriptionDate(
+    subscription.endDate
+  );
+
+  if (!startDate || !endDate) {
+    return false;
+  }
+
+  const today = new Date();
+
+  today.setHours(0, 0, 0, 0);
+
+  return (
+    today >= startDate &&
+    today <= endDate
+  );
+};
+
+
 
   const fetchSubscriptions = async () => {
   try {
@@ -163,16 +245,38 @@ useEffect(() => {
     // DO NOT WAIT FOR menu-cycle
     // =========================================================
 
-    const initialSubscriptions =
-      data.map((sub) => ({
-        ...sub,
-        meals: [],
-        menu_cycle: [],
-      }));
+    // =========================================================
+// SPLIT ACTIVE + HISTORY
+// =========================================================
 
-    setSubscriptions(
-      initialSubscriptions
-    );
+const activeSubscriptions: Subscription[] = [];
+const expiredSubscriptions: Subscription[] = [];
+
+data.forEach((sub) => {
+  if (isSubscriptionCurrentlyActive(sub)) {
+    activeSubscriptions.push({
+      ...sub,
+      meals: [],
+      menu_cycle: [],
+    });
+  } else {
+    expiredSubscriptions.push({
+      ...sub,
+      meals: [],
+      menu_cycle: [],
+      status:
+        sub.status === "active"
+          ? "expired"
+          : sub.status,
+    });
+  }
+});
+
+// Active subscriptions only
+setSubscriptions(activeSubscriptions);
+
+// Expired / cancelled subscriptions
+setSubscriptionHistory(expiredSubscriptions);
 
     // =========================================================
     // 3. LOAD TODAY'S MEALS + MENU CYCLE
@@ -181,7 +285,7 @@ useEffect(() => {
     // These requests NEVER block the initial screen.
     // =========================================================
 
-    data.forEach((sub) => {
+    activeSubscriptions.forEach((sub) => {
 
       // =======================================================
       // TODAY'S MEALS
@@ -2074,38 +2178,54 @@ const renderMenuItem = (
 
         <div className="absolute -left-12 bottom-[-60px] h-36 w-36 rounded-full bg-white/10" />
 
-        <div className="relative flex items-center gap-4">
-
-          <button
-            onClick={onBack}
-            className="h-12 w-12 shrink-0 rounded-2xl bg-white/95 flex items-center justify-center shadow-lg active:scale-95 transition"
-          >
-            <ArrowLeft
-              size={22}
-              className="text-gray-900"
-            />
-          </button>
-
-          <div>
-            <div className="flex items-center gap-2">
-              <Crown
-                size={22}
-                className="text-yellow-300"
-                fill="currentColor"
-              />
-
-              <h1 className="text-[24px] font-extrabold text-white">
-                My Subscriptions
-              </h1>
-            </div>
-
-            <p className="text-sm text-white/80 mt-1">
-              Your personalized meal plans
-            </p>
-          </div>
-
-        </div>
+        
       </div>
+
+      <div className="relative flex items-center gap-3">
+
+  {/* BACK */}
+  <button
+    onClick={onBack}
+    className="h-12 w-12 shrink-0 rounded-2xl bg-white/95 flex items-center justify-center shadow-lg active:scale-95 transition"
+  >
+    <ArrowLeft
+      size={22}
+      className="text-gray-900"
+    />
+  </button>
+
+  {/* TITLE */}
+  <div className="min-w-0 flex-1">
+    <div className="flex items-center gap-2">
+      <Crown
+        size={22}
+        className="text-yellow-300 shrink-0"
+        fill="currentColor"
+      />
+
+      <h1 className="text-[22px] font-extrabold text-white truncate">
+        My Subscriptions
+      </h1>
+    </div>
+
+    <p className="text-sm text-white/80 mt-1">
+      Your personalized meal plans
+    </p>
+  </div>
+
+  {/* HISTORY BUTTON */}
+  <button
+  type="button"
+  onClick={onNavigateToSubscriptionHistory}
+  className="shrink-0 flex items-center gap-1.5 px-3 py-2.5 rounded-2xl bg-white/95 text-gray-900 shadow-lg active:scale-95 transition"
+>
+  <History size={16} />
+  <span className="text-xs font-extrabold">
+    History
+  </span>
+</button>
+
+</div>
 
       {/* =====================================================
           EMPTY STATE
@@ -2123,13 +2243,13 @@ const renderMenuItem = (
           </div>
 
           <h2 className="text-xl font-extrabold text-gray-900 mb-2">
-            No Active Subscription
-          </h2>
+  No Active Subscription
+</h2>
 
-          <p className="text-sm text-gray-500 leading-6">
-            Subscribe to a meal plan and enjoy
-            delicious food every day.
-          </p>
+<p className="text-sm text-gray-500 leading-6">
+  You currently don't have an active subscription.
+  Subscribe to a meal plan and enjoy delicious food every day.
+</p>
 
         </div>
       ) : (
@@ -2372,11 +2492,14 @@ const renderMenuItem = (
 
       
 
-        {/* WALLET BODY */}
-
-        
+        {/* =====================================================
+          SUBSCRIPTION HISTORY
+          Expired / cancelled subscriptions are shown here.
+          No meals, menu cycle or payment actions are shown.
+      ===================================================== */}
 
       
+      {/* WALLET BODY */}
 
     </div>
   );

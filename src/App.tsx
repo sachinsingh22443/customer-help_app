@@ -31,6 +31,7 @@ import { NoOrders } from "./components/customer/NoOrders";
 import { OrderCancellation } from "./components/customer/OrderCancellation";
 import { RefundStatus } from "./components/customer/RefundStatus";
 import { Wallet } from "./components/customer/Wallet";
+import { ShareAndEarn } from "./components/customer/ShareAndEarn";
 import { Profile } from "./components/customer/Profile";
 import { EditProfile } from "./components/customer/EditProfile";
 import { MyAddresses } from "./components/customer/MyAddresses";
@@ -51,6 +52,7 @@ import { ScheduleDelivery } from "./components/customer/ScheduleDelivery";
 import { SubscriptionPlans } from "./components/customer/SubscriptionPlans";
 import { SubscriptionTypeDetail } from "./components/customer/SubscriptionTypeDetail";
 import { SubscriptionDuration } from "./components/customer/SubscriptionDuration";
+import MySubscriptionHistory from "./components/customer/MySubscriptionHistory";
 import { UserDetailsForm } from "./components/customer/UserDetailsForm";
 import { PlanPreview } from "./components/customer/PlanPreview";
 import { TomorrowSpecials } from "./components/customer/TomorrowSpecials";
@@ -90,6 +92,7 @@ type Screen =
   | "orderCancellation"
   | "refundStatus"
   | "wallet"
+  | "shareAndEarn"
   | "profile"
   | "editProfile"
   | "myAddresses"
@@ -111,6 +114,7 @@ type Screen =
   | "subscriptionTypeDetail"
   | "subscriptionDuration"
   | "mySubscriptions"
+  | "mySubscriptionHistory"
   | "userDetailsForm"
   | "planPreview"
   | "tomorrowSpecials"
@@ -1333,14 +1337,30 @@ if (!isOnline) {
 )}
 
         {currentScreen === "wallet" && (
-          <Wallet key="wallet" onBack={handleBackToCustomerHome} />
-        )}
+  <Wallet
+    key="wallet"
+    onBack={() => setCurrentScreen("profile")}
+  />
+)}
+
+{currentScreen === "shareAndEarn" && (
+  <ShareAndEarn
+    key="shareAndEarn"
+    onBack={() => setCurrentScreen("profile")}
+  />
+)}
 
         {currentScreen === "profile" && (
           <Profile 
             key="profile"
             onNavigateToEditProfile={() => setCurrentScreen("editProfile")}
             onNavigateToAddresses={() => setCurrentScreen("myAddresses")}
+            onNavigateToWallet={() =>
+                setCurrentScreen("wallet")
+          }
+         onNavigateToShareAndEarn={() =>
+         setCurrentScreen("shareAndEarn")
+          }
             onNavigateToFavorites={() => setCurrentScreen("favoriteDishes")}
             onNavigateToSubscriptions={() =>
             setCurrentScreen("mySubscriptions")
@@ -1354,14 +1374,16 @@ if (!isOnline) {
             onNavigateToDeleteAccount={() => setCurrentScreen("deleteAccount")}
             onNavigateToChangePassword={() => setCurrentScreen("changePassword")}
             onLogout={() => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("refresh_token");
-  localStorage.removeItem("user_id");
-  localStorage.clear();
-  setCurrentScreen("login");
-}}
-          />
-        )}
+                localStorage.removeItem("token");
+                localStorage.removeItem("refresh_token");
+                localStorage.removeItem("user_id");
+                localStorage.clear();
+                setCurrentScreen("login");
+                }}
+      />
+          
+          
+  )}
 
 
    {currentScreen === "mySpecialHistory" && (
@@ -1508,6 +1530,15 @@ if (!isOnline) {
   <MySubscriptions
     onBack={handleBackToCustomerHome}
     onViewDish={handleNavigateToDishDetail}
+    onNavigateToSubscriptionHistory={() =>
+      setCurrentScreen("mySubscriptionHistory")
+    }
+  />
+)}
+
+{currentScreen === "mySubscriptionHistory" && (
+  <MySubscriptionHistory
+    onBack={goBack}
   />
 )}
 
