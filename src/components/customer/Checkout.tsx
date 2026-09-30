@@ -59,10 +59,10 @@ export function Checkout({
   };
 
   const cartItems =
-  directItem != null
-    ? [directItem]
-    : Array.isArray(cartData)
-      ? cartData
+  Array.isArray(cartData) && cartData.length > 0
+    ? cartData
+    : directItem
+      ? [directItem]
       : [];
 
   const subtotal = cartItems.reduce(
@@ -92,6 +92,7 @@ export function Checkout({
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
+          address_id: selectedAddress,
   address: addr.address,
   payment_method: selectedPayment,
 
@@ -126,9 +127,21 @@ export function Checkout({
       // console.log("ORDER:", data);
 
       if (!res.ok) {
-        alert(data.detail || "Order failed");
-        return null;
-      }
+  let errorMessage = "Order failed";
+
+  if (Array.isArray(data.detail)) {
+    errorMessage = data.detail
+      .map((error: any) => error?.msg || "Invalid request")
+      .join("\n");
+  } else if (typeof data.detail === "string") {
+    errorMessage = data.detail;
+  } else if (data.detail) {
+    errorMessage = JSON.stringify(data.detail);
+  }
+
+  alert(errorMessage);
+  return null;
+}
 
       return data;
 
