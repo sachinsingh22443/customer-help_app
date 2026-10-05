@@ -388,7 +388,7 @@ export function TomorrowSpecials({
                         alt={
                           special.dish_name
                         }
-                        className="h-60 w-full object-cover"
+                        className="h-32 w-full object-cover"
                       />
 
 
@@ -568,7 +568,7 @@ export function TomorrowSpecials({
 
                       {special.description && (
 
-                        <p className="mt-4 text-xs leading-6 text-slate-500">
+                        <p className="hidden mt-4 text-xs leading-6 text-slate-500">
 
                           {special.description}
 
@@ -592,7 +592,7 @@ export function TomorrowSpecials({
                           undefined
                       ) && (
 
-                        <div className="mt-5">
+                        <div className="hidden mt-5">
 
                           <p className="mb-3 text-[8px] font-bold uppercase tracking-[0.15em] text-slate-400">
                             Nutrition
@@ -683,7 +683,7 @@ export function TomorrowSpecials({
                           PREPARATION
                       ================================================= */}
 
-                      <div className="mt-5 flex items-center gap-3">
+                      <div className="hidden mt-5 flex items-center gap-3">
 
                         {special.preparation_time && (
 
@@ -736,7 +736,7 @@ export function TomorrowSpecials({
 
                       {special.ingredients && (
 
-                        <div className="mt-5 rounded-2xl bg-[#FAF9FF] p-4">
+                        <div className="hidden mt-5 rounded-2xl bg-[#FAF9FF] p-4">
 
                           <div className="flex items-center gap-2">
 

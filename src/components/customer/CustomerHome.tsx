@@ -171,7 +171,7 @@ export function CustomerHome({
     <div className="min-h-screen bg-[#F8F7F4] pb-24 text-slate-900">
 
       {/* PREMIUM HEADER */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-[#25134F] via-[#5F2EEA] to-[#FF7A30] px-5 pb-8 pt-10 rounded-b-[2.2rem] shadow-[0_12px_35px_rgba(95,46,234,0.20)]">
+      <div className="relative overflow-hidden bg-gradient-to-br from-[#25134F] via-[#5F2EEA] to-[#FF7A30] px-4 pb-4 pt-6 rounded-b-[2rem] shadow-[0_10px_28px_rgba(95,46,234,0.18)]">
         <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
         <div className="pointer-events-none absolute -bottom-16 left-10 h-36 w-36 rounded-full bg-orange-300/20 blur-3xl" />
 
@@ -251,14 +251,14 @@ export function CustomerHome({
       {/* SUBSCRIPTION - TOP PRIORITY */}
       {/* ===================================================== */}
 
-      <section className="px-5 pt-5">
+      <section className="px-5 pt-4">
 
         <button
           onClick={onNavigateToSubscription}
           className="group relative w-full overflow-hidden rounded-[1.6rem] bg-gradient-to-r from-[#FF7A30] via-[#FF5C35] to-[#5F2EEA] p-[1px] text-left shadow-[0_14px_30px_rgba(95,46,234,0.18)]"
         >
 
-          <div className="relative overflow-hidden rounded-[1.55rem] px-5 py-5 text-white">
+          <div className="relative overflow-hidden rounded-[1.4rem] px-4 py-0 text-white">
 
             <div className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-white/15 blur-xl" />
 
@@ -303,7 +303,7 @@ export function CustomerHome({
 
 
             {/* SUBSCRIPTION BOTTOM */}
-            <div className="relative mt-4 flex items-center justify-between border-t border-white/15 pt-3">
+            <div className="relative mt-3 flex items-center justify-between border-t border-white/15 pt-3">
 
               <div className="flex items-center gap-2 text-[11px] text-white/85">
 
@@ -410,7 +410,7 @@ export function CustomerHome({
               <button
                 key={chef.id}
                 onClick={() => onNavigateToChefDetails(chef.id)}
-                className="group w-44 shrink-0 overflow-hidden rounded-2xl bg-white text-left shadow-sm ring-1 ring-slate-100 transition-all hover:-translate-y-0.5 hover:shadow-md"
+                className="group w-40 shrink-0 overflow-hidden rounded-2xl bg-white text-left shadow-sm ring-1 ring-slate-100 transition-all hover:-translate-y-0.5 hover:shadow-md"
               >
 
                 {/* CHEF IMAGE */}
@@ -419,7 +419,7 @@ export function CustomerHome({
                   <ImageWithFallback
                     src={chef.profile_image}
                     alt={chef.name}
-                    className="h-32 w-full object-cover"
+                    className="h-28 w-full object-cover"
                   />
 
                   {/* VERIFIED BADGE */}
@@ -435,7 +435,7 @@ export function CustomerHome({
 
 
                 {/* CHEF INFO */}
-                <div className="p-3">
+                <div className="p-2.5">
 
                   <p className="truncate text-sm font-bold text-slate-900">
                     {chef.name}
@@ -470,170 +470,7 @@ export function CustomerHome({
       {/* UNIQUE CATEGORIES */}
       {/* ===================================================== */}
 
-      <section className="pt-7">
-
-        <div className="mb-4 flex items-end justify-between px-5">
-
-          <div>
-
-            <h2 className="text-lg font-bold">
-              Explore by goal
-            </h2>
-
-            <p className="mt-0.5 text-xs text-slate-500">
-              Choose what your body needs today
-            </p>
-
-          </div>
-
-          <Sparkles className="h-5 w-5 text-[#FF7A30]" />
-
-        </div>
-
-
-        {/* HORIZONTAL CATEGORY CARDS */}
-        <div className="flex gap-3 overflow-x-auto px-5 pb-2 scrollbar-hide">
-
-          {categories.map((cat, i) => {
-
-            const Icon = cat.icon;
-
-            const selected = selectedCategory === cat.key;
-
-
-            const categoryMeta = [
-
-              {
-                subtitle: "Clean & balanced",
-                iconBg: "bg-emerald-50",
-                iconColor: "text-emerald-600",
-                glow: "from-emerald-100/70",
-              },
-
-              {
-                subtitle: "Power your day",
-                iconBg: "bg-orange-50",
-                iconColor: "text-orange-600",
-                glow: "from-orange-100/70",
-              },
-
-              {
-                subtitle: "Homely & fresh",
-                iconBg: "bg-blue-50",
-                iconColor: "text-blue-600",
-                glow: "from-blue-100/70",
-              },
-
-              {
-                subtitle: "Goal-focused",
-                iconBg: "bg-purple-50",
-                iconColor: "text-purple-600",
-                glow: "from-purple-100/70",
-              },
-
-            ][i];
-
-
-            return (
-
-              <button
-                key={cat.key}
-                onClick={() => {
-
-                  const newCategory =
-                    selected ? "" : cat.key;
-
-                  setSelectedCategory(newCategory);
-
-                  localStorage.setItem(
-                    "category",
-                    newCategory
-                  );
-
-                  onNavigateToCategory(
-                    cat.key as
-                      | "healthy"
-                      | "protein"
-                      | "tiffin"
-                      | "diet"
-                  );
-
-                }}
-                className={`relative w-[150px] shrink-0 overflow-hidden rounded-[1.35rem] border p-4 text-left transition-all ${
-                  selected
-                    ? "border-[#5F2EEA] bg-[#5F2EEA] text-white shadow-[0_10px_25px_rgba(95,46,234,0.25)]"
-                    : "border-slate-100 bg-white text-slate-900 shadow-sm hover:-translate-y-0.5 hover:shadow-md"
-                }`}
-              >
-
-                {/* GLOW */}
-                <div
-                  className={`pointer-events-none absolute -right-8 -top-8 h-20 w-20 rounded-full bg-gradient-to-br ${categoryMeta.glow} to-transparent blur-xl`}
-                />
-
-
-                {/* ICON */}
-                <div
-                  className={`relative mb-5 flex h-11 w-11 items-center justify-center rounded-2xl ${
-                    selected
-                      ? "bg-white/15 text-white"
-                      : `${categoryMeta.iconBg} ${categoryMeta.iconColor}`
-                  }`}
-                >
-
-                  <Icon className="h-5 w-5" />
-
-                </div>
-
-
-                {/* CATEGORY NAME */}
-                <p
-                  className={`relative text-sm font-bold ${
-                    selected
-                      ? "text-white"
-                      : "text-slate-900"
-                  }`}
-                >
-                  {cat.name}
-                </p>
-
-
-                {/* SUBTITLE */}
-                <p
-                  className={`relative mt-1 text-[10px] leading-4 ${
-                    selected
-                      ? "text-white/70"
-                      : "text-slate-400"
-                  }`}
-                >
-                  {categoryMeta.subtitle}
-                </p>
-
-
-                {/* EXPLORE */}
-                <div
-                  className={`relative mt-3 flex items-center gap-1 text-[10px] font-semibold ${
-                    selected
-                      ? "text-white/90"
-                      : categoryMeta.iconColor
-                  }`}
-                >
-
-                  Explore
-
-                  <ChevronRight className="h-3 w-3" />
-
-                </div>
-
-              </button>
-
-            );
-
-          })}
-
-        </div>
-
-      </section>
+      
 
 
       {/* ===================================================== */}
@@ -743,10 +580,10 @@ export function CustomerHome({
                 <ImageWithFallback
                   src={item.image_url}
                   alt={item.dish_name}
-                  className="h-32 w-full object-cover"
+                  className="h-24 w-full object-cover"
                 />
 
-                <div className="p-3">
+                <div className="p-2.5">
 
                   <p className="truncate text-sm font-bold text-slate-900">
                     {item.dish_name}
@@ -775,6 +612,246 @@ export function CustomerHome({
         )}
 
       </section>
+
+
+{/* category wise box  */}
+{/* ===================================================== */}
+{/* UNIQUE CATEGORIES */}
+{/* ===================================================== */}
+
+<section className="pt-6">
+
+  {/* SECTION HEADER */}
+  <div className="mb-3 flex items-end justify-between px-5">
+
+    <div>
+      <h2 className="text-lg font-bold">
+        Explore by goal
+      </h2>
+
+      <p className="mt-0.5 text-xs text-slate-500">
+        Choose what your body needs today
+      </p>
+    </div>
+
+    <Sparkles className="h-5 w-5 text-[#FF7A30]" />
+
+  </div>
+
+
+  {/* CATEGORY GRID */}
+  <div className="grid grid-cols-2 gap-2.5 px-5 pb-2">
+
+    {categories.map((cat, i) => {
+
+      const Icon = cat.icon;
+
+      const selected =
+        selectedCategory === cat.key;
+
+
+      const categoryMeta = [
+        {
+          subtitle: "Clean & balanced",
+          iconBg: "bg-emerald-100",
+          iconColor: "text-emerald-600",
+          glow: "from-emerald-200/70",
+        },
+        {
+          subtitle: "Power your day",
+          iconBg: "bg-orange-100",
+          iconColor: "text-orange-600",
+          glow: "from-orange-200/70",
+        },
+        {
+          subtitle: "Homely & fresh",
+          iconBg: "bg-blue-100",
+          iconColor: "text-blue-600",
+          glow: "from-blue-200/70",
+        },
+        {
+          subtitle: "Goal-focused",
+          iconBg: "bg-purple-100",
+          iconColor: "text-purple-600",
+          glow: "from-purple-200/70",
+        },
+      ][i];
+
+
+      return (
+
+        <button
+          key={cat.key}
+
+          onClick={() => {
+
+            const newCategory =
+              selected ? "" : cat.key;
+
+            setSelectedCategory(
+              newCategory
+            );
+
+            localStorage.setItem(
+              "category",
+              newCategory
+            );
+
+            onNavigateToCategory(
+              cat.key as
+                | "healthy"
+                | "protein"
+                | "tiffin"
+                | "diet"
+            );
+
+          }}
+
+          className={`
+            relative
+            min-h-[120px]
+            overflow-hidden
+            rounded-[1.15rem]
+            border
+            p-3
+            text-left
+            transition-all
+
+            ${
+              selected
+                ? "border-[#5F2EEA] bg-gradient-to-br from-[#5F2EEA] to-[#8B5CF6] text-white shadow-[0_8px_20px_rgba(95,46,234,0.25)]"
+
+                : i === 0
+                ? "border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-emerald-100/80 text-slate-900 shadow-sm"
+
+                : i === 1
+                ? "border-orange-100 bg-gradient-to-br from-orange-50 via-white to-orange-100/80 text-slate-900 shadow-sm"
+
+                : i === 2
+                ? "border-blue-100 bg-gradient-to-br from-blue-50 via-white to-blue-100/80 text-slate-900 shadow-sm"
+
+                : "border-purple-100 bg-gradient-to-br from-purple-50 via-white to-purple-100/80 text-slate-900 shadow-sm"
+            }
+
+            hover:-translate-y-0.5
+            hover:shadow-md
+          `}
+        >
+
+          {/* GLOW */}
+          <div
+            className={`
+              pointer-events-none
+              absolute
+              -right-7
+              -top-7
+              h-16
+              w-16
+              rounded-full
+              bg-gradient-to-br
+              ${categoryMeta.glow}
+              to-transparent
+              blur-xl
+            `}
+          />
+
+
+          {/* ICON */}
+          <div
+            className={`
+              relative
+              mb-3
+              flex
+              h-9
+              w-9
+              items-center
+              justify-center
+              rounded-xl
+
+              ${
+                selected
+                  ? "bg-white/15 text-white"
+                  : `${categoryMeta.iconBg} ${categoryMeta.iconColor}`
+              }
+            `}
+          >
+            <Icon className="h-4.5 w-4.5" />
+          </div>
+
+
+          {/* CATEGORY NAME */}
+          <p
+            className={`
+              relative
+              text-sm
+              font-bold
+
+              ${
+                selected
+                  ? "text-white"
+                  : "text-slate-900"
+              }
+            `}
+          >
+            {cat.name}
+          </p>
+
+
+          {/* SUBTITLE */}
+          <p
+            className={`
+              relative
+              mt-0.5
+              text-[9px]
+              leading-4
+
+              ${
+                selected
+                  ? "text-white/70"
+                  : "text-slate-400"
+              }
+            `}
+          >
+            {categoryMeta.subtitle}
+          </p>
+
+
+          {/* EXPLORE */}
+          <div
+            className={`
+              relative
+              mt-2
+              flex
+              items-center
+              gap-1
+              text-[9px]
+              font-semibold
+
+              ${
+                selected
+                  ? "text-white/90"
+                  : categoryMeta.iconColor
+              }
+            `}
+          >
+            Explore
+
+            <ChevronRight className="h-3 w-3" />
+
+          </div>
+
+        </button>
+
+      );
+
+    })}
+
+  </div>
+
+</section>
+
+
+
 
 
       {/* ===================================================== */}
