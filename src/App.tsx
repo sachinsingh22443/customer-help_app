@@ -307,11 +307,15 @@ function AppContent() {
     screenHistory[screenHistory.length - 1];
 
   const setCurrentScreen = (screen: Screen) => {
-    setScreenHistory((prev) => [
-      ...prev,
-      screen,
-    ]);
-  };
+  setScreenHistory((prev) => {
+    // Same screen ko baar-baar history mein add mat karo
+    if (prev[prev.length - 1] === screen) {
+      return prev;
+    }
+
+    return [...prev, screen];
+  });
+};
 
 
     // =========================================================
@@ -541,17 +545,47 @@ const replaceScreen = (screen: Screen) => {
 
 const goBack = () => {
   setScreenHistory((prev) => {
-
     if (prev.length <= 1) {
       return prev;
     }
 
-    return prev.slice(
-      0,
-      prev.length - 1
-    );
+    return prev.slice(0, -1);
   });
 };
+
+// =========================================================
+// ANDROID BACK BUTTON / GESTURE BACK HANDLER
+// =========================================================
+useEffect(() => {
+  let backButtonListener: any;
+
+  const setupBackButton = async () => {
+    backButtonListener = await CapacitorApp.addListener(
+      "backButton",
+      () => {
+        setScreenHistory((prev) => {
+          // App ke andar previous screen available hai
+          if (prev.length > 1) {
+            return prev.slice(0, -1);
+          }
+
+          // Root screen par hain -> Android app exit kare
+          CapacitorApp.exitApp();
+
+          return prev;
+        });
+      }
+    );
+  };
+
+  setupBackButton();
+
+  return () => {
+    if (backButtonListener) {
+      backButtonListener.remove();
+    }
+  };
+}, []);
 
 // =========================================================
 // GO HOME
@@ -957,8 +991,8 @@ const handleNavigateToSpecialDetail = (special: any) => {
   };
 
   const handleBackToCustomerHome = () => {
-    setCurrentScreen("customerHome");
-  };
+  setScreenHistory(["customerHome"]);
+};
 
   const handleNavigateToCategory = (category: "healthy" | "protein" | "tiffin" | "diet") => {
     setSelectedCategory(category);
