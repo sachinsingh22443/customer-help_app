@@ -544,15 +544,30 @@ const replaceScreen = (screen: Screen) => {
 // =========================================================
 
 const goBack = () => {
-  setScreenHistory((prev) => {
+  setScreenHistory(prev => {
+    console.log(
+      "🔥 GO BACK CALLED",
+      {
+        before: prev,
+        lastScreen: prev[prev.length - 1],
+      }
+    );
+
     if (prev.length <= 1) {
+      console.log("🔥 HISTORY ROOT - NOTHING TO POP");
       return prev;
     }
 
-    return prev.slice(0, -1);
+    const newHistory = prev.slice(0, -1);
+
+    console.log(
+      "🔥 HISTORY AFTER POP",
+      newHistory
+    );
+
+    return newHistory;
   });
 };
-
 // =========================================================
 // ANDROID BACK BUTTON / GESTURE BACK HANDLER
 // =========================================================
@@ -565,6 +580,14 @@ const goBack = () => {
 // =========================================================
 useEffect(() => {
   const handleAndroidBack = () => {
+    console.log(
+      "🔥 EATUNITY ANDROID BACK EVENT",
+      {
+        currentScreen,
+        screenHistory,
+      }
+    );
+
     goBack();
   };
 
@@ -579,7 +602,7 @@ useEffect(() => {
       handleAndroidBack
     );
   };
-}, []);
+}, [currentScreen, screenHistory]);
 // =========================================================
 // WEBVIEW / ANDROID EDGE-SWIPE BACK
 // =========================================================

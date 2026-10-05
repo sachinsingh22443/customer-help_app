@@ -39,19 +39,25 @@ public void onCreate(Bundle savedInstanceState) {
         new OnBackPressedCallback(true) {
 
             @Override
-            public void handleOnBackPressed() {
+public void handleOnBackPressed() {
 
-                if (getBridge() != null &&
-                    getBridge().getWebView() != null) {
+    Log.d("EatUnityBack", "ANDROID BACK PRESSED");
 
-                    getBridge()
-                        .getWebView()
-                        .evaluateJavascript(
-                            "window.dispatchEvent(new Event('eatunityAndroidBack'));",
-                            null
-                        );
-                }
-            }
+    if (getBridge() != null &&
+        getBridge().getWebView() != null) {
+
+        Log.d("EatUnityBack", "DISPATCHING eatunityAndroidBack");
+
+        getBridge()
+            .getWebView()
+            .evaluateJavascript(
+                "window.dispatchEvent(new Event('eatunityAndroidBack'));",
+                null
+            );
+    } else {
+        Log.d("EatUnityBack", "WEBVIEW NOT AVAILABLE");
+    }
+}
         }
     );
 
