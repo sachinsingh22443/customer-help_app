@@ -588,14 +588,29 @@ useEffect(() => {
       }
     );
 
-    // Previous screen available hai
+    // Normal inner screen hai
     if (screenHistory.length > 1) {
       goBack();
       return;
     }
 
-    // Root screen = Android app close
-    console.log("🔥 ANDROID ROOT - EXITING APP");
+    // Orders / Profile / Specials root tab
+    // se right swipe -> Home
+    if (
+      currentScreen === "orders" ||
+      currentScreen === "profile" ||
+      currentScreen === "tomorrowSpecials"
+    ) {
+      console.log("🔥 TAB ROOT - GOING TO HOME");
+
+      setActiveTab("home");
+      setScreenHistory(["customerHome"]);
+
+      return;
+    }
+
+    // Home root par right swipe -> App close
+    console.log("🔥 HOME ROOT - EXITING APP");
     CapacitorApp.exitApp();
   };
 
