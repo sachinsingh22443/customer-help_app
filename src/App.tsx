@@ -588,7 +588,15 @@ useEffect(() => {
       }
     );
 
-    goBack();
+    // Previous screen available hai
+    if (screenHistory.length > 1) {
+      goBack();
+      return;
+    }
+
+    // Root screen = Android app close
+    console.log("🔥 ANDROID ROOT - EXITING APP");
+    CapacitorApp.exitApp();
   };
 
   window.addEventListener(
