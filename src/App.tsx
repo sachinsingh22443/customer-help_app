@@ -560,63 +560,53 @@ const goBack = () => {
 // ANDROID BACK + EDGE SWIPE NAVIGATION
 // =========================================================
 
+// =========================================================
+// EAT UNITY ANDROID BACK HANDLER
+// =========================================================
 useEffect(() => {
-  let backButtonListener: any;
 
-  // Android hardware / system back
-  const setupBackButton = async () => {
-    backButtonListener = await CapacitorApp.addListener(
-      "backButton",
-      () => {
-        goBack();
+  const handleAndroidBack = () => {
+
+    setScreenHistory((prev) => {
+
+      // Previous screen available hai
+      if (prev.length > 1) {
+        return prev.slice(0, -1);
       }
-    );
+
+      // Root screen par hain
+      // Android app close kare
+      CapacitorApp.exitApp();
+
+      return prev;
+    });
+
   };
 
-  setupBackButton();
+  window.addEventListener(
+    "eatunityAndroidBack",
+    handleAndroidBack
+  );
 
   return () => {
-    if (backButtonListener) {
-      backButtonListener.remove();
-    }
+
+    window.removeEventListener(
+      "eatunityAndroidBack",
+      handleAndroidBack
+    );
+
   };
+
 }, []);
 
 // =========================================================
 // WEBVIEW / ANDROID EDGE-SWIPE BACK
 // =========================================================
 
-useEffect(() => {
-  const handlePopState = () => {
-    setScreenHistory((prev) => {
-      if (prev.length > 1) {
-        return prev.slice(0, -1);
-      }
 
-      // Root screen par browser history ko dobara restore karo
-      window.history.pushState(
-        { eatUnity: true },
-        "",
-        window.location.href
-      );
-
-      return prev;
-    });
-  };
 
   // Initial browser history entry
-  window.history.replaceState(
-    { eatUnity: true },
-    "",
-    window.location.href
-  );
-
-  window.addEventListener("popstate", handlePopState);
-
-  return () => {
-    window.removeEventListener("popstate", handlePopState);
-  };
-}, []);
+  
 
 // =========================================================
 // GO HOME
@@ -625,12 +615,6 @@ useEffect(() => {
 
 const goHome = () => {
   setScreenHistory(["customerHome"]);
-
-  window.history.replaceState(
-    { eatUnity: true, screen: "customerHome" },
-    "",
-    window.location.href
-  );
 };
 
 

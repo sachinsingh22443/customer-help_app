@@ -1,5 +1,5 @@
 package com.eatunity.app;
-
+import androidx.activity.OnBackPressedCallback;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -24,16 +24,40 @@ public class MainActivity extends BridgeActivity {
             "install_referrer";
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+public void onCreate(Bundle savedInstanceState) {
 
-        // Existing Razorpay / Checkout plugin
-        registerPlugin(Checkout.class);
+    // Existing Razorpay / Checkout plugin
+    registerPlugin(Checkout.class);
 
-        super.onCreate(savedInstanceState);
+    super.onCreate(savedInstanceState);
 
-        // Read Google Play Install Referrer
-        readInstallReferrer();
-    }
+    // =========================================================
+    // EAT UNITY ANDROID BACK HANDLER
+    // =========================================================
+    getOnBackPressedDispatcher().addCallback(
+        this,
+        new OnBackPressedCallback(true) {
+
+            @Override
+            public void handleOnBackPressed() {
+
+                if (getBridge() != null &&
+                    getBridge().getWebView() != null) {
+
+                    getBridge()
+                        .getWebView()
+                        .evaluateJavascript(
+                            "window.dispatchEvent(new Event('eatunityAndroidBack'));",
+                            null
+                        );
+                }
+            }
+        }
+    );
+
+    // Read Google Play Install Referrer
+    readInstallReferrer();
+}
 
     @Override
     public void onResume() {
