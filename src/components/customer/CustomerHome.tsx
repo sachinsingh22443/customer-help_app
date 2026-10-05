@@ -161,11 +161,11 @@ export function CustomerHome({
   // 🔥 CATEGORY LIST
   // =========================
   const categories = [
-    { name: "Healthy", key: "healthy", icon: Salad },
-    { name: "Protein Rich", key: "protein", icon: Drumstick },
-    { name: "Tiffin", key: "tiffin", icon: Apple },
-    { name: "Diet Plan", key: "diet", icon: TrendingUp },
-  ];
+  { name: "Healthy", key: "healthy", icon: Salad },
+  { name: "Protein Rich", key: "protein", icon: Drumstick },
+  { name: "Bulk Order", key: "tiffin", icon: Apple },
+  { name: "Anytime", key: "diet", icon: TrendingUp },
+];
 
     return (
     <div className="min-h-screen bg-[#F8F7F4] pb-24 text-slate-900">
@@ -251,7 +251,7 @@ export function CustomerHome({
       {/* SUBSCRIPTION - TOP PRIORITY */}
       {/* ===================================================== */}
 
-      <section className="px-5 pt-4">
+      <section className="px-5 pt-6">
 
         <button
           onClick={onNavigateToSubscription}
@@ -265,41 +265,29 @@ export function CustomerHome({
             <div className="pointer-events-none absolute -bottom-12 right-16 h-24 w-24 rounded-full bg-purple-300/20 blur-2xl" />
 
             <div className="relative flex items-start justify-between gap-4">
+  <div className="flex min-w-0 gap-3">
+    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 border border-white/20 backdrop-blur-sm">
+      <Crown className="h-6 w-6 text-yellow-200" />
+    </div>
 
-              <div className="flex min-w-0 gap-3">
+    <div>
+      <h2 className="text-lg font-bold">
+        Fit & Fresh Plan
+      </h2>
 
-                {/* CROWN */}
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 border border-white/20 backdrop-blur-sm">
-                  <Crown className="h-6 w-6 text-yellow-200" />
-                </div>
+      <p className="mt-1 text-xs leading-relaxed text-white/80">
+        Diet + Gym + Trainer packages
+      </p>
 
-                <div>
+      <div className="mt-3 flex items-center gap-1 text-xs font-semibold text-white">
+        <span>Explore Plans</span>
+        <ChevronRight className="h-3.5 w-3.5" />
+      </div>
+    </div>
+  </div>
 
-                  <div className="mb-1 flex items-center gap-2">
-
-                    <span className="rounded-full bg-white/15 px-2 py-1 text-[9px] font-bold uppercase tracking-wider">
-                      Premium
-                    </span>
-
-                    <Sparkles className="h-3.5 w-3.5 text-yellow-200" />
-
-                  </div>
-
-                  <h2 className="text-lg font-bold">
-                    Your personal meal plan
-                  </h2>
-
-                  <p className="mt-1 text-xs leading-relaxed text-white/80">
-                    Healthy meals, expert chefs & plans made for your goals.
-                  </p>
-
-                </div>
-
-              </div>
-
-              <ChevronRight className="mt-2 h-5 w-5 shrink-0 transition-transform group-hover:translate-x-1" />
-
-            </div>
+  <Flame className="mt-2 h-5 w-5 shrink-0 text-yellow-200 transition-transform group-hover:translate-x-1" />
+</div>
 
 
             {/* SUBSCRIPTION BOTTOM */}
@@ -583,7 +571,7 @@ export function CustomerHome({
                   className="h-24 w-full object-cover"
                 />
 
-                <div className="p-2.5">
+                <div className="p-3">
 
                   <p className="truncate text-sm font-bold text-slate-900">
                     {item.dish_name}
@@ -664,17 +652,17 @@ export function CustomerHome({
           glow: "from-orange-200/70",
         },
         {
-          subtitle: "Homely & fresh",
-          iconBg: "bg-blue-100",
-          iconColor: "text-blue-600",
-          glow: "from-blue-200/70",
-        },
+  subtitle: "For groups & events",
+  iconBg: "bg-blue-100",
+  iconColor: "text-blue-600",
+  glow: "from-blue-200/70",
+},
         {
-          subtitle: "Goal-focused",
-          iconBg: "bg-purple-100",
-          iconColor: "text-purple-600",
-          glow: "from-purple-200/70",
-        },
+  subtitle: "Order anytime",
+  iconBg: "bg-purple-100",
+  iconColor: "text-purple-600",
+  glow: "from-purple-200/70",
+},
       ][i];
 
 
