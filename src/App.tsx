@@ -1643,18 +1643,21 @@ if (!isOnline) {
           />
         )}
 
-        {currentScreen === "tomorrowSpecials" && (
-          <TomorrowSpecials
-  onBack={goBack}
-  onNavigateToChefDetails={
-    handleNavigateToChefDetails
-  }
-  onNavigateToSpecialDetail={
-    handleNavigateToSpecialDetail
-  }
-  selectedChefId={selectedChefId}
-/>
-        )}
+  {currentScreen === "tomorrowSpecials" && (
+  <TomorrowSpecials
+    onBack={() => {
+      setActiveTab("home");
+      setScreenHistory(["customerHome"]);
+    }}
+    onNavigateToChefDetails={
+      handleNavigateToChefDetails
+    }
+    onNavigateToSpecialDetail={
+      handleNavigateToSpecialDetail
+    }
+    selectedChefId={selectedChefId}
+  />
+)}
 
         {currentScreen === "chefDetails" && (
        <ChefDetails
