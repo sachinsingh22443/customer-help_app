@@ -308,17 +308,10 @@ function AppContent() {
 
   const setCurrentScreen = (screen: Screen) => {
   setScreenHistory((prev) => {
-    // Same screen ko dobara history mein add mat karo
+    // Same screen ko baar-baar history mein add mat karo
     if (prev[prev.length - 1] === screen) {
       return prev;
     }
-
-    // Android/WebView edge-swipe ke liye history entry
-    window.history.pushState(
-      { eatUnity: true, screen },
-      "",
-      window.location.href
-    );
 
     return [...prev, screen];
   });
@@ -550,14 +543,14 @@ const replaceScreen = (screen: Screen) => {
 // GO BACK
 // =========================================================
 
-const goHome = () => {
-  setScreenHistory(["customerHome"]);
+const goBack = () => {
+  setScreenHistory((prev) => {
+    if (prev.length <= 1) {
+      return prev;
+    }
 
-  window.history.replaceState(
-    { eatUnity: true, screen: "customerHome" },
-    "",
-    window.location.href
-  );
+    return prev.slice(0, -1);
+  });
 };
 
 // =========================================================
@@ -630,10 +623,14 @@ useEffect(() => {
 // Use only when user explicitly needs Home
 // =========================================================
 
+const goHome = () => {
+  setScreenHistory(["customerHome"]);
 
-  setScreenHistory([
-    "customerHome",
-  ]);
+  window.history.replaceState(
+    { eatUnity: true, screen: "customerHome" },
+    "",
+    window.location.href
+  );
 };
 
 
@@ -648,7 +645,7 @@ useEffect(() => {
   const [selectedDuration, setSelectedDuration] = useState<string>("");
   const [userDetails, setUserDetails] = useState<any>(null);
   const [selectedChefId, setSelectedChefId] = useState<string>("");
-  conconst goHome = () => {st [forgotPasswordOtp, setForgotPasswordOtp] = useState("");
+  const [forgotPasswordOtp, setForgotPasswordOtp] = useState("");
   const [forgotPasswordValue, setForgotPasswordValue] = useState<string>("");
   const [orderAmount, setOrderAmount] = useState(0);
   const [cartData, setCartData] = useState<any[]>([]);
