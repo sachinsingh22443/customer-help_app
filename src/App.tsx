@@ -308,10 +308,17 @@ function AppContent() {
 
   const setCurrentScreen = (screen: Screen) => {
   setScreenHistory((prev) => {
-    // Same screen ko baar-baar history mein add mat karo
+    // Same screen ko dobara history mein add mat karo
     if (prev[prev.length - 1] === screen) {
       return prev;
     }
+
+    // Android/WebView edge-swipe ke liye history entry
+    window.history.pushState(
+      { eatUnity: true, screen },
+      "",
+      window.location.href
+    );
 
     return [...prev, screen];
   });
@@ -543,37 +550,32 @@ const replaceScreen = (screen: Screen) => {
 // GO BACK
 // =========================================================
 
-const goBack = () => {
-  setScreenHistory((prev) => {
-    if (prev.length <= 1) {
-      return prev;
-    }
+const goHome = () => {
+  setScreenHistory(["customerHome"]);
 
-    return prev.slice(0, -1);
-  });
+  window.history.replaceState(
+    { eatUnity: true, screen: "customerHome" },
+    "",
+    window.location.href
+  );
 };
 
 // =========================================================
 // ANDROID BACK BUTTON / GESTURE BACK HANDLER
 // =========================================================
+// =========================================================
+// ANDROID BACK + EDGE SWIPE NAVIGATION
+// =========================================================
+
 useEffect(() => {
   let backButtonListener: any;
 
+  // Android hardware / system back
   const setupBackButton = async () => {
     backButtonListener = await CapacitorApp.addListener(
       "backButton",
       () => {
-        setScreenHistory((prev) => {
-          // App ke andar previous screen available hai
-          if (prev.length > 1) {
-            return prev.slice(0, -1);
-          }
-
-          // Root screen par hain -> Android app exit kare
-          CapacitorApp.exitApp();
-
-          return prev;
-        });
+        goBack();
       }
     );
   };
@@ -588,11 +590,47 @@ useEffect(() => {
 }, []);
 
 // =========================================================
+// WEBVIEW / ANDROID EDGE-SWIPE BACK
+// =========================================================
+
+useEffect(() => {
+  const handlePopState = () => {
+    setScreenHistory((prev) => {
+      if (prev.length > 1) {
+        return prev.slice(0, -1);
+      }
+
+      // Root screen par browser history ko dobara restore karo
+      window.history.pushState(
+        { eatUnity: true },
+        "",
+        window.location.href
+      );
+
+      return prev;
+    });
+  };
+
+  // Initial browser history entry
+  window.history.replaceState(
+    { eatUnity: true },
+    "",
+    window.location.href
+  );
+
+  window.addEventListener("popstate", handlePopState);
+
+  return () => {
+    window.removeEventListener("popstate", handlePopState);
+  };
+}, []);
+
+// =========================================================
 // GO HOME
 // Use only when user explicitly needs Home
 // =========================================================
 
-const goHome = () => {
+
   setScreenHistory([
     "customerHome",
   ]);
@@ -610,7 +648,7 @@ const goHome = () => {
   const [selectedDuration, setSelectedDuration] = useState<string>("");
   const [userDetails, setUserDetails] = useState<any>(null);
   const [selectedChefId, setSelectedChefId] = useState<string>("");
-  const [forgotPasswordOtp, setForgotPasswordOtp] = useState("");
+  conconst goHome = () => {st [forgotPasswordOtp, setForgotPasswordOtp] = useState("");
   const [forgotPasswordValue, setForgotPasswordValue] = useState<string>("");
   const [orderAmount, setOrderAmount] = useState(0);
   const [cartData, setCartData] = useState<any[]>([]);
