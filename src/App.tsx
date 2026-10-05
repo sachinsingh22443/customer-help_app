@@ -564,23 +564,8 @@ const goBack = () => {
 // EAT UNITY ANDROID BACK HANDLER
 // =========================================================
 useEffect(() => {
-
   const handleAndroidBack = () => {
-
-    setScreenHistory((prev) => {
-
-      // Previous screen available hai
-      if (prev.length > 1) {
-        return prev.slice(0, -1);
-      }
-
-      // Root screen par hain
-      // Android app close kare
-      CapacitorApp.exitApp();
-
-      return prev;
-    });
-
+    goBack();
   };
 
   window.addEventListener(
@@ -589,16 +574,12 @@ useEffect(() => {
   );
 
   return () => {
-
     window.removeEventListener(
       "eatunityAndroidBack",
       handleAndroidBack
     );
-
   };
-
 }, []);
-
 // =========================================================
 // WEBVIEW / ANDROID EDGE-SWIPE BACK
 // =========================================================
@@ -655,6 +636,8 @@ useEffect(() => {
   console.log("CURRENT SCREEN:", currentScreen);
   console.log("SELECTED DISH:", selectedDish);
 }, [currentScreen, selectedDish]);
+
+
 
 
 
