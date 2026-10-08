@@ -289,11 +289,11 @@ const getMealCutoffTime = () => {
   }
 
   if (mealType === "lunch") {
-    return "13:00";
+    return "12:00";
   }
 
   if (mealType === "dinner") {
-    return "20:00";
+    return "19:00";
   }
 
   return null;
@@ -558,9 +558,9 @@ const getMealCutoffTime = () => {
             const displayTime =
   cutoff === "09:00"
     ? "9:00 AM"
-    : cutoff === "13:00"
-    ? "1:00 PM"
-    : "8:00 PM";
+    : cutoff === "12:00"
+    ? "12:00 PM"
+    : "7:00 PM";
 
 
             alert(
@@ -806,9 +806,9 @@ const getMealCutoffTime = () => {
       const displayTime =
   cutoff === "09:00"
     ? "9:00 AM"
-    : cutoff === "13:00"
-    ? "1:00 PM"
-    : "8:00 PM";
+    : cutoff === "12:00"
+    ? "12:00 PM"
+    : "7:00 PM";
 
       alert(
         `${mealType.charAt(0).toUpperCase() + mealType.slice(1)} ordering is closed. Order by ${displayTime}.`
@@ -1001,8 +1001,8 @@ const getMealCutoffTime = () => {
                 : mealType === "breakfast"
                 ? "⏰ Order before 9:00 AM"
                 : mealType === "lunch"
-                ? "⏰ Order before 1:00 PM"
-                : "⏰ Order before 8:00 PM"}
+                ? "⏰ Order before 12:00 PM"
+                : "⏰ Order before 7:00 PM"}
             </p>
           )}
 
