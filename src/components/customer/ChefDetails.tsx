@@ -115,12 +115,16 @@ const MEAL_CONFIG: Record<
     emoji: string;
     cutoff: string;
   }
+
+
 > = {
   breakfast: {
     label: "Breakfast",
     emoji: "🌅",
     cutoff: "9:00 AM",
   },
+
+  
 
   lunch: {
     label: "Lunch",
@@ -134,6 +138,14 @@ const MEAL_CONFIG: Record<
     cutoff: "8:00 PM",
   },
 };
+
+
+const MEAL_DESCRIPTION: Record<MealType, string> = {
+  breakfast: "Breakfast Menu",
+  lunch: "Sabji + 4 Roti + Rice + Raita",
+  dinner: "Sabji + 4 Roti + Rice",
+};
+
 
 // =========================================================
 // FORMAT DATE
@@ -1336,6 +1348,8 @@ useEffect(() => {
                         mealType
                       ];
 
+                    const mealDescription = MEAL_DESCRIPTION[mealType];
+
                     const menu =
                       meal.menu;
 
@@ -1466,10 +1480,19 @@ useEffect(() => {
 
                         </div>
 
+                        <div className="px-4 pt-3">
+                           <p className="text-sm text-gray-600">
+                             <span className="font-semibold text-gray-800">
+                               Meal Includes:
+                             </span>{" "}
+                             {mealDescription}
+                           </p>
+                          </div>
+
                         {/* =================================================
                             NO MENU
                         ================================================= */}
-
+                        
                         {!menu ? (
 
                           <div className="p-5 text-center">
