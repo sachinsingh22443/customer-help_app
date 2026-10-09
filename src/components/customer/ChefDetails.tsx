@@ -1348,10 +1348,25 @@ useEffect(() => {
                         mealType
                       ];
 
-                    const mealDescription = MEAL_DESCRIPTION[mealType];
+                   
+const menu = meal.menu;
 
-                    const menu =
-                      meal.menu;
+const dishName = String(menu?.name || "").toLowerCase();
+
+const mealDescription =
+  mealType === "lunch" || mealType === "dinner"
+    ? dishName.includes("puri")
+      ? "10 Puri + Sabji + Kheer"
+      : dishName.includes("chhole bhature") ||
+        dishName.includes("chole bhature")
+      ? "Chhole + Bhature"
+      : mealType === "lunch"
+      ? "Sabji + 4 Roti + Rice + Raita "
+      : "Sabji + 4 Roti + Rice"
+    : MEAL_DESCRIPTION[mealType];
+
+
+                    
 
                     const today =
                       isToday(
