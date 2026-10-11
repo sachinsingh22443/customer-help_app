@@ -121,7 +121,7 @@ const MEAL_CONFIG: Record<
   breakfast: {
     label: "Breakfast",
     emoji: "🌅",
-    cutoff: "9:00 AM",
+    cutoff: "7:00 AM",
   },
 
   
@@ -266,7 +266,7 @@ function getCutoffDateTime(
     string
   > = {
     breakfast:
-      "09:00:00",
+      "7:00:00",
 
     lunch:
       "13:00:00",
