@@ -84,6 +84,9 @@ export function DishDetail({
   const isSpecial =
   String(dish?.type || "").toLowerCase() === "special";
 
+  const isProduct =
+  String(dish?.type || "").toLowerCase() === "product";
+
 
   // =========================================================
   // NORMAL MENU VALUES
@@ -499,7 +502,7 @@ const getMealCutoffTime = () => {
         // NORMAL MENU VALIDATION
         // ===================================================
 
-        if (!isSpecial) {
+        if (!isSpecial && !isProduct) {
 
           if (isUpcoming) {
     alert(
@@ -628,24 +631,25 @@ const getMealCutoffTime = () => {
         // ===================================================
 
         const requestBody: any = {
+  type: isProduct
+    ? "product"
+    : isSpecial
+    ? "special"
+    : "menu",
 
-          type:
-            isSpecial
-              ? "special"
-              : "menu",
+  item_id: isProduct
+    ? (dish?.product_id ?? dish?.id)
+    : dish.id,
 
-          item_id:
-            dish.id,
-
-          quantity,
-        };
+  quantity,
+};
 
 
         // ===================================================
         // NORMAL MENU DATA
         // ===================================================
 
-        if (!isSpecial) {
+        if (!isSpecial && !isProduct) {
 
           requestBody.menu_date =
             menuDate;
@@ -764,6 +768,33 @@ const getMealCutoffTime = () => {
   // =========================================================
 
   const handleOrderNow = () => {
+
+    // EXPLORE PRODUCT: order at any time
+if (isProduct) {
+  if (availableQty <= 0) {
+    alert("Out of stock");
+    return;
+  }
+
+  if (quantity > availableQty) {
+    alert(`Only ${availableQty} items available`);
+    return;
+  }
+
+  if (!onOrderNow) {
+    console.error("onOrderNow handler not provided");
+    return;
+  }
+
+  onOrderNow({
+    ...dish,
+    type: "product",
+    product_id: dish?.product_id ?? dish?.id,
+    quantity,
+  });
+
+  return;
+}
 
   if (isUpcoming) {
     alert(
@@ -948,7 +979,7 @@ const getMealCutoffTime = () => {
           NORMAL MENU — MEAL INFORMATION
       ================================================== */}
 
-      {!isSpecial && (
+      {!isSpecial && !isProduct && (
         <div className="mt-4 bg-orange-50 border border-orange-200 rounded-xl p-4">
 
           <p className="text-xs text-gray-500">
@@ -1301,48 +1332,49 @@ const getMealCutoffTime = () => {
             ADD TO CART
         ================================================== */}
 
-        <button
+<button
           disabled={
-            isUpcoming ||
-            availableQty === 0 ||
-            loading ||
-            (
-              isSpecial &&
-              isSpecialCutoffPassed()
-            ) ||
-            (
-              !isSpecial &&
-              (
-                !menuDate ||
-                !mealType ||
-                !validMealTypes.includes(mealType) ||
-                isNormalMenuCutoffPassed()
-              )
-            )
+           (!isProduct && isUpcoming) ||
+availableQty <= 0 ||
+loading ||
+(
+  !isProduct &&
+  (
+    isSpecial
+      ? isSpecialCutoffPassed()
+      : (
+          !menuDate ||
+          !mealType ||
+          !validMealTypes.includes(mealType) ||
+          isNormalMenuCutoffPassed()
+        )
+  )
+)
           }
           onClick={handleAddToCart}
           className={`flex-1 py-3 rounded-xl font-medium ${
-            isUpcoming ||
-            availableQty === 0 ||
-            (
-              !isSpecial &&
-              (
-                !menuDate ||
-                !mealType ||
-                !validMealTypes.includes(mealType) ||
-                isNormalMenuCutoffPassed()
-              )
-            ) ||
-            (
-              isSpecial &&
-              isSpecialCutoffPassed()
-            )
+            (!isProduct && isUpcoming) ||
+availableQty <= 0 ||
+loading ||
+(
+  !isProduct &&
+  (
+    isSpecial
+      ? isSpecialCutoffPassed()
+      : (
+          !menuDate ||
+          !mealType ||
+          !validMealTypes.includes(mealType) ||
+          isNormalMenuCutoffPassed()
+        )
+  )
+)
               ? "bg-gray-400 text-white"
               : "bg-[#FF7A30] text-white"
           }`}
         >
 
-          {isUpcoming
+          {!isProduct && isUpcoming
             ? "Upcoming • Not Available"
 
             : loading
@@ -1358,27 +1390,24 @@ const getMealCutoffTime = () => {
             ? "Ordering Closed"
 
             : (
+                !isProduct &&
                 !isSpecial &&
                 isNormalMenuCutoffPassed()
               )
             ? "Ordering Closed"
 
             : (
-                !isSpecial &&
-                (
-                  !menuDate ||
-                  !mealType ||
-                  !validMealTypes.includes(
-                    mealType
-                  )
-                )
-              )
-            ? "Menu Unavailable"
+  !isProduct &&
+  !isSpecial &&
+  (
+    !menuDate ||
+    !mealType ||
+    !validMealTypes.includes(mealType)
+  )
+)
+  ? "Menu Unavailable"
 
-            : `Add to Cart • ₹${
-                currentPrice *
-                quantity
-              }`
+            : `Add to Cart • ₹${(currentPrice * quantity).toFixed(2)}`
           }
 
         </button>
@@ -1393,46 +1422,49 @@ const getMealCutoffTime = () => {
 
       <button
         disabled={
-          isUpcoming ||
-          availableQty === 0 ||
-          loading ||
-          (
-            isSpecial
-              ? isSpecialCutoffPassed()
-              : (
-                  !menuDate ||
-                  !mealType ||
-                  !validMealTypes.includes(
-                    mealType
-                  ) ||
-                  isNormalMenuCutoffPassed()
-                )
+  (!isProduct && isUpcoming) ||
+  availableQty <= 0 ||
+  loading ||
+  (
+    !isProduct &&
+    (
+      isSpecial
+        ? isSpecialCutoffPassed()
+        : (
+            !menuDate ||
+            !mealType ||
+            !validMealTypes.includes(mealType) ||
+            isNormalMenuCutoffPassed()
           )
+    )
+  )
+
         }
         onClick={handleOrderNow}
         className={`w-full mt-3 py-3 rounded-xl font-semibold ${
-          isUpcoming ||
+         (!isProduct && isUpcoming) ||
           availableQty === 0 ||
           loading ||
           (
-            isSpecial
-              ? isSpecialCutoffPassed()
-              : (
-                  !menuDate ||
-                  !mealType ||
-                  !validMealTypes.includes(
-                    mealType
-                  ) ||
-                  isNormalMenuCutoffPassed()
-                )
-          )
+  !isProduct &&
+  (
+    isSpecial
+      ? isSpecialCutoffPassed()
+      : (
+          !menuDate ||
+          !mealType ||
+          !validMealTypes.includes(mealType) ||
+          isNormalMenuCutoffPassed()
+        )
+  )
+)
             ? "bg-gray-400 text-white"
             : "bg-[#5F2EEA] text-white"
         }`}
       >
 
         {
-          isUpcoming
+          !isProduct && isUpcoming
             ? "Upcoming • Not Available"
 
             : loading
@@ -1445,13 +1477,13 @@ const getMealCutoffTime = () => {
               isSpecialCutoffPassed()
             ? "⏰ Ordering Closed"
 
-            : !isSpecial &&
-              isNormalMenuCutoffPassed()
-            ? "⏰ Ordering Closed"
+            : !isProduct &&
+  !isSpecial &&
+  isNormalMenuCutoffPassed()
+  ? "⏰ Ordering Closed"
 
             : `⚡ Order Now • ₹${
-                currentPrice *
-                quantity
+                (currentPrice * quantity).toFixed(2)
               }`
         }
 

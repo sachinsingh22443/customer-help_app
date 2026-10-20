@@ -58,12 +58,29 @@ export function Checkout({
     }
   };
 
-  const cartItems =
-  Array.isArray(cartData) && cartData.length > 0
+ 
+const cartItems = directItem
+  ? [directItem]
+  : Array.isArray(cartData) && cartData.length > 0
     ? cartData
-    : directItem
-      ? [directItem]
-      : [];
+    : (() => {
+        try {
+          const savedCart = localStorage.getItem("checkout_cart");
+          const parsedCart = savedCart ? JSON.parse(savedCart) : [];
+          return Array.isArray(parsedCart) ? parsedCart : [];
+        } catch {
+          return [];
+        }
+      })();
+
+  useEffect(() => {
+  if (directItem) return;
+
+  if (Array.isArray(cartData) && cartData.length > 0) {
+    localStorage.setItem("checkout_cart", JSON.stringify(cartData));
+  }
+}, [cartData, directItem]);
+
 
   const subtotal = cartItems.reduce(
   (sum, item) =>
@@ -106,6 +123,13 @@ export function Checkout({
     item.type === "special"
       ? (item.special_id ?? item.item_id ?? item.id)
       : null,
+
+  
+  product_id:
+    item.type === "product"
+      ? (item.product_id ?? item.item_id ?? item.id)
+      : null,
+  
 
   quantity: Number(item.quantity),
 
@@ -304,6 +328,7 @@ export function Checkout({
     // ============================================
 
     localStorage.removeItem("cart");
+    localStorage.removeItem("checkout_cart");
 
     setLoading(false);
 
@@ -1067,8 +1092,8 @@ if (selectedPayment === "wallet") {
             </p>
 
             <p className="mt-0.5 text-lg font-bold text-slate-900">
-              ₹{total}
-            </p>
+  ₹{total.toFixed(0)}
+</p>
 
           </div>
 

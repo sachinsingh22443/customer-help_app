@@ -998,10 +998,22 @@ const handleNavigateToSpecialDetail = (special: any) => {
 };
 
 
-  const handleOrderNow = (item: any) => {
+  
+const handleOrderNow = (item: any) => {
+  const itemType =
+    item.type === "product"
+      ? "product"
+      : item.type === "special"
+      ? "special"
+      : "menu";
+
   setDirectCheckoutItem({
     ...item,
-    type: item.type === "special" ? "special" : "menu",
+    type: itemType,
+    product_id:
+      itemType === "product"
+        ? item.product_id ?? item.id
+        : undefined,
     quantity: item.quantity || 1,
     menu_date: item.menu_date,
     meal_type: item.meal_type,
@@ -1009,6 +1021,7 @@ const handleNavigateToSpecialDetail = (special: any) => {
 
   setCurrentScreen("checkout");
 };
+
   const handlePlaceOrder = () => {
     setCurrentScreen("orderConfirmation");
   };
@@ -1047,9 +1060,75 @@ const handleNavigateToSpecialDetail = (special: any) => {
     setCurrentScreen("categoryDetail");
   };
 
-  const handleAddToCart = (itemId: string, quantity?: number) => {
-    // console.log("Added to cart:", itemId, quantity);
-  };
+  const handleAddToCart = async (
+  itemOrId: any,
+  quantity?: number
+) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      setCurrentScreen("login");
+      return;
+    }
+
+    // CategoryDetail se poora product object aata hai.
+    // DishDetail se sirf item ID aur quantity aati hai.
+    const isProductObject =
+      typeof itemOrId === "object" &&
+      itemOrId !== null;
+
+    if (isProductObject) {
+      const product = itemOrId;
+
+      if (product.type !== "product") {
+        console.error("Unsupported cart item:", product);
+        return;
+      }
+
+      const response = await fetch(
+        "https://chef-backend-qh12.onrender.com/cart/add",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            type: "product",
+            item_id: product.product_id ?? product.id,
+            quantity: Number(product.quantity ?? 1),
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+
+        throw new Error(
+          errorData?.detail ||
+          errorData?.message ||
+          "Product cart mein add nahi ho paya."
+        );
+      }
+
+      // Product backend cart mein add ho gaya.
+      // Cart screen kholne par backend se latest items fetch honge.
+      console.log("Explore product added to cart:", product.id);
+      return;
+    }
+
+    // DishDetail apne /cart/add request se item pehle hi add karta hai.
+    // Yahan dobara API call nahi karni, warna quantity duplicate ho sakti hai.
+    console.log("DishDetail cart request handled:", {
+      itemId: itemOrId,
+      quantity,
+    });
+  } catch (error: any) {
+    console.error("Add to cart error:", error);
+    alert(error?.message || "Cart mein item add nahi ho paya.");
+  }
+};
 
   const handleCheckout = () => {
     setCurrentScreen("checkout");
