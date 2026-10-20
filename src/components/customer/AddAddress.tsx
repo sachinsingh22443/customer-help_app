@@ -93,13 +93,12 @@ export function AddAddress({
           name: formData.name,
           phone: formData.phone,
 
-          flatNo: formData.flatNo,
-          area: formData.area,
-          landmark: formData.landmark,
-
-          city: formData.city,
-          state: formData.state,
-          pincode: formData.pincode,
+          flatNo: formData.flatNo.trim(),
+          area: formData.area.trim(),
+          landmark: formData.landmark.trim(),
+          city: formData.city.trim(),
+          state: formData.state.trim(),
+          pincode: formData.pincode.trim(),
 
           addressType: addressType,
 
